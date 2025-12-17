@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -54,8 +54,13 @@ export default function Dashboard() {
     queryFn: api.getCurrentUser,
   });
 
-  if (!isUserLoading && !user) {
-    setLocation("/auth");
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      setLocation("/auth");
+    }
+  }, [isUserLoading, user, setLocation]);
+
+  if (isUserLoading || !user) {
     return null;
   }
 
@@ -118,8 +123,6 @@ export default function Dashboard() {
   const onSubmit = (values: z.infer<typeof LinkFormSchema>) => {
     addLinkMutation.mutate(values);
   };
-
-  if (isUserLoading || !user) return null;
 
   return (
     <Layout>
@@ -388,10 +391,11 @@ export default function Dashboard() {
                      {/* Notch */}
                      <div className="absolute top-0 inset-x-0 h-6 bg-slate-900 rounded-b-xl w-40 mx-auto z-20"></div>
                      <iframe 
-                        src={`/${user.username}?preview=true`} 
-                        className="w-full h-full border-none bg-white"
+                        src={`/${user.username}`} 
+                        className="w-full h-full border-none"
                         title="Preview"
-                        key={user.theme} // Force reload on theme change
+                        key={`${user.theme}-${user.username}`}
+                        style={{ backgroundColor: 'transparent' }}
                      />
                 </div>
              </div>
