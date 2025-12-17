@@ -112,8 +112,21 @@ const INITIAL_REVIEWS: Review[] = [
   { id: "rev-2", userId: "user-1", authorName: "Bob", rating: 4, comment: "Great links, very useful.", createdAt: new Date(Date.now() - 86400000).toISOString(), isHidden: false },
 ];
 
+// Data version - increment this when initial data changes to force refresh
+const DATA_VERSION = "v2";
+
 // Persistence Helpers
 const getStorage = <T>(key: string, initial: T): T => {
+  const storedVersion = localStorage.getItem("tt_data_version");
+  
+  // If version mismatch, clear old data and use fresh initial data
+  if (storedVersion !== DATA_VERSION) {
+    localStorage.removeItem("tt_users");
+    localStorage.removeItem("tt_links");
+    localStorage.removeItem("tt_reviews");
+    localStorage.setItem("tt_data_version", DATA_VERSION);
+  }
+  
   const stored = localStorage.getItem(key);
   if (!stored) {
     localStorage.setItem(key, JSON.stringify(initial));
