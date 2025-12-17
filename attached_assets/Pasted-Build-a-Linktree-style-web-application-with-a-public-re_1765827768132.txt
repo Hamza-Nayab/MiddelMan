@@ -1,0 +1,102 @@
+Build a Linktree-style web application with a public review system, using a frontend-focused architecture (no custom backend). Use a Backend-as-a-Service such as Firebase or Supabase for authentication and data storage.
+
+Core Features
+1. User Accounts & Dashboard
+
+Users can sign up and log in
+
+Each user gets a public profile page (e.g., /username)
+
+Logged-in users have access to a private dashboard
+
+2. Link & Social Management
+
+Logged-in users can:
+
+Create, edit, delete, and reorder multiple links
+
+Add a title, URL, and optional description/icon for each link
+
+Add, edit, or remove social media links (Instagram, LinkedIn, GitHub, X, YouTube, etc.)
+
+Control visibility of individual links and socials
+
+3. Public Profile Pages
+
+Anyone can view a user’s public profile without logging in
+
+Public profile displays:
+
+Profile info
+
+Links and social icons
+
+Average rating and total review count
+
+Public list of reviews
+
+4. Review System (No Login Required)
+
+Visitors can leave reviews without creating an account
+
+Reviews include:
+
+Rating (1–5 stars)
+
+Text comment
+
+Optional name (anonymous allowed)
+
+Display average rating and reviews publicly on profile pages
+
+5. Review Dashboard (Profile Owners)
+
+Logged-in users can:
+
+View all reviews left on their profile
+
+See individual ratings and comments
+
+Monitor overall rating
+
+Delete or hide reviews from public view
+
+6. Moderation & Safety
+
+Implement basic spam protection for anonymous reviews:
+
+Rate limiting
+
+CAPTCHA or bot prevention
+
+Prevent rapid or duplicate review submissions
+
+7. Tech & UI Requirements
+
+Frontend-only implementation using React or Next.js
+
+Authentication and database via Firebase or Supabase
+
+No custom backend/server code
+
+Responsive, mobile-first design
+
+SEO-friendly public profile pages
+
+Clean, modern UI inspired by Linktree
+
+Deliverables
+
+Production-ready web application
+
+Clean, maintainable, and scalable code
+
+Clear setup and deployment instructions
+
+Optional:
+
+Profile themes or customization
+
+Review sorting (latest / highest rating)
+
+Link click analytics
