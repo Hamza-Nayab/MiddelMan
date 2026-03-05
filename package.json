@@ -10,6 +10,9 @@
     "preview": "NODE_ENV=production node dist/index.cjs",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
+    "lint": "npm run check",
+    "typecheck": "npm run check",
+    "test": "tsx script/test_search.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {

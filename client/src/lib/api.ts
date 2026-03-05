@@ -31,12 +31,14 @@ async function request<T>(
   method: string,
   url: string,
   body?: unknown,
+  options?: { signal?: AbortSignal },
 ): Promise<T> {
   const res = await fetch(url, {
     method,
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
     credentials: "include",
+    signal: options?.signal,
   });
 
   const json = (await res.json()) as ApiResponse<T>;
@@ -387,6 +389,15 @@ export type SearchSuggestion = {
   displayName: string;
 };
 
+export type SearchResult = {
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  avgRating: number;
+  totalReviews: number;
+};
+
 export const api = {
   register: (payload: RegisterPayload) =>
     request<{ user: User }>("POST", "/api/auth/register", payload),
@@ -531,7 +542,10 @@ export const api = {
 
     return json.data;
   },
-  search: (query: string, options?: { limit?: number; offset?: number }) => {
+  search: (
+    query: string,
+    options?: { limit?: number; offset?: number; signal?: AbortSignal },
+  ) => {
     const params = new URLSearchParams();
     params.set("q", query);
     if (options?.limit !== undefined) {
@@ -542,21 +556,19 @@ export const api = {
     }
     const suffix = params.toString();
     return request<{
-      results: Array<{
-        user: User;
-        profile: Profile;
-        stats: ReviewsResponse["stats"];
-      }>;
+      results: SearchResult[];
       meta: {
         nextOffset: number | null;
         hasMore: boolean;
       };
-    }>("GET", `/api/search?${suffix}`);
+    }>("GET", `/api/search?${suffix}`, undefined, { signal: options?.signal });
   },
-  searchSuggest: (query: string) =>
+  searchSuggest: (query: string, options?: { signal?: AbortSignal }) =>
     request<{ suggestions: SearchSuggestion[] }>(
       "GET",
       `/api/search/suggest?q=${encodeURIComponent(query)}`,
+      undefined,
+      { signal: options?.signal },
     ),
   adminGetReviews: (params?: {
     sellerId?: number;

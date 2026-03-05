@@ -29,7 +29,7 @@ export default function SearchPage() {
   useEffect(() => {
     const handle = window.setTimeout(() => {
       setDebouncedQuery(query.trim());
-    }, 250);
+    }, 150);
 
     return () => window.clearTimeout(handle);
   }, [query]);
@@ -54,18 +54,22 @@ export default function SearchPage() {
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useInfiniteQuery({
       queryKey: ["search", debouncedQuery],
-      queryFn: ({ pageParam = 0 }) =>
-        api.search(debouncedQuery, { limit: 15, offset: pageParam }),
-      enabled: debouncedQuery.length > 0,
+      queryFn: ({ pageParam = 0, signal }) =>
+        api.search(debouncedQuery, { limit: 15, offset: pageParam, signal }),
+      enabled: debouncedQuery.length >= 2,
       initialPageParam: 0,
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
       getNextPageParam: (lastPage) =>
         lastPage?.meta?.hasMore ? lastPage.meta.nextOffset : undefined,
     });
 
   const { data: suggestData } = useQuery({
     queryKey: ["search-suggest", debouncedQuery],
-    queryFn: () => api.searchSuggest(debouncedQuery),
+    queryFn: ({ signal }) => api.searchSuggest(debouncedQuery, { signal }),
     enabled: debouncedQuery.length >= 2,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 
   const results = data?.pages.flatMap((page) => page.results) || [];
@@ -121,47 +125,41 @@ export default function SearchPage() {
           <div className="text-center py-10 text-muted-foreground">
             Searching...
           </div>
-        ) : debouncedQuery.length === 0 ? (
+        ) : debouncedQuery.length < 2 ? (
           <div className="text-center py-20 text-muted-foreground">
-            Start typing to find sellers.
+            Type at least 2 characters to search.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {results.map((result) => (
-              <Link
-                key={result.user.id}
-                href={`/${encodeURIComponent(result.user.username || "")}`}
-              >
+              <Link key={result.username} href={`/${encodeURIComponent(result.username)}`}>
                 <Card className="hover:shadow-md transition-all cursor-pointer group h-full overflow-hidden border-border/60">
                   <CardContent className="p-0">
                     <div className="h-24 bg-gradient-to-r from-primary/10 to-purple-400/10 group-hover:from-primary/20 group-hover:to-purple-400/20 transition-colors" />
                     <div className="px-6 pb-6 -mt-10">
                       <Avatar className="w-20 h-20 border-4 border-background shadow-sm mb-3">
                         <AvatarImage
-                          src={getAvatarUrl(
-                            result.profile.avatarUrl,
-                            result.user.id,
-                          )}
+                          src={getAvatarUrl(result.avatarUrl, result.username)}
                         />
                         <AvatarFallback>
-                          {result.user.username?.[0]?.toUpperCase() || "U"}
+                          {result.username?.[0]?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
 
                       <div className="flex items-start justify-between">
                         <div>
                           <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
-                            {result.profile.displayName}
+                            {result.displayName}
                           </h3>
                           <p className="text-sm text-muted-foreground mb-2">
-                            @{result.user.username}
+                            @{result.username}
                           </p>
                         </div>
                         <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
 
                       <p className="text-sm text-slate-600 line-clamp-2 min-h-[2.5em]">
-                        {result.profile.bio || "No bio available."}
+                        {result.bio || "No bio available."}
                       </p>
                     </div>
                   </CardContent>

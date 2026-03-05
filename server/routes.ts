@@ -442,7 +442,7 @@ const getReviewStats = async (sellerId: number, includeHidden = false) => {
   };
 };
 
-const SEARCH_QUERY_MIN_LENGTH = 1;
+const SEARCH_QUERY_MIN_LENGTH = 2;
 const SEARCH_QUERY_MAX_LENGTH = 120;
 const SEARCH_TOKEN_MAX_COUNT = 5;
 const SEARCH_CACHE_TTL_MS = 30 * 1000;
@@ -462,31 +462,12 @@ const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, "\\$&");
 
 type SearchResponsePayload = {
   results: Array<{
-    user: {
-      id: number;
-      username: string | null;
-      role: "buyer" | "seller" | "admin";
-      createdAt: Date;
-    };
-    profile: {
-      userId: number;
-      displayName: string;
-      bio: string | null;
-      avatarUrl: string | null;
-      contactEmail: string | null;
-      whatsappNumber: string | null;
-      phoneNumber: string | null;
-      countryCode: string | null;
-      isVerified: boolean;
-      verificationMethod: "none" | "ig_bio_code" | "whatsapp_otp" | "manual";
-      theme: "light" | "dark" | "gradient";
-      createdAt: Date;
-      updatedAt: Date;
-    };
-    stats: {
-      avgRating: number;
-      totalReviews: number;
-    };
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    bio: string | null;
+    avgRating: number;
+    totalReviews: number;
   }>;
   meta: {
     nextOffset: number | null;
@@ -1452,8 +1433,9 @@ export async function registerRoutes(
     const matchByToken = tokens.map((token) => {
       const escaped = escapeLikePattern(token);
       const pattern = `%${escaped}%`;
+      const usernamePrefixPattern = `${escaped}%`;
       return or(
-        ilike(users.username, pattern),
+        sql`lower(${users.username}) LIKE ${usernamePrefixPattern}`,
         ilike(profiles.displayName, pattern),
         ilike(profiles.contactEmail, pattern),
       );
@@ -1461,56 +1443,29 @@ export async function registerRoutes(
 
     const searchScore = sql<number>`
       (
-        CASE WHEN ${users.username} ILIKE ${exactPattern} THEN 100 ELSE 0 END +
+        CASE WHEN lower(${users.username}) = ${exactPattern} THEN 100 ELSE 0 END +
         CASE WHEN ${profiles.displayName} ILIKE ${exactPattern} THEN 85 ELSE 0 END +
         CASE WHEN ${profiles.contactEmail} ILIKE ${exactPattern} THEN 80 ELSE 0 END +
-        CASE WHEN ${users.username} ILIKE ${prefixPattern} THEN 50 ELSE 0 END +
+        CASE WHEN lower(${users.username}) LIKE ${prefixPattern} THEN 50 ELSE 0 END +
         CASE WHEN ${profiles.displayName} ILIKE ${prefixPattern} THEN 35 ELSE 0 END +
         CASE WHEN ${profiles.contactEmail} ILIKE ${prefixPattern} THEN 30 ELSE 0 END +
-        CASE WHEN ${users.username} ILIKE ${containsPattern} THEN 10 ELSE 0 END +
+        CASE WHEN lower(${users.username}) LIKE ${containsPattern} THEN 10 ELSE 0 END +
         CASE WHEN ${profiles.displayName} ILIKE ${containsPattern} THEN 8 ELSE 0 END +
         CASE WHEN ${profiles.contactEmail} ILIKE ${containsPattern} THEN 6 ELSE 0 END
       )
     `;
 
-    const reviewStats = db
-      .select({
-        sellerId: reviews.sellerId,
-        avgRating: sql<number>`avg(${reviews.rating})`.as("avg_rating"),
-        totalReviews: sql<number>`count(*)`.as("total_reviews"),
-      })
-      .from(reviews)
-      .where(eq(reviews.isHidden, false))
-      .groupBy(reviews.sellerId)
-      .as("review_stats");
-
-    const rows = await db
+    const baseRows = await db
       .select({
         userId: users.id,
         username: users.username,
-        role: users.role,
-        userCreatedAt: users.createdAt,
-        userUpdatedAt: users.updatedAt,
-        profileUserId: profiles.userId,
         displayName: profiles.displayName,
         bio: profiles.bio,
         avatarUrl: profiles.avatarUrl,
-        contactEmail: profiles.contactEmail,
-        whatsappNumber: profiles.whatsappNumber,
-        phoneNumber: profiles.phoneNumber,
-        countryCode: profiles.countryCode,
-        isVerified: profiles.isVerified,
-        verificationMethod: profiles.verificationMethod,
-        theme: profiles.theme,
-        profileCreatedAt: profiles.createdAt,
-        profileUpdatedAt: profiles.updatedAt,
-        avgRating: reviewStats.avgRating,
-        totalReviews: reviewStats.totalReviews,
         searchScore,
       })
       .from(users)
       .leftJoin(profiles, eq(profiles.userId, users.id))
-      .leftJoin(reviewStats, eq(reviewStats.sellerId, users.id))
       .where(
         and(
           eq(users.role, "seller"),
@@ -1520,44 +1475,71 @@ export async function registerRoutes(
       )
       .orderBy(
         desc(searchScore),
-        desc(sql`coalesce(${reviewStats.totalReviews}, 0)`),
         asc(users.id),
       )
       .limit(limit + 1)
       .offset(offset);
 
+    const hasMore = baseRows.length > limit;
+    const pageRows = hasMore ? baseRows.slice(0, limit) : baseRows;
+    const sellerIds = pageRows.map((row) => row.userId);
+
+    const statsRows =
+      sellerIds.length > 0
+        ? await db
+            .select({
+              sellerId: reviews.sellerId,
+              avgRating: sql<number>`avg(${reviews.rating})`,
+              totalReviews: sql<number>`count(*)`,
+            })
+            .from(reviews)
+            .where(
+              and(
+                inArray(reviews.sellerId, sellerIds),
+                eq(reviews.isHidden, false),
+              ),
+            )
+            .groupBy(reviews.sellerId)
+        : [];
+
+    const statsBySellerId = new Map(
+      statsRows.map((row) => [
+        row.sellerId,
+        {
+          avgRating: Number(row.avgRating ?? 0),
+          totalReviews: Number(row.totalReviews ?? 0),
+        },
+      ]),
+    );
+
+    const rankedRows = pageRows
+      .map((row) => ({
+        ...row,
+        stats: statsBySellerId.get(row.userId) || {
+          avgRating: 0,
+          totalReviews: 0,
+        },
+      }))
+      .sort((a, b) => {
+        const scoreDiff = Number(b.searchScore ?? 0) - Number(a.searchScore ?? 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        const reviewDiff = b.stats.totalReviews - a.stats.totalReviews;
+        if (reviewDiff !== 0) return reviewDiff;
+        return a.userId - b.userId;
+      });
+
     const retrievedAt = Date.now();
 
-    const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
-
-    const hydrated = pageRows.map((row) => ({
-      user: {
-        id: row.userId,
-        username: row.username,
-        role: row.role,
-        createdAt: row.userCreatedAt,
-      },
-      profile: {
-        userId: row.profileUserId ?? row.userId,
+    const hydrated = rankedRows
+      .filter((row) => row.username)
+      .map((row) => ({
+        username: row.username as string,
         displayName: row.displayName ?? row.username ?? "Seller",
-        bio: row.bio ?? null,
         avatarUrl: row.avatarUrl ?? null,
-        contactEmail: row.contactEmail ?? null,
-        whatsappNumber: row.whatsappNumber ?? null,
-        phoneNumber: row.phoneNumber ?? null,
-        countryCode: row.countryCode ?? null,
-        isVerified: row.isVerified ?? false,
-        verificationMethod: row.verificationMethod ?? "none",
-        theme: row.theme ?? "light",
-        createdAt: row.profileCreatedAt ?? row.userCreatedAt,
-        updatedAt: row.profileUpdatedAt ?? row.userUpdatedAt,
-      },
-      stats: {
-        avgRating: Number(row.avgRating ?? 0),
-        totalReviews: Number(row.totalReviews ?? 0),
-      },
-    }));
+        bio: row.bio ?? null,
+        avgRating: row.stats.avgRating,
+        totalReviews: row.stats.totalReviews,
+      }));
 
     const serializedAt = Date.now();
     const parseMs = parseEndedAt - requestStartedAt;
@@ -1565,7 +1547,7 @@ export async function registerRoutes(
     const serializeMs = serializedAt - retrievedAt;
     const totalMs = serializedAt - requestStartedAt;
 
-    const response = {
+    const response: SearchResponsePayload = {
       results: hydrated,
       meta: {
         nextOffset: hasMore ? offset + limit : null,
@@ -1609,7 +1591,7 @@ export async function registerRoutes(
         and(
           eq(users.role, "seller"),
           eq(users.isDisabled, false),
-          ilike(users.username, prefixPattern),
+          sql`lower(${users.username}) LIKE ${prefixPattern}`,
         ),
       )
       .orderBy(asc(users.username))
