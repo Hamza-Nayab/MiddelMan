@@ -382,6 +382,11 @@ export type AnalyticsOverview = {
   }>;
 };
 
+export type SearchSuggestion = {
+  username: string;
+  displayName: string;
+};
+
 export const api = {
   register: (payload: RegisterPayload) =>
     request<{ user: User }>("POST", "/api/auth/register", payload),
@@ -526,14 +531,33 @@ export const api = {
 
     return json.data;
   },
-  search: (query: string) =>
-    request<{
+  search: (query: string, options?: { limit?: number; offset?: number }) => {
+    const params = new URLSearchParams();
+    params.set("q", query);
+    if (options?.limit !== undefined) {
+      params.set("limit", String(options.limit));
+    }
+    if (options?.offset !== undefined) {
+      params.set("offset", String(options.offset));
+    }
+    const suffix = params.toString();
+    return request<{
       results: Array<{
         user: User;
         profile: Profile;
         stats: ReviewsResponse["stats"];
       }>;
-    }>("GET", `/api/search?query=${encodeURIComponent(query)}`),
+      meta: {
+        nextOffset: number | null;
+        hasMore: boolean;
+      };
+    }>("GET", `/api/search?${suffix}`);
+  },
+  searchSuggest: (query: string) =>
+    request<{ suggestions: SearchSuggestion[] }>(
+      "GET",
+      `/api/search/suggest?q=${encodeURIComponent(query)}`,
+    ),
   adminGetReviews: (params?: {
     sellerId?: number;
     hidden?: boolean;

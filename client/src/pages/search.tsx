@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Layout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,10 @@ import { getAvatarUrl } from "@/lib/graphics";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Extract query parameter from URL
@@ -23,13 +26,50 @@ export default function SearchPage() {
     }
   }, [location]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["search", query],
-    queryFn: () => api.search(query),
-    enabled: query.trim().length > 0,
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedQuery(query.trim());
+    }, 250);
+
+    return () => window.clearTimeout(handle);
+  }, [query]);
+
+  // Handle clicks outside the search container
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteQuery({
+      queryKey: ["search", debouncedQuery],
+      queryFn: ({ pageParam = 0 }) =>
+        api.search(debouncedQuery, { limit: 15, offset: pageParam }),
+      enabled: debouncedQuery.length > 0,
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) =>
+        lastPage?.meta?.hasMore ? lastPage.meta.nextOffset : undefined,
+    });
+
+  const { data: suggestData } = useQuery({
+    queryKey: ["search-suggest", debouncedQuery],
+    queryFn: () => api.searchSuggest(debouncedQuery),
+    enabled: debouncedQuery.length >= 2,
   });
 
-  const results = data?.results || [];
+  const results = data?.pages.flatMap((page) => page.results) || [];
+  const suggestions = suggestData?.suggestions || [];
 
   return (
     <Layout>
@@ -42,14 +82,38 @@ export default function SearchPage() {
             Find people, inspiration, and connections.
           </p>
 
-          <div className="relative max-w-lg mx-auto">
+          <div className="relative max-w-lg mx-auto" ref={searchContainerRef}>
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <Input
               className="pl-10 h-12 rounded-full shadow-sm"
               placeholder="Search by username or name..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
             />
+
+            {showSuggestions &&
+              debouncedQuery.length >= 2 &&
+              suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-border bg-background shadow-lg z-20 overflow-hidden">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.username}
+                      type="button"
+                      className="w-full px-4 py-3 text-left hover:bg-accent transition-colors"
+                      onClick={() => {
+                        setShowSuggestions(false);
+                        navigate(`/${encodeURIComponent(suggestion.username)}`);
+                      }}
+                    >
+                      <div className="font-medium">@{suggestion.username}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {suggestion.displayName}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
           </div>
         </div>
 
@@ -57,7 +121,7 @@ export default function SearchPage() {
           <div className="text-center py-10 text-muted-foreground">
             Searching...
           </div>
-        ) : query.trim().length === 0 ? (
+        ) : debouncedQuery.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             Start typing to find sellers.
           </div>
@@ -110,6 +174,18 @@ export default function SearchPage() {
                 No users found matching "{query}"
               </div>
             )}
+          </div>
+        )}
+
+        {results.length > 0 && hasNextPage && (
+          <div className="mt-10 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? "Loading..." : "Load More"}
+            </Button>
           </div>
         )}
       </div>

@@ -880,7 +880,12 @@ interface ProvideCardProps {
   comingSoon?: boolean;
 }
 
-function ProvideCard({ title, description, icon: Icon, comingSoon }: ProvideCardProps) {
+function ProvideCard({
+  title,
+  description,
+  icon: Icon,
+  comingSoon,
+}: ProvideCardProps) {
   return (
     <div className="group flex flex-col p-10 rounded-lg border border-slate-100 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default justify-between">
       {Icon && (
@@ -898,7 +903,9 @@ function ProvideCard({ title, description, icon: Icon, comingSoon }: ProvideCard
           </span>
         )}
       </div>
-      <p className="text-sm text-slate-600 leading-relaxed flex-1">{description}</p>
+      <p className="text-sm text-slate-600 leading-relaxed flex-1">
+        {description}
+      </p>
       <div className="mt-6 h-[3px] w-12 bg-gradient-to-r from-blue-500 to-blue-300 rounded-full" />
     </div>
   );
