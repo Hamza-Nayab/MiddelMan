@@ -32,23 +32,25 @@ async function explainSearchQuery() {
     `;
 
     const result = await client.query(query);
-    
+
     console.log("📊 Query Plan:");
     console.log("═".repeat(80));
-    result.rows.forEach(row => {
+    result.rows.forEach((row) => {
       console.log(row["QUERY PLAN"]);
     });
     console.log("═".repeat(80));
 
-    const plan = result.rows.map(r => r["QUERY PLAN"]).join("\n");
-    
+    const plan = result.rows.map((r) => r["QUERY PLAN"]).join("\n");
+
     if (plan.includes("Index Scan")) {
       console.log("\n✅ Query uses Index Scan (GOOD)");
     } else if (plan.includes("Seq Scan")) {
       console.log("\n⚠️  Query uses Sequential Scan (NEEDS OPTIMIZATION)");
     }
 
-    console.log("\n🔍 Running EXPLAIN ANALYZE for /api/search/suggest query...\n");
+    console.log(
+      "\n🔍 Running EXPLAIN ANALYZE for /api/search/suggest query...\n",
+    );
 
     const suggestQuery = `
       EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
@@ -66,22 +68,25 @@ async function explainSearchQuery() {
     `;
 
     const suggestResult = await client.query(suggestQuery);
-    
+
     console.log("📊 Suggest Query Plan:");
     console.log("═".repeat(80));
-    suggestResult.rows.forEach(row => {
+    suggestResult.rows.forEach((row) => {
       console.log(row["QUERY PLAN"]);
     });
     console.log("═".repeat(80));
 
-    const suggestPlan = suggestResult.rows.map(r => r["QUERY PLAN"]).join("\n");
-    
+    const suggestPlan = suggestResult.rows
+      .map((r) => r["QUERY PLAN"])
+      .join("\n");
+
     if (suggestPlan.includes("Index Scan")) {
       console.log("\n✅ Suggest query uses Index Scan (GOOD)");
     } else if (suggestPlan.includes("Seq Scan")) {
-      console.log("\n⚠️  Suggest query uses Sequential Scan (NEEDS OPTIMIZATION)");
+      console.log(
+        "\n⚠️  Suggest query uses Sequential Scan (NEEDS OPTIMIZATION)",
+      );
     }
-
   } finally {
     client.release();
     await pool.end();

@@ -26,11 +26,11 @@ async function checkIndexes() {
     `;
 
     const result = await client.query(indexQuery);
-    
+
     console.log("📊 Existing indexes:");
     console.log("═".repeat(80));
-    
-    result.rows.forEach(row => {
+
+    result.rows.forEach((row) => {
       console.log(`\n📌 ${row.tablename}.${row.indexname}`);
       console.log(`   ${row.indexdef}`);
     });
@@ -39,20 +39,20 @@ async function checkIndexes() {
     console.log("\n✅ Checking for required search indexes:\n");
 
     const requiredIndexes = [
-      { name: 'users_username_lower_idx', exists: false },
-      { name: 'users_username_prefix_active_idx', exists: false },
-      { name: 'profiles_display_name_lower_idx', exists: false }
+      { name: "users_username_lower_idx", exists: false },
+      { name: "users_username_prefix_active_idx", exists: false },
+      { name: "profiles_display_name_lower_idx", exists: false },
     ];
 
-    result.rows.forEach(row => {
-      requiredIndexes.forEach(req => {
+    result.rows.forEach((row) => {
+      requiredIndexes.forEach((req) => {
         if (row.indexname === req.name) {
           req.exists = true;
         }
       });
     });
 
-    requiredIndexes.forEach(idx => {
+    requiredIndexes.forEach((idx) => {
       if (idx.exists) {
         console.log(`✅ ${idx.name} - EXISTS`);
       } else {
@@ -95,7 +95,6 @@ async function checkIndexes() {
     }
 
     console.log("\n✅ All required indexes verified/created!");
-
   } finally {
     client.release();
     await pool.end();

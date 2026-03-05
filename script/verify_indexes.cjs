@@ -20,12 +20,16 @@ async function checkIndexes() {
       ORDER BY indexname;
     `);
 
-    const existing = result.rows.map(r => r.indexname);
-    
+    const existing = result.rows.map((r) => r.indexname);
+
     const required = {
-      'users_username_lower_idx': !existing.includes('users_username_lower_idx'),
-      'users_username_prefix_active_idx': !existing.includes('users_username_prefix_active_idx'),
-      'profiles_display_name_lower_idx': !existing.includes('profiles_display_name_lower_idx')
+      users_username_lower_idx: !existing.includes("users_username_lower_idx"),
+      users_username_prefix_active_idx: !existing.includes(
+        "users_username_prefix_active_idx",
+      ),
+      profiles_display_name_lower_idx: !existing.includes(
+        "profiles_display_name_lower_idx",
+      ),
     };
 
     for (const [name, missing] of Object.entries(required)) {
@@ -37,7 +41,7 @@ async function checkIndexes() {
     }
 
     // Create missing indexes
-    if (required['users_username_lower_idx']) {
+    if (required["users_username_lower_idx"]) {
       await client.query(`
         CREATE INDEX IF NOT EXISTS users_username_lower_idx
         ON users (lower(username))
@@ -46,7 +50,7 @@ async function checkIndexes() {
       console.log("\n✅ Created users_username_lower_idx");
     }
 
-    if (required['users_username_prefix_active_idx']) {
+    if (required["users_username_prefix_active_idx"]) {
       await client.query(`
         CREATE INDEX IF NOT EXISTS users_username_prefix_active_idx
         ON users (lower(username) text_pattern_ops)
@@ -55,7 +59,7 @@ async function checkIndexes() {
       console.log("✅ Created users_username_prefix_active_idx");
     }
 
-    if (required['profiles_display_name_lower_idx']) {
+    if (required["profiles_display_name_lower_idx"]) {
       await client.query(`
         CREATE INDEX IF NOT EXISTS profiles_display_name_lower_idx
         ON profiles (lower(display_name))
