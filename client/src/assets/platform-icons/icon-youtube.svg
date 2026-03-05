@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+  <rect x="8" y="8" width="48" height="48" rx="6" fill="#FF0000"/>
+  <path d="M 28 30 L 40 37 L 40 23 Z" fill="#FFFFFF"/>
+  <text x="32" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" opacity="0.7">YouTube</text>
+</svg>

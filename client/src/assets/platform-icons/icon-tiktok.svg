@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+  <defs>
+    <linearGradient id="tiktok-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#25F4EE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#265BEE;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="48" height="48" rx="8" fill="url(#tiktok-grad)"/>
+  <path d="M 38 22 Q 40 20 42 20 L 42 28 Q 40 28 38 26 L 38 42 Q 38 45 35 45 Q 32 45 32 42 L 32 24 Q 30 25 27 25 Q 22 25 22 30 L 22 40 Q 22 47 28 50 Q 34 53 40 50 L 40 33 Q 43 35 46 35 L 46 28 Q 43 28 40 26 Z" fill="#FFFFFF"/>
+</svg>
