@@ -200,6 +200,98 @@ export default function ProfilePage() {
     usernameForm.setValue("username", user.username);
   }, [user?.username, usernameForm]);
 
+  // SEO: Set meta tags for public profile
+  useEffect(() => {
+    if (!user || !profile) return;
+
+    const displayName = profile.displayName || user.username || "Seller";
+    const title = `${displayName} | MiddelMen Trust Profile`;
+    const description = `View ${displayName}'s verified reviews, seller reputation, and trusted profile on MiddelMen.`;
+    const profileUrl = `${typeof window !== "undefined" ? window.location.origin : "https://middelmen.com"}/profile/${encodeURIComponent(user.username || "")}`;
+    const imageUrl = profile.avatarUrl
+      ? profile.avatarUrl
+      : `${typeof window !== "undefined" ? window.location.origin : "https://middelmen.com"}/default-avatar.png`;
+
+    // Update document title
+    document.title = title;
+
+    // Update or create meta tags
+    const updateMeta = (name: string, content: string, isProperty = false) => {
+      let tag = document.querySelector(
+        `meta[${isProperty ? "property" : "name"}="${name}"]`,
+      ) as HTMLMetaElement | null;
+      if (!tag) {
+        tag = document.createElement("meta");
+        if (isProperty) {
+          tag.setAttribute("property", name);
+        } else {
+          tag.setAttribute("name", name);
+        }
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    };
+
+    // Meta description
+    updateMeta("description", description);
+
+    // OpenGraph tags
+    updateMeta("og:title", title, true);
+    updateMeta("og:description", description, true);
+    updateMeta("og:type", "profile", true);
+    updateMeta("og:url", profileUrl, true);
+    updateMeta("og:image", imageUrl, true);
+
+    // Twitter tags
+    updateMeta("twitter:card", "summary_large_image");
+    updateMeta("twitter:title", title);
+    updateMeta("twitter:description", description);
+    updateMeta("twitter:image", imageUrl);
+
+    // Update or create canonical link
+    let canonical = document.querySelector(
+      "link[rel=canonical]",
+    ) as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = profileUrl;
+
+    // JSON-LD structured data
+    const jsonLdScript = document.querySelector(
+      'script[type="application/ld+json"][data-seo="profile"]',
+    );
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: displayName,
+      alternateName: user.username,
+      url: profileUrl,
+      image: imageUrl,
+      description: profile.bio || description,
+      ...(profile.contactEmail && { email: profile.contactEmail }),
+      ...(reviewStats?.totalReviews && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: reviewStats.avgRating.toFixed(1),
+          reviewCount: reviewStats.totalReviews,
+        },
+      }),
+    };
+
+    if (jsonLdScript) {
+      jsonLdScript.textContent = JSON.stringify(structuredData);
+    } else {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.setAttribute("data-seo", "profile");
+      script.textContent = JSON.stringify(structuredData);
+      document.head.appendChild(script);
+    }
+  }, [user, profile, reviewStats]);
+
   const changeUsernameMutation = useMutation({
     mutationFn: (values: z.infer<typeof UsernameChangeSchema>) =>
       api.changeUsername(values.username),

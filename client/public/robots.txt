@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /profile/
+Disallow: /admin
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /.git
+
+Sitemap: https://middelmen.com/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /

@@ -784,6 +784,10 @@ export async function registerRoutes(
       response.nextCursor = nextCursor;
     }
 
+    // SEO headers for public profiles
+    res.setHeader("X-Robots-Tag", "index, follow");
+    res.setHeader("Cache-Control", "public, max-age=300");
+
     return res.status(200).json(ok(response));
   });
 
@@ -1473,10 +1477,7 @@ export async function registerRoutes(
           ...matchByToken,
         ),
       )
-      .orderBy(
-        desc(searchScore),
-        asc(users.id),
-      )
+      .orderBy(desc(searchScore), asc(users.id))
       .limit(limit + 1)
       .offset(offset);
 
@@ -1521,7 +1522,8 @@ export async function registerRoutes(
         },
       }))
       .sort((a, b) => {
-        const scoreDiff = Number(b.searchScore ?? 0) - Number(a.searchScore ?? 0);
+        const scoreDiff =
+          Number(b.searchScore ?? 0) - Number(a.searchScore ?? 0);
         if (scoreDiff !== 0) return scoreDiff;
         const reviewDiff = b.stats.totalReviews - a.stats.totalReviews;
         if (reviewDiff !== 0) return reviewDiff;
@@ -3991,6 +3993,58 @@ export async function registerRoutes(
         },
       }),
     );
+  });
+
+  // SEO: Sitemap endpoint
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const sellers = await db
+        .select({
+          username: users.username,
+          updatedAt: profiles.updatedAt,
+        })
+        .from(users)
+        .leftJoin(profiles, eq(profiles.userId, users.id))
+        .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
+        .orderBy(desc(profiles.updatedAt));
+
+      const baseUrl = process.env.APP_URL || "https://middelmen.com";
+
+      const urls = sellers
+        .filter((s) => s.username)
+        .map((seller) => {
+          const url = `${baseUrl}/profile/${encodeURIComponent(seller.username!)}`;
+          const lastmod = seller.updatedAt
+            ? new Date(seller.updatedAt).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0];
+          return `  <url>
+    <loc>${url}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+        })
+        .join("\n");
+
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+${urls}
+</urlset>`;
+
+      res.setHeader("Content-Type", "application/xml");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      return res.send(sitemap);
+    } catch (err) {
+      console.error("Sitemap generation error:", err);
+      res
+        .status(500)
+        .json(error("SITEMAP_ERROR", "Failed to generate sitemap"));
+    }
   });
 
   return httpServer;
