@@ -1,3 +1,6 @@
+import path from "path";
+import { config } from "dotenv";
+config({ path: path.resolve(process.cwd(), "../.env") });
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -9,6 +12,9 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { initAuth } from "./auth";
 import { pool } from "./db";
+
+
+console.log(process.env.NODE_ENV);
 
 declare global {
   namespace Express {

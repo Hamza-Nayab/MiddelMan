@@ -3,7 +3,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Loader2, LogOut, ShieldCheck } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
+import logoImg from "@/assets/middelman-bg.png";
 import { NotificationBell } from "@/components/notification-bell";
 
 export function Layout({
@@ -48,7 +49,7 @@ export function Layout({
             href="/"
             className="font-heading font-bold text-xl tracking-tight text-primary hover:opacity-80 transition-opacity flex items-center gap-2"
           >
-            <ShieldCheck className="w-6 h-6" />
+            <img src={logoImg} alt="" className="h-10 w-auto rounded-lg" />
             MiddelMen
           </Link>
 

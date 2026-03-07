@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/popover";
 import { ReviewsSection } from "@/components/reviews-section";
 import generatedImage from "@assets/generated_images/abstract_soft_gradient_mesh_background.png";
+import logoImg from "@/assets/middelman-bg.png";
 import {
   getAvatarUrl,
   platformIconMap,
@@ -482,15 +483,9 @@ export default function ProfilePage() {
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 py-12 pb-24 flex flex-col items-center">
         {/* Logo */}
-        <Link href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-8 gap-2 hover:opacity-80"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span className="font-semibold">MiddelMen</span>
-          </Button>
+        <Link href="/" className="mb-8 flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <img src={logoImg} alt="" className="h-12 w-auto rounded-lg" />
+          <span className="font-semibold">MiddelMen</span>
         </Link>
 
         {/* Profile Header */}
