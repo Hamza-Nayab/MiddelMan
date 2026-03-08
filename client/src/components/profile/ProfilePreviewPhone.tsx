@@ -200,7 +200,9 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
               >
                 <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
                 <span>{hasReviews ? avgRating?.toFixed(1) : "New"}</span>
-                <span className={cn(mutedTextClass)}>({totalReviews || 0})</span>
+                <span className={cn(mutedTextClass)}>
+                  ({totalReviews || 0})
+                </span>
               </div>
 
               {/* Contact Icons */}
@@ -312,7 +314,9 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                           cardClass,
                           isDarkTheme && "hover:bg-slate-800",
                           isGradientTheme && "hover:bg-white/20",
-                          !isDarkTheme && !isGradientTheme && "hover:bg-slate-50",
+                          !isDarkTheme &&
+                            !isGradientTheme &&
+                            "hover:bg-slate-50",
                         )}
                       >
                         <div className="flex items-center gap-3">
@@ -335,7 +339,12 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                               )}
                             />
                           </div>
-                          <span className={cn("text-sm font-semibold", sectionClass)}>
+                          <span
+                            className={cn(
+                              "text-sm font-semibold",
+                              sectionClass,
+                            )}
+                          >
                             {link.title}
                           </span>
                         </div>
@@ -371,10 +380,15 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                   {MOCK_REVIEWS.map((review) => (
                     <div
                       key={review.id}
-                      className={cn("rounded-xl border p-3 shadow-sm", cardClass)}
+                      className={cn(
+                        "rounded-xl border p-3 shadow-sm",
+                        cardClass,
+                      )}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className={cn("text-xs font-semibold", sectionClass)}>
+                        <span
+                          className={cn("text-xs font-semibold", sectionClass)}
+                        >
                           {review.author}
                         </span>
                         <div className="flex gap-0.5">

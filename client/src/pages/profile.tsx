@@ -37,9 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  TooltipProvider,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -55,7 +53,10 @@ import {
 } from "@/lib/graphics";
 import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
 import { useMeQuery } from "@/hooks/use-me";
-import { useGivenReviewsQuery, useProfileBundleQuery } from "@/hooks/use-profile";
+import {
+  useGivenReviewsQuery,
+  useProfileBundleQuery,
+} from "@/hooks/use-profile";
 
 const ReviewFormSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -467,7 +468,10 @@ export default function ProfilePage() {
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 py-12 pb-24 flex flex-col items-center">
         {/* Logo */}
-        <Link href="/" className="mb-8 flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <Link
+          href="/"
+          className="mb-8 flex items-center gap-2 hover:opacity-90 transition-opacity"
+        >
           <img src={logoImg} alt="" className="h-12 w-auto rounded-lg" />
           <span className="font-semibold">MiddelMen</span>
         </Link>

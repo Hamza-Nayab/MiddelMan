@@ -212,11 +212,7 @@ export default function Dashboard() {
   >("light");
 
   // Auth Check
-  const {
-    data: me,
-    isLoading: isUserLoading,
-    error: meError,
-  } = useMeQuery();
+  const { data: me, isLoading: isUserLoading, error: meError } = useMeQuery();
 
   // Handle account disabled error
   useEffect(() => {
