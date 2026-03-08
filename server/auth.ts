@@ -3,12 +3,31 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { profiles, users } from "@shared/schema";
+import type { UserRole } from "@shared/types";
 import { generateUniqueUsername } from "./user-helpers";
 
 type SessionUser = {
   id: number;
-  role: "user" | "seller" | "admin";
+  role: UserRole;
   isNewUser?: boolean;
+};
+
+const userColumns = {
+  id: users.id,
+  username: users.username,
+  email: users.email,
+  passwordHash: users.passwordHash,
+  googleId: users.googleId,
+  role: users.role,
+  createdAt: users.createdAt,
+  updatedAt: users.updatedAt,
+  isDisabled: users.isDisabled,
+  disabledReason: users.disabledReason,
+  disabledAt: users.disabledAt,
+  disabledByAdminId: users.disabledByAdminId,
+  isMasterAdmin: users.isMasterAdmin,
+  lastUsernameChangedAt: users.lastUsernameChangedAt,
+  usernameChangeCount: users.usernameChangeCount,
 };
 
 const getGoogleCallbackUrl = () => {
@@ -23,7 +42,10 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id: number, done) => {
   try {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await db
+      .select(userColumns)
+      .from(users)
+      .where(eq(users.id, id));
     if (!user) return done(null, false);
     return done(null, user);
   } catch (err) {
@@ -54,7 +76,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             "User";
 
           const [existingByGoogle] = await db
-            .select()
+            .select(userColumns)
             .from(users)
             .where(eq(users.googleId, googleId));
 
@@ -63,7 +85,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           }
 
           const [existingByEmail] = await db
-            .select()
+            .select(userColumns)
             .from(users)
             .where(eq(users.email, email));
 

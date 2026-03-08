@@ -1,3 +1,31 @@
+import type {
+  AnalyticsDay as SharedAnalyticsDay,
+  AnalyticsOverview as SharedAnalyticsOverview,
+  AnalyticsResponse as SharedAnalyticsResponse,
+  DisputeStatus,
+  Link as SharedLink,
+  MeResponse as SharedMeResponse,
+  Profile as SharedProfile,
+  ProfileTheme,
+  Review as SharedReview,
+  ReviewDispute as SharedReviewDispute,
+  ReviewStats,
+  SearchResponse,
+  SearchResult as SharedSearchResult,
+  SearchSuggestion as SharedSearchSuggestion,
+  User as SharedUser,
+  UserRole,
+  UsernameCheckResponse as SharedUsernameCheckResponse,
+} from "@shared/types";
+
+export type {
+  DisputeStatus,
+  ProfileTheme,
+  ReviewStats,
+  SearchResponse,
+  UserRole,
+};
+
 export type ApiErrorPayload = {
   code: string;
   message: string;
@@ -56,75 +84,69 @@ async function request<T>(
   return json.data;
 }
 
-export type User = {
-  id: number;
-  username: string | null;
-  email?: string | null;
-  role: "buyer" | "seller" | "admin";
-  lastUsernameChangedAt?: string | null;
-  usernameChangeCount?: number;
-  createdAt: string;
-  isMasterAdmin?: boolean;
-};
+async function requestForm<T>(
+  method: string,
+  url: string,
+  formData: FormData,
+  options?: { signal?: AbortSignal; fallbackMessage?: string },
+): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    body: formData,
+    credentials: "include",
+    signal: options?.signal,
+  });
 
-export type Profile = {
-  userId: number;
-  displayName: string;
-  bio: string | null;
-  avatarUrl: string | null;
-  contactEmail: string | null;
-  whatsappNumber: string | null;
-  phoneNumber: string | null;
-  countryCode: string | null;
-  isVerified: boolean;
-  verificationMethod: "none" | "ig_bio_code" | "whatsapp_otp" | "manual";
-  theme: "light" | "dark" | "gradient";
-  createdAt: string;
-  updatedAt: string;
-};
+  const json = (await res.json()) as ApiResponse<T>;
 
-export type Link = {
-  id: number;
-  userId: number;
-  icon?: string | null;
-  title: string;
-  url: string;
-  isActive: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-};
+  if (!res.ok || !json.ok) {
+    const errorPayload = !json.ok ? json.error : undefined;
+    throw new ApiError(
+      errorPayload?.message || options?.fallbackMessage || "Request failed",
+      res.status,
+      errorPayload?.code,
+      errorPayload?.details,
+    );
+  }
 
-export type MeResponse = {
-  user: User | null;
-  profile: Profile | null;
-};
+  return json.data;
+}
 
-export type PublicProfileResponse = {
-  user: User;
-  profile: Profile;
-  stats: { avgRating: number; totalReviews: number };
-};
+export type User = SharedUser;
 
-export type Review = {
-  id: number;
-  sellerId: number;
-  reviewerUserId?: number | null;
-  authorName: string;
-  rating: number;
-  comment: string;
-  isHidden: boolean;
-  createdAt: string;
-};
+export type Profile = SharedProfile;
+
+export type Link = SharedLink;
+
+export type MeResponse = SharedMeResponse;
+
+export type Review = SharedReview;
 
 export type ReviewsResponse = {
   reviews: Review[];
+  stats: ReviewStats;
+  nextCursor?: number;
+};
+
+export type OwnerDashboardReview = {
+  reviewId: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  reviewerName: string;
+  disputeStatus: string | null;
+};
+
+export type OwnerReviewsResponse = {
+  reviews: OwnerDashboardReview[];
   stats: {
     avgRating: number;
     totalReviews: number;
-    breakdown?: { 1: number; 2: number; 3: number; 4: number; 5: number };
   };
-  nextCursor?: number;
+  meta: {
+    hasMore: boolean;
+    nextOffset: number | null;
+  };
 };
 
 export type PublicProfileBundleResponse = {
@@ -136,15 +158,9 @@ export type PublicProfileBundleResponse = {
   isOwner: boolean;
 };
 
-export type AnalyticsDay = {
-  day: string;
-  views: number;
-  clicks: number;
-};
+export type AnalyticsDay = SharedAnalyticsDay;
 
-export type AnalyticsResponse = {
-  days: AnalyticsDay[];
-};
+export type AnalyticsResponse = SharedAnalyticsResponse;
 
 export type RegisterPayload = {
   displayName: string;
@@ -156,10 +172,7 @@ export type RegisterPayload = {
   avatarUrl?: string;
 };
 
-export type UsernameCheckResponse = {
-  available: boolean;
-  suggestions: string[];
-};
+export type UsernameCheckResponse = SharedUsernameCheckResponse;
 
 export type OnboardingPayload = {
   displayName?: string;
@@ -184,7 +197,7 @@ export type ProfileUpdatePayload = Partial<{
   whatsappNumber: string;
   phoneNumber: string;
   countryCode: string;
-  theme: "light" | "dark" | "gradient";
+  theme: ProfileTheme;
 }>;
 
 export type LinkCreatePayload = {
@@ -233,17 +246,7 @@ export type AdminReviewsResponse = {
   nextCursor?: number;
 };
 
-export type ReviewDispute = {
-  id: number;
-  reviewId: number;
-  sellerId: number;
-  status: "open" | "resolved_valid" | "resolved_rejected";
-  reason: string;
-  message?: string | null;
-  evidenceUrl?: string | null;
-  evidenceMime?: string | null;
-  createdAt: string;
-};
+export type ReviewDispute = SharedReviewDispute;
 
 export type ReviewDisputeCreatePayload = {
   reason: string;
@@ -254,7 +257,7 @@ export type AdminUser = {
   id: number;
   username: string | null;
   email: string | null;
-  role: "buyer" | "seller" | "admin";
+  role: UserRole;
   isDisabled: boolean;
   disabledReason: string | null;
   createdAt: string;
@@ -284,7 +287,7 @@ export type AdminDisputeItem = {
   id: number;
   reviewId: number;
   sellerId: number;
-  status: "open" | "resolved_valid" | "resolved_rejected";
+  status: DisputeStatus;
   reason: string;
   message?: string | null;
   evidenceUrl?: string | null;
@@ -356,7 +359,7 @@ export type AdminSellerDetail = {
   recentDisputes: Array<{
     id: number;
     reviewId: number;
-    status: "open" | "resolved_valid" | "resolved_rejected";
+    status: DisputeStatus;
     reason: string;
     message?: string | null;
     evidenceUrl?: string | null;
@@ -366,37 +369,11 @@ export type AdminSellerDetail = {
   }>;
 };
 
-export type AnalyticsOverview = {
-  days: number;
-  totalViews: number;
-  totalClicks: number;
-  topSellersByViews: Array<{
-    userId: number;
-    username: string | null;
-    displayName: string;
-    views: number;
-  }>;
-  topSellersByClicks: Array<{
-    userId: number;
-    username: string | null;
-    displayName: string;
-    clicks: number;
-  }>;
-};
+export type AnalyticsOverview = SharedAnalyticsOverview;
 
-export type SearchSuggestion = {
-  username: string;
-  displayName: string;
-};
+export type SearchSuggestion = SharedSearchSuggestion;
 
-export type SearchResult = {
-  username: string;
-  displayName: string;
-  avatarUrl: string | null;
-  bio: string | null;
-  avgRating: number;
-  totalReviews: number;
-};
+export type SearchResult = SharedSearchResult;
 
 export const api = {
   register: (payload: RegisterPayload) =>
@@ -435,13 +412,6 @@ export const api = {
     request<{ updated: boolean }>("PATCH", "/api/me/links/reorder", {
       orderedIds,
     }),
-  getPublicProfile: (username: string, options?: { track?: boolean }) =>
-    request<PublicProfileResponse>(
-      "GET",
-      `/api/profile/${encodeURIComponent(username)}${
-        options?.track ? "?track=1" : ""
-      }`,
-    ),
   getPublicProfileBundle: (username: string, options?: { track?: boolean }) =>
     request<PublicProfileBundleResponse>(
       "GET",
@@ -449,8 +419,6 @@ export const api = {
         options?.track ? "?track=1" : ""
       }`,
     ),
-  getPublicLinks: (userId: number) =>
-    request<{ links: Link[] }>("GET", `/api/profile/${userId}/links`),
   trackProfileClick: (userId: number) =>
     request<{ recorded: boolean }>("POST", `/api/profile/${userId}/click`),
   getPublicReviews: (
@@ -473,7 +441,26 @@ export const api = {
       `/api/profile/${userId}/reviews`,
       payload,
     ),
-  getOwnerReviews: () => request<ReviewsResponse>("GET", "/api/me/reviews"),
+  getOwnerReviewsPage: (options?: {
+    limit?: number;
+    offset?: number;
+    signal?: AbortSignal;
+  }) => {
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined) {
+      params.set("limit", String(options.limit));
+    }
+    if (options?.offset !== undefined) {
+      params.set("offset", String(options.offset));
+    }
+    const suffix = params.toString();
+    return request<OwnerReviewsResponse>(
+      "GET",
+      `/api/me/reviews${suffix ? `?${suffix}` : ""}`,
+      undefined,
+      { signal: options?.signal },
+    );
+  },
   getGivenReviews: () =>
     request<GivenReviewsResponse>("GET", "/api/me/reviews/given"),
   updateGivenReview: (id: number, payload: ReviewUpdatePayload) =>
@@ -494,53 +481,22 @@ export const api = {
   uploadDisputeEvidence: async (reviewId: number, file: File) => {
     const formData = new FormData();
     formData.append("evidence", file);
-
-    const res = await fetch(`/api/me/reviews/${reviewId}/dispute/evidence`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-
-    const json = (await res.json()) as ApiResponse<{
+    return requestForm<{
       dispute: ReviewDispute;
       evidenceUrl: string;
-    }>;
-
-    if (!res.ok || !json.ok) {
-      const errorPayload = !json.ok ? json.error : undefined;
-      throw new ApiError(
-        errorPayload?.message || "Evidence upload failed",
-        res.status,
-        errorPayload?.code,
-        errorPayload?.details,
-      );
-    }
-
-    return json.data;
+    }>("POST", `/api/me/reviews/${reviewId}/dispute/evidence`, formData, {
+      fallbackMessage: "Evidence upload failed",
+    });
   },
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
     formData.append("avatar", file);
-
-    const res = await fetch("/api/me/avatar", {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-
-    const json = (await res.json()) as ApiResponse<{ avatarUrl: string }>;
-
-    if (!res.ok || !json.ok) {
-      const errorPayload = !json.ok ? json.error : undefined;
-      throw new ApiError(
-        errorPayload?.message || "Avatar upload failed",
-        res.status,
-        errorPayload?.code,
-        errorPayload?.details,
-      );
-    }
-
-    return json.data;
+    return requestForm<{ avatarUrl: string }>(
+      "POST",
+      "/api/me/avatar",
+      formData,
+      { fallbackMessage: "Avatar upload failed" },
+    );
   },
   search: (
     query: string,
@@ -555,13 +511,9 @@ export const api = {
       params.set("offset", String(options.offset));
     }
     const suffix = params.toString();
-    return request<{
-      results: SearchResult[];
-      meta: {
-        nextOffset: number | null;
-        hasMore: boolean;
-      };
-    }>("GET", `/api/search?${suffix}`, undefined, { signal: options?.signal });
+    return request<SearchResponse>("GET", `/api/search?${suffix}`, undefined, {
+      signal: options?.signal,
+    });
   },
   searchSuggest: (query: string, options?: { signal?: AbortSignal }) =>
     request<{ suggestions: SearchSuggestion[] }>(
@@ -738,10 +690,3 @@ export const api = {
       "/api/me/notifications/mark-all-read",
     ),
 };
-
-// Global error handler hook for catching ACCOUNT_DISABLED errors
-export function useGlobalErrorHandler() {
-  // This is a no-op right now, but individual pages should catch
-  // the ACCOUNT_DISABLED error using error boundaries or error handlers
-  // The error will be thrown from api.ts as ApiError with code='ACCOUNT_DISABLED'
-}

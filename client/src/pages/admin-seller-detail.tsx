@@ -5,7 +5,6 @@ import { AdminLayout } from "@/components/admin-layout";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -24,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Star, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminSellerDetailPage() {
@@ -37,11 +36,10 @@ export default function AdminSellerDetailPage() {
   const [disableDialog, setDisableDialog] = useState<boolean>(false);
   const [disableReason, setDisableReason] = useState("");
 
-  // Get saved search params on mount
-  const [returnUrl, setReturnUrl] = useState(() => {
-    if (typeof window === "undefined") return "/admin/users";
-    return sessionStorage.getItem("adminUsersFilterUrl") || "/admin/users";
-  });
+  const returnUrl =
+    typeof window === "undefined"
+      ? "/admin/users"
+      : sessionStorage.getItem("adminUsersFilterUrl") || "/admin/users";
 
   const {
     data: detail,
@@ -57,7 +55,7 @@ export default function AdminSellerDetailPage() {
     mutationFn: () => api.adminDisableUser(parsedSellerId!, disableReason),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["admin-seller-detail", sellerId],
+        queryKey: ["admin-seller-detail", parsedSellerId],
       });
       setDisableDialog(false);
       setDisableReason("");
@@ -76,7 +74,7 @@ export default function AdminSellerDetailPage() {
     mutationFn: () => api.adminEnableUser(parsedSellerId!),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["admin-seller-detail", sellerId],
+        queryKey: ["admin-seller-detail", parsedSellerId],
       });
       toast({ title: "User enabled" });
     },

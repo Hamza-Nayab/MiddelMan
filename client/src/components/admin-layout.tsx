@@ -1,6 +1,5 @@
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { api, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useEffect } from "react";
+import { useMeQuery } from "@/hooks/use-me";
 
 type NavTab = "users" | "reviews" | "disputes" | "analytics" | "admins";
 
@@ -64,11 +64,7 @@ export function AdminLayout({ children, currentTab }: AdminLayoutProps) {
     data: me,
     isLoading,
     error: meError,
-  } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  } = useMeQuery();
 
   // Redirect if not logged in or not admin
   useEffect(() => {

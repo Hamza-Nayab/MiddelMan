@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
-import { ProfilePreviewPhone } from "@/components/ProfilePreviewPhone";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { ProfilePreviewPhone } from "@/components/profile/ProfilePreviewPhone";
+import { LinksTab } from "@/components/dashboard/LinksTab";
+import { ProfileTab } from "@/components/dashboard/ProfileTab";
+import { ReviewsTab } from "@/components/dashboard/ReviewsTab";
+import { AnalyticsTab } from "@/components/dashboard/AnalyticsTab";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,88 +16,37 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { api, Link as LinkType, ApiError } from "@/lib/api";
 import { compressAvatar } from "@/lib/avatar";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
-import {
-  Plus,
-  GripVertical,
-  Trash2,
-  ExternalLink,
-  BarChart3,
-  Palette,
-  User,
-  Star,
-  AlertTriangle,
-  Upload,
-} from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
 import {
-  avatarOptions,
   getAvatarId,
   platformIconMap,
   platformOptions,
   type PlatformKey,
 } from "@/lib/graphics";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { useMeQuery } from "@/hooks/use-me";
+
+const LINKS_QUERY_KEY = ["links"] as const;
+const OWNER_REVIEWS_QUERY_KEY = ["owner-reviews"] as const;
+const OWNER_REVIEWS_INFINITE_QUERY_KEY = [
+  ...OWNER_REVIEWS_QUERY_KEY,
+  "infinite-v2",
+] as const;
 
 const platformKeys = platformOptions.map((option) => option.key) as [
   PlatformKey,
@@ -200,14 +151,6 @@ const DisputeFormSchema = z.object({
   message: z.string().max(1000).optional(),
 });
 
-const disputeReasons = [
-  { value: "inappropriate-review", label: "Inappropriate Review" },
-  { value: "fake-review", label: "Fake Review" },
-  { value: "incorrect-information", label: "Incorrect Information" },
-  { value: "response-already-given", label: "Response Already Given" },
-  { value: "other", label: "Other" },
-];
-
 const formatDayLabel = (day: string) =>
   new Date(`${day}T00:00:00Z`).toLocaleDateString("en-US", {
     weekday: "short",
@@ -270,11 +213,7 @@ export default function Dashboard() {
     data: me,
     isLoading: isUserLoading,
     error: meError,
-  } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  } = useMeQuery();
 
   // Handle account disabled error
   useEffect(() => {
@@ -310,7 +249,7 @@ export default function Dashboard() {
 
   // Data Fetching
   const { data: links, isLoading: isLinksLoading } = useQuery({
-    queryKey: ["links"],
+    queryKey: LINKS_QUERY_KEY,
     queryFn: () => api.getLinks().then((response) => response.links),
     enabled: !!user,
   });
@@ -322,9 +261,40 @@ export default function Dashboard() {
     originalOrderRef.current = sorted.map((link) => link.id);
   }, [links]);
 
-  const { data: reviewsResponse, isLoading: isReviewsLoading } = useQuery({
-    queryKey: ["owner-reviews"],
-    queryFn: () => api.getOwnerReviews(),
+  const {
+    data: reviewsResponse,
+    isLoading: isReviewsLoading,
+    fetchNextPage: fetchMoreReviews,
+    hasNextPage: hasMoreReviews,
+    isFetchingNextPage: isFetchingMoreReviews,
+  } = useInfiniteQuery({
+    queryKey: OWNER_REVIEWS_INFINITE_QUERY_KEY,
+    queryFn: ({ pageParam = 0, signal }) =>
+      api
+        .getOwnerReviewsPage({
+          limit: 10,
+          offset: Number(pageParam),
+          signal,
+        })
+        .then((payload) => ({
+          reviews: payload.reviews,
+          stats: {
+            avgRating: Number(payload.stats?.avgRating ?? 0),
+            totalReviews: Number(payload.stats?.totalReviews ?? 0),
+          },
+          meta: {
+            hasMore: Boolean(payload.meta?.hasMore),
+            nextOffset:
+              typeof payload.meta?.nextOffset === "number"
+                ? payload.meta.nextOffset
+                : null,
+          },
+        })),
+    getNextPageParam: (lastPage) =>
+      lastPage?.meta?.hasMore
+        ? (lastPage.meta.nextOffset ?? undefined)
+        : undefined,
+    initialPageParam: 0,
     enabled: !!user,
   });
 
@@ -335,8 +305,8 @@ export default function Dashboard() {
     staleTime: 60_000,
   });
 
-  const reviews = reviewsResponse?.reviews || [];
-  const reviewStats = reviewsResponse?.stats || {
+  const reviews = reviewsResponse?.pages.flatMap((page) => page.reviews) || [];
+  const reviewStats = reviewsResponse?.pages[0]?.stats || {
     avgRating: 0,
     totalReviews: 0,
   };
@@ -353,23 +323,26 @@ export default function Dashboard() {
       { visits: 0, clicks: 0 },
     );
   }, [analyticsData]);
-  const ratingCounts = [1, 2, 3, 4, 5].map((rating) =>
-    reviews.reduce(
-      (count, review) => (review.rating === rating ? count + 1 : count),
-      0,
-    ),
-  );
-  const pieData = [5, 4, 3, 2, 1].map((rating, index) => ({
-    name: `${rating} Stars`,
-    value: ratingCounts[rating - 1] || 0,
-    color: RATING_COLORS[4 - index],
-  }));
+  const pieData = useMemo(() => {
+    const ratingCounts = [1, 2, 3, 4, 5].map((rating) =>
+      reviews.reduce(
+        (count, review) => (review.rating === rating ? count + 1 : count),
+        0,
+      ),
+    );
+
+    return [5, 4, 3, 2, 1].map((rating, index) => ({
+      name: `${rating} Stars`,
+      value: ratingCounts[rating - 1] || 0,
+      color: RATING_COLORS[4 - index],
+    }));
+  }, [reviews]);
 
   // Mutations
   const addLinkMutation = useMutation({
     mutationFn: (values: z.infer<typeof LinkFormSchema>) => api.addLink(values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["links"] });
+      queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
       setIsAddLinkOpen(false);
       toast({ title: "Link Added", description: "Your new link is live." });
     },
@@ -378,7 +351,7 @@ export default function Dashboard() {
   const deleteLinkMutation = useMutation({
     mutationFn: (id: number) => api.deleteLink(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["links"] });
+      queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
       toast({ title: "Link Deleted", description: "Link has been removed." });
     },
   });
@@ -387,7 +360,7 @@ export default function Dashboard() {
     mutationFn: ({ id, updates }: { id: number; updates: Partial<LinkType> }) =>
       api.updateLink(id, updates as Parameters<typeof api.updateLink>[1]),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["links"] });
+      queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
     },
   });
 
@@ -395,7 +368,7 @@ export default function Dashboard() {
     mutationFn: (nextLinks: LinkType[]) =>
       api.reorderLinks(nextLinks.map((link) => link.id)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["links"] });
+      queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
     },
     onError: (error) => {
       toast({
@@ -406,28 +379,34 @@ export default function Dashboard() {
     },
   });
 
-  const moveLink = (dragId: number, targetId: number) => {
-    if (dragId === targetId) return;
-    const current = [...orderedLinks];
-    const fromIndex = current.findIndex((link) => link.id === dragId);
-    const toIndex = current.findIndex((link) => link.id === targetId);
-    if (fromIndex === -1 || toIndex === -1) return;
+  const moveLink = useCallback(
+    (dragId: number, targetId: number) => {
+      if (dragId === targetId) return;
+      const current = [...orderedLinks];
+      const fromIndex = current.findIndex((link) => link.id === dragId);
+      const toIndex = current.findIndex((link) => link.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) return;
 
-    const [moved] = current.splice(fromIndex, 1);
-    current.splice(toIndex, 0, moved);
+      const [moved] = current.splice(fromIndex, 1);
+      current.splice(toIndex, 0, moved);
 
-    const reindexed = current.map((link, index) => ({
-      ...link,
-      sortOrder: index,
-    }));
-    setOrderedLinks(reindexed);
-  };
+      const reindexed = current.map((link, index) => ({
+        ...link,
+        sortOrder: index,
+      }));
+      setOrderedLinks(reindexed);
+    },
+    [orderedLinks],
+  );
 
-  const handleLinkDrop = (targetId: number, draggedId?: number) => {
-    const effectiveDraggedId = draggedId ?? draggedLinkId;
-    if (effectiveDraggedId === null) return;
-    moveLink(effectiveDraggedId, targetId);
-  };
+  const handleLinkDrop = useCallback(
+    (targetId: number, draggedId?: number) => {
+      const effectiveDraggedId = draggedId ?? draggedLinkId;
+      if (effectiveDraggedId === null) return;
+      moveLink(effectiveDraggedId, targetId);
+    },
+    [draggedLinkId, moveLink],
+  );
 
   const hasOrderChanges =
     orderedLinks.length !== originalOrderRef.current.length ||
@@ -540,9 +519,12 @@ export default function Dashboard() {
     }
   }, [profile, profileForm]);
 
-  const onSubmit = (values: z.infer<typeof LinkFormSchema>) => {
-    addLinkMutation.mutate(values);
-  };
+  const onSubmit = useCallback(
+    (values: z.infer<typeof LinkFormSchema>) => {
+      addLinkMutation.mutate(values);
+    },
+    [addLinkMutation.mutate],
+  );
 
   const usernameForm = useForm<z.infer<typeof UsernameChangeSchema>>({
     resolver: zodResolver(UsernameChangeSchema),
@@ -610,12 +592,17 @@ export default function Dashboard() {
   const selectedPlatform = platformOptions.find(
     (option) => option.key === selectedPlatformKey,
   );
-  const getPlatformIcon = (icon?: string | null) => {
+  const getPlatformIcon = useCallback((icon?: string | null) => {
     const IconComponent =
       platformIconMap[(icon as PlatformKey) || "website"] ||
       platformIconMap.website;
     return IconComponent;
-  };
+  }, []);
+
+  const handleOnboardingComplete = useCallback(() => {
+    setShowOnboardingWizard(false);
+    queryClient.invalidateQueries({ queryKey: ["me"] });
+  }, [queryClient]);
 
   const createDisputeMutation = useMutation({
     mutationFn: ({
@@ -625,7 +612,7 @@ export default function Dashboard() {
       reviewId: number;
       data: z.infer<typeof DisputeFormSchema>;
     }) => api.createReviewDispute(reviewId, data),
-    onSuccess: async (result, variables) => {
+    onSuccess: async (_, variables) => {
       // If evidence file exists, upload it
       if (evidenceFile) {
         try {
@@ -639,7 +626,7 @@ export default function Dashboard() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["owner-reviews"] });
+      queryClient.invalidateQueries({ queryKey: OWNER_REVIEWS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });
       setDisputeDialogOpen(null);
       setEvidenceFile(null);
@@ -663,8 +650,8 @@ export default function Dashboard() {
   const uploadEvidenceMutation = useMutation({
     mutationFn: ({ reviewId, file }: { reviewId: number; file: File }) =>
       api.uploadDisputeEvidence(reviewId, file),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["owner-reviews"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: OWNER_REVIEWS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });
     },
     onError: (error) => {
@@ -716,10 +703,7 @@ export default function Dashboard() {
     <Layout>
       <OnboardingWizard
         open={showOnboardingWizard}
-        onComplete={() => {
-          setShowOnboardingWizard(false);
-          queryClient.invalidateQueries({ queryKey: ["me"] });
-        }}
+        onComplete={handleOnboardingComplete}
         currentProfile={profile}
       />
       <div className="container mx-auto px-4 py-8">
@@ -755,1181 +739,89 @@ export default function Dashboard() {
               </TabsList>
 
               <TabsContent value="links" className="space-y-4 mt-6">
-                <Dialog open={isAddLinkOpen} onOpenChange={setIsAddLinkOpen}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <DialogTrigger asChild>
-                            <Button
-                              className="w-full h-12 border-dashed border-2 bg-transparent text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/40 shadow-none"
-                              disabled={orderedLinks.length >= 12}
-                            >
-                              <Plus className="mr-2 h-4 w-4" /> Add New Link{" "}
-                              {orderedLinks.length > 0 &&
-                                `(${orderedLinks.length}/12)`}
-                            </Button>
-                          </DialogTrigger>
-                        </div>
-                      </TooltipTrigger>
-                      {orderedLinks.length >= 12 && (
-                        <TooltipContent>
-                          <p>Maximum of 12 links allowed</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Link</DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="icon"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Platform</FormLabel>
-                              <FormControl>
-                                <div className="grid grid-cols-3 gap-3">
-                                  {platformOptions.map((option) => {
-                                    const isSelected =
-                                      field.value === option.key;
-                                    return (
-                                      <button
-                                        key={option.key}
-                                        type="button"
-                                        onClick={() => {
-                                          field.onChange(option.key);
-                                          if (!form.getValues("title")) {
-                                            form.setValue(
-                                              "title",
-                                              option.label,
-                                              {
-                                                shouldDirty: true,
-                                              },
-                                            );
-                                          }
-                                        }}
-                                        className={cn(
-                                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition",
-                                          isSelected
-                                            ? "border-primary bg-primary/10"
-                                            : "border-border hover:border-primary/40",
-                                        )}
-                                      >
-                                        {(() => {
-                                          const Icon = option.icon;
-                                          return <Icon className="h-5 w-5" />;
-                                        })()}
-                                        <span>{option.label}</span>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="My Portfolio" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="url"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>URL</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder={
-                                    selectedPlatform?.urlHint ||
-                                    "https://example.com"
-                                  }
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <DialogFooter>
-                          <Button
-                            type="submit"
-                            disabled={addLinkMutation.isPending}
-                          >
-                            {addLinkMutation.isPending
-                              ? "Adding..."
-                              : "Add Link"}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
-
-                <div className="space-y-3">
-                  {isLinksLoading ? (
-                    <div className="text-center py-10 text-muted-foreground">
-                      Loading links...
-                    </div>
-                  ) : links?.length === 0 ? (
-                    <div className="text-center py-10 border rounded-xl border-dashed">
-                      <p className="text-muted-foreground">
-                        No links yet. Add your first one above!
-                      </p>
-                    </div>
-                  ) : (
-                    orderedLinks?.map((link) => (
-                      <Card
-                        key={link.id}
-                        className="group hover:shadow-md transition-shadow"
-                        draggable
-                        onDragStart={(event) => {
-                          setDraggedLinkId(link.id);
-                          dragStartOrderRef.current = orderedLinks.map(
-                            (item) => item.id,
-                          );
-                          event.dataTransfer.effectAllowed = "move";
-                          event.dataTransfer.setData(
-                            "text/plain",
-                            String(link.id),
-                          );
-                        }}
-                        onDragEnd={() => {
-                          setDraggedLinkId(null);
-                          lastOverIdRef.current = null;
-                        }}
-                        onDragOver={(event) => {
-                          event.preventDefault();
-                          if (draggedLinkId === null) return;
-                          if (lastOverIdRef.current === link.id) return;
-                          lastOverIdRef.current = link.id;
-                          moveLink(draggedLinkId, link.id);
-                        }}
-                        onDrop={(event) => {
-                          event.preventDefault();
-                          const data = event.dataTransfer.getData("text/plain");
-                          const parsed = Number(data);
-                          handleLinkDrop(
-                            link.id,
-                            Number.isNaN(parsed) ? undefined : parsed,
-                          );
-                        }}
-                      >
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="cursor-move text-muted-foreground/50 hover:text-muted-foreground">
-                            <GripVertical className="w-5 h-5" />
-                          </div>
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            {(() => {
-                              const Icon = getPlatformIcon(link.icon);
-                              return <Icon className="h-6 w-6" />;
-                            })()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">
-                              {link.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {link.url}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={link.isActive}
-                              onCheckedChange={(checked) =>
-                                updateLinkMutation.mutate({
-                                  id: link.id,
-                                  updates: { isActive: checked },
-                                })
-                              }
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:bg-destructive/10"
-                              onClick={() => deleteLinkMutation.mutate(link.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-                {orderedLinks.length > 0 ? (
-                  <div className="flex justify-end">
-                    <Button
-                      variant={hasOrderChanges ? "default" : "outline"}
-                      disabled={
-                        !hasOrderChanges || reorderLinksMutation.isPending
-                      }
-                      onClick={() =>
-                        reorderLinksMutation.mutate(
-                          orderedLinks.map((link, index) => ({
-                            ...link,
-                            sortOrder: index,
-                          })),
-                        )
-                      }
-                    >
-                      {reorderLinksMutation.isPending
-                        ? "Saving..."
-                        : "Save order"}
-                    </Button>
-                  </div>
-                ) : null}
+                <LinksTab
+                  isAddLinkOpen={isAddLinkOpen}
+                  setIsAddLinkOpen={setIsAddLinkOpen}
+                  orderedLinks={orderedLinks}
+                  isLinksLoading={isLinksLoading}
+                  links={links}
+                  form={form}
+                  onSubmit={onSubmit}
+                  selectedPlatform={selectedPlatform}
+                  addLinkMutation={addLinkMutation}
+                  draggedLinkId={draggedLinkId}
+                  setDraggedLinkId={setDraggedLinkId}
+                  dragStartOrderRef={dragStartOrderRef}
+                  lastOverIdRef={lastOverIdRef}
+                  moveLink={moveLink}
+                  handleLinkDrop={handleLinkDrop}
+                  getPlatformIcon={getPlatformIcon}
+                  updateLinkMutation={updateLinkMutation}
+                  deleteLinkMutation={deleteLinkMutation}
+                  hasOrderChanges={hasOrderChanges}
+                  reorderLinksMutation={reorderLinksMutation}
+                />
               </TabsContent>
 
               <TabsContent value="profile" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="w-4 h-4" /> Profile Details
-                    </CardTitle>
-                    <CardDescription>
-                      Update how your public profile appears.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {user?.username && (
-                      <div className="mb-6 p-4 border rounded-lg bg-muted/30">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Username</p>
-                            <p className="text-sm text-muted-foreground">
-                              @{user.username}
-                            </p>
-                          </div>
-                          <Dialog
-                            open={isUsernameDialogOpen}
-                            onOpenChange={setIsUsernameDialogOpen}
-                          >
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                Change username
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Change username</DialogTitle>
-                              </DialogHeader>
-                              <Form {...usernameForm}>
-                                <form
-                                  onSubmit={usernameForm.handleSubmit(
-                                    (values) =>
-                                      changeUsernameMutation.mutate(values),
-                                  )}
-                                  className="space-y-4"
-                                >
-                                  <FormField
-                                    control={usernameForm.control}
-                                    name="username"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>New username</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            placeholder="5-20 chars, lowercase only"
-                                            {...field}
-                                            onChange={(e) =>
-                                              field.onChange(
-                                                e.target.value.toLowerCase(),
-                                              )
-                                            }
-                                          />
-                                        </FormControl>
-                                        {usernameInput &&
-                                          usernameInput ===
-                                            (user.username ?? "") && (
-                                            <p className="text-xs text-muted-foreground">
-                                              This is already your current
-                                              username.
-                                            </p>
-                                          )}
-                                        {usernameAvailability.status ===
-                                          "checking" && (
-                                          <p className="text-xs text-muted-foreground">
-                                            Checking availability...
-                                          </p>
-                                        )}
-                                        {usernameAvailability.status ===
-                                          "available" && (
-                                          <p className="text-xs text-emerald-600">
-                                            Username is available.
-                                          </p>
-                                        )}
-                                        {usernameAvailability.status ===
-                                          "taken" && (
-                                          <div className="space-y-2">
-                                            <p className="text-xs text-amber-600">
-                                              Username is taken.
-                                            </p>
-                                            {usernameAvailability.suggestions
-                                              .length > 0 && (
-                                              <div className="flex flex-wrap gap-2">
-                                                {usernameAvailability.suggestions.map(
-                                                  (suggestion) => (
-                                                    <button
-                                                      key={suggestion}
-                                                      type="button"
-                                                      onClick={() =>
-                                                        usernameForm.setValue(
-                                                          "username",
-                                                          suggestion,
-                                                        )
-                                                      }
-                                                      className="text-xs px-2 py-1 bg-muted rounded hover:bg-muted/80"
-                                                    >
-                                                      {suggestion}
-                                                    </button>
-                                                  ),
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        )}
-                                        {usernameAvailability.status ===
-                                          "invalid" && (
-                                          <p className="text-xs text-destructive">
-                                            5-20 chars, lowercase only (a-z,
-                                            0-9, ._-)
-                                          </p>
-                                        )}
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <div className="text-xs text-muted-foreground space-y-1">
-                                    <p>
-                                      Remaining changes:{" "}
-                                      {remainingUsernameChanges} / 3
-                                    </p>
-                                    {usernameCooldownActive &&
-                                      nextUsernameChangeAt && (
-                                        <p className="text-amber-600">
-                                          Next change in{" "}
-                                          {daysUntilUsernameChange} day(s)
-                                          (available{" "}
-                                          {nextUsernameChangeAt.toDateString()})
-                                        </p>
-                                      )}
-                                    {remainingUsernameChanges === 0 && (
-                                      <p className="text-destructive">
-                                        You have reached the lifetime limit of 3
-                                        changes.
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  <Button
-                                    type="submit"
-                                    disabled={
-                                      !canChangeUsername ||
-                                      !usernameAvailability.available ||
-                                      changeUsernameMutation.isPending
-                                    }
-                                    className="w-full"
-                                  >
-                                    {changeUsernameMutation.isPending
-                                      ? "Updating..."
-                                      : "Update username"}
-                                  </Button>
-
-                                  <p className="text-xs text-muted-foreground">
-                                    Max 3 lifetime changes. 30-day cooldown
-                                    between changes. Contact
-                                    Support@MiddelMen.com for further questions.
-                                  </p>
-                                </form>
-                              </Form>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </div>
-                    )}
-                    {user?.email && (
-                      <div className="mb-6 p-4 border rounded-lg bg-muted/30">
-                        <div>
-                          <p className="text-sm font-medium">Email</p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    <Form {...profileForm}>
-                      <form
-                        onSubmit={profileForm.handleSubmit((values) =>
-                          updateProfileMutation.mutate(values),
-                        )}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={profileForm.control}
-                          name="displayName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Display Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Seller Name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={profileForm.control}
-                          name="bio"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Bio</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Short seller bio"
-                                  maxLength={160}
-                                  className="resize-none"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={profileForm.control}
-                          name="avatarUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Avatar</FormLabel>
-                              <FormControl>
-                                <div className="grid grid-cols-4 gap-3">
-                                  {avatarOptions.map((option) => {
-                                    const isCustomValue =
-                                      option.id === "custom" &&
-                                      typeof field.value === "string" &&
-                                      (field.value.startsWith("data:") ||
-                                        field.value.startsWith("http"));
-                                    const isSelected =
-                                      field.value === option.id ||
-                                      isCustomValue;
-                                    const customPreview =
-                                      customAvatarPreview ||
-                                      (isCustomValue
-                                        ? field.value
-                                        : option.url);
-                                    return (
-                                      <button
-                                        key={option.id}
-                                        type="button"
-                                        onClick={() => {
-                                          if (option.id === "custom") {
-                                            avatarInputRef.current?.click();
-                                            return;
-                                          }
-                                          field.onChange(option.id);
-                                        }}
-                                        className={cn(
-                                          "rounded-xl border p-2 transition",
-                                          isSelected
-                                            ? "border-primary ring-2 ring-primary/30"
-                                            : "border-border hover:border-primary/40",
-                                        )}
-                                      >
-                                        <img
-                                          src={
-                                            option.id === "custom"
-                                              ? customPreview
-                                              : option.url
-                                          }
-                                          alt={option.label}
-                                          className="h-16 w-16 mx-auto"
-                                        />
-                                        <span className="mt-2 block text-xs text-muted-foreground">
-                                          {option.label}
-                                        </span>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </FormControl>
-                              <input
-                                ref={avatarInputRef}
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={async (event) => {
-                                  const file = event.target.files?.[0];
-                                  if (!file) return;
-
-                                  // Save input reference before async operations
-                                  const inputElement = event.currentTarget;
-
-                                  // Validate file type before compression
-                                  if (
-                                    ![
-                                      "image/jpeg",
-                                      "image/png",
-                                      "image/webp",
-                                    ].includes(file.type)
-                                  ) {
-                                    toast({
-                                      title: "Unsupported format",
-                                      description: "Use JPG, PNG, or WEBP.",
-                                      variant: "destructive",
-                                    });
-                                    inputElement.value = "";
-                                    return;
-                                  }
-
-                                  // Validate original file size
-                                  if (file.size > 5 * 1024 * 1024) {
-                                    toast({
-                                      title: "Image too large",
-                                      description: "Max size is 5MB.",
-                                      variant: "destructive",
-                                    });
-                                    inputElement.value = "";
-                                    return;
-                                  }
-
-                                  try {
-                                    setIsAvatarUploading(true);
-
-                                    // Compress avatar client-side
-                                    const compressedFile =
-                                      await compressAvatar(file);
-
-                                    // Upload compressed file to server
-                                    const { avatarUrl } =
-                                      await api.uploadAvatar(compressedFile);
-
-                                    setCustomAvatarPreview(avatarUrl);
-                                    field.onChange(avatarUrl);
-
-                                    toast({
-                                      title: "Avatar uploaded",
-                                      description:
-                                        "Your avatar has been updated successfully.",
-                                    });
-                                  } catch (error) {
-                                    const message =
-                                      error instanceof Error
-                                        ? error.message
-                                        : "Upload failed";
-                                    toast({
-                                      title: "Upload failed",
-                                      description: message,
-                                      variant: "destructive",
-                                    });
-                                  } finally {
-                                    setIsAvatarUploading(false);
-                                    inputElement.value = "";
-                                  }
-                                }}
-                              />
-                              {isAvatarUploading ? (
-                                <p className="text-xs text-muted-foreground">
-                                  Uploading avatar...
-                                </p>
-                              ) : null}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={profileForm.control}
-                            name="contactEmail"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Contact Email</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="seller@email.com"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={profileForm.control}
-                            name="phoneNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Phone Number</FormLabel>
-                                <FormControl>
-                                  <PhoneInput
-                                    international
-                                    withCountryCallingCode
-                                    countryCallingCodeEditable={false}
-                                    defaultCountry={
-                                      (watchedCountryCode as any) || "US"
-                                    }
-                                    country={
-                                      (watchedCountryCode as any) || "US"
-                                    }
-                                    value={field.value || ""}
-                                    onChange={(value) =>
-                                      field.onChange(value ?? "")
-                                    }
-                                    onCountryChange={(country) =>
-                                      profileForm.setValue(
-                                        "countryCode",
-                                        country ?? "US",
-                                      )
-                                    }
-                                    numberInputProps={{
-                                      className:
-                                        "w-full h-10 rounded-md border border-input bg-background px-3 text-sm",
-                                      placeholder: "+1234567890",
-                                    }}
-                                    countrySelectProps={{
-                                      className:
-                                        "h-10 rounded-md border border-input bg-background px-2 text-sm",
-                                    }}
-                                    className="flex items-center gap-6"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <FormField
-                          control={profileForm.control}
-                          name="countryCode"
-                          render={({ field }) => (
-                            <input type="hidden" {...field} />
-                          )}
-                        />
-                        <FormField
-                          control={profileForm.control}
-                          name="whatsappNumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between">
-                                <FormLabel>WhatsApp Number</FormLabel>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">
-                                    Same as phone
-                                  </span>
-                                  <Switch
-                                    checked={isWhatsAppSameAsPhone}
-                                    onCheckedChange={(checked) => {
-                                      setIsWhatsAppSameAsPhone(checked);
-                                      if (checked) {
-                                        profileForm.setValue(
-                                          "whatsappNumber",
-                                          watchedPhoneNumber || "",
-                                        );
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <FormControl>
-                                <div className="flex items-center gap-2">
-                                  <div className="flex-1">
-                                    <PhoneInput
-                                      international
-                                      withCountryCallingCode
-                                      countryCallingCodeEditable={false}
-                                      defaultCountry={
-                                        (watchedCountryCode as any) || "US"
-                                      }
-                                      country={
-                                        (watchedCountryCode as any) || "US"
-                                      }
-                                      value={field.value || ""}
-                                      onChange={(value) =>
-                                        field.onChange(value ?? "")
-                                      }
-                                      onCountryChange={(country) =>
-                                        profileForm.setValue(
-                                          "countryCode",
-                                          country ?? "US",
-                                        )
-                                      }
-                                      numberInputProps={{
-                                        className:
-                                          "w-full h-10 rounded-md border border-input bg-background px-3 text-sm",
-                                        placeholder: "+1234567890",
-                                        disabled: isWhatsAppSameAsPhone,
-                                      }}
-                                      countrySelectProps={{
-                                        className:
-                                          "h-10 rounded-md border border-input bg-background px-2 text-sm",
-                                        disabled: isWhatsAppSameAsPhone,
-                                      }}
-                                      className="flex items-center gap-6"
-                                    />
-                                  </div>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span>
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            disabled={!whatsappPreviewUrl}
-                                            onClick={() => {
-                                              if (!whatsappPreviewUrl) return;
-                                              window.open(
-                                                whatsappPreviewUrl,
-                                                "_blank",
-                                              );
-                                            }}
-                                            aria-label="Open WhatsApp preview"
-                                          >
-                                            <WhatsAppIcon className="h-4 w-4" />
-                                          </Button>
-                                        </span>
-                                      </TooltipTrigger>
-                                      {!whatsappPreviewUrl && (
-                                        <TooltipContent>
-                                          Enter a valid WhatsApp number
-                                        </TooltipContent>
-                                      )}
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="submit"
-                          disabled={updateProfileMutation.isPending}
-                        >
-                          {updateProfileMutation.isPending
-                            ? "Saving..."
-                            : "Save Changes"}
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
+                <ProfileTab
+                  user={user}
+                  profileForm={profileForm}
+                  updateProfileMutation={updateProfileMutation}
+                  isUsernameDialogOpen={isUsernameDialogOpen}
+                  setIsUsernameDialogOpen={setIsUsernameDialogOpen}
+                  usernameForm={usernameForm}
+                  changeUsernameMutation={changeUsernameMutation}
+                  usernameInput={usernameInput}
+                  usernameAvailability={usernameAvailability}
+                  remainingUsernameChanges={remainingUsernameChanges}
+                  usernameCooldownActive={usernameCooldownActive}
+                  nextUsernameChangeAt={nextUsernameChangeAt}
+                  daysUntilUsernameChange={daysUntilUsernameChange}
+                  canChangeUsername={canChangeUsername}
+                  avatarInputRef={avatarInputRef}
+                  customAvatarPreview={customAvatarPreview}
+                  setCustomAvatarPreview={setCustomAvatarPreview}
+                  isAvatarUploading={isAvatarUploading}
+                  setIsAvatarUploading={setIsAvatarUploading}
+                  compressAvatar={compressAvatar}
+                  api={api}
+                  toast={toast}
+                  isWhatsAppSameAsPhone={isWhatsAppSameAsPhone}
+                  setIsWhatsAppSameAsPhone={setIsWhatsAppSameAsPhone}
+                  watchedCountryCode={watchedCountryCode}
+                  watchedPhoneNumber={watchedPhoneNumber}
+                  whatsappPreviewUrl={whatsappPreviewUrl}
+                  WhatsAppIcon={WhatsAppIcon}
+                />
               </TabsContent>
 
               <TabsContent value="reviews" className="mt-6">
-                <div className="grid gap-4">
-                  {isReviewsLoading ? (
-                    <p className="text-center text-muted-foreground py-6">
-                      Loading reviews...
-                    </p>
-                  ) : reviews.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-10">
-                      No reviews yet.
-                    </p>
-                  ) : (
-                    reviews.map((review) => (
-                      <Card key={review.id}>
-                        <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                          <div className="flex items-center gap-2">
-                            <div className="font-bold">{review.authorName}</div>
-                            <div className="flex items-center text-yellow-500">
-                              {Array.from({ length: review.rating }).map(
-                                (_, i) => (
-                                  <Star
-                                    key={i}
-                                    className="w-3 h-3 fill-current"
-                                  />
-                                ),
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-2">
-                          <p className="text-sm mb-3">{review.comment}</p>
-                          <div className="flex flex-wrap gap-2">
-                            <Dialog
-                              open={disputeDialogOpen === review.id}
-                              onOpenChange={(open) => {
-                                if (!open) {
-                                  setDisputeDialogOpen(null);
-                                  disputeForm.reset();
-                                  setEvidenceFile(null);
-                                } else {
-                                  setDisputeDialogOpen(review.id);
-                                }
-                              }}
-                            >
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 text-xs"
-                                >
-                                  <AlertTriangle className="w-3 h-3 mr-2" />
-                                  Dispute
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle>Dispute Review</DialogTitle>
-                                </DialogHeader>
-                                <Form {...disputeForm}>
-                                  <form
-                                    onSubmit={disputeForm.handleSubmit(
-                                      (values) => {
-                                        createDisputeMutation.mutate({
-                                          reviewId: review.id,
-                                          data: values,
-                                        });
-                                      },
-                                    )}
-                                    className="space-y-4"
-                                  >
-                                    <FormField
-                                      control={disputeForm.control}
-                                      name="reason"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Reason for Dispute
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Select
-                                              value={field.value}
-                                              onValueChange={field.onChange}
-                                            >
-                                              <SelectTrigger>
-                                                <SelectValue placeholder="Select a reason" />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {disputeReasons.map(
-                                                  (reason) => (
-                                                    <SelectItem
-                                                      key={reason.value}
-                                                      value={reason.value}
-                                                    >
-                                                      {reason.label}
-                                                    </SelectItem>
-                                                  ),
-                                                )}
-                                              </SelectContent>
-                                            </Select>
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <FormField
-                                      control={disputeForm.control}
-                                      name="message"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Message (Optional)
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Textarea
-                                              placeholder="Provide more details about your dispute..."
-                                              {...field}
-                                              className="resize-none"
-                                              maxLength={1000}
-                                            />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <div>
-                                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        Evidence (Optional)
-                                      </label>
-                                      <div className="mt-2 border-2 border-dashed border-border rounded-lg p-4">
-                                        {evidenceFile ? (
-                                          <div className="flex items-center justify-between">
-                                            <p className="text-sm text-muted-foreground">
-                                              {evidenceFile.name}
-                                            </p>
-                                            <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() =>
-                                                setEvidenceFile(null)
-                                              }
-                                            >
-                                              Remove
-                                            </Button>
-                                          </div>
-                                        ) : (
-                                          <label className="cursor-pointer">
-                                            <input
-                                              type="file"
-                                              accept=".pdf,.png,.jpg,.jpeg,.webp"
-                                              onChange={(e) => {
-                                                const file =
-                                                  e.target.files?.[0];
-                                                if (file) {
-                                                  if (
-                                                    file.size >
-                                                    5 * 1024 * 1024
-                                                  ) {
-                                                    toast({
-                                                      title: "File too large",
-                                                      description:
-                                                        "File must be less than 5MB",
-                                                      variant: "destructive",
-                                                    });
-                                                  } else {
-                                                    setEvidenceFile(file);
-                                                  }
-                                                }
-                                              }}
-                                              className="hidden"
-                                            />
-                                            <div className="flex flex-col items-center justify-center gap-2">
-                                              <Upload className="w-4 h-4 text-muted-foreground" />
-                                              <p className="text-sm text-muted-foreground">
-                                                Click to upload (PDF, PNG, JPEG,
-                                                WebP)
-                                              </p>
-                                              <p className="text-xs text-muted-foreground">
-                                                Max 5MB
-                                              </p>
-                                            </div>
-                                          </label>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <DialogFooter>
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
-                                          setDisputeDialogOpen(null);
-                                          disputeForm.reset();
-                                          setEvidenceFile(null);
-                                        }}
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        type="submit"
-                                        disabled={
-                                          createDisputeMutation.isPending ||
-                                          uploadEvidenceMutation.isPending
-                                        }
-                                      >
-                                        {createDisputeMutation.isPending ||
-                                        uploadEvidenceMutation.isPending ? (
-                                          <>
-                                            <div className="w-3 h-3 border-2 border-background border-t-foreground rounded-full animate-spin mr-2" />
-                                            Submitting...
-                                          </>
-                                        ) : (
-                                          "Submit Dispute"
-                                        )}
-                                      </Button>
-                                    </DialogFooter>
-                                  </form>
-                                </Form>
-                              </DialogContent>
-                            </Dialog>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
+                <ReviewsTab
+                  isReviewsLoading={isReviewsLoading}
+                  reviews={reviews}
+                  disputeDialogOpen={disputeDialogOpen}
+                  setDisputeDialogOpen={setDisputeDialogOpen}
+                  disputeForm={disputeForm}
+                  createDisputeMutation={createDisputeMutation}
+                  evidenceFile={evidenceFile}
+                  setEvidenceFile={setEvidenceFile}
+                  uploadEvidenceMutation={uploadEvidenceMutation}
+                  toast={toast}
+                  hasMoreReviews={hasMoreReviews}
+                  fetchMoreReviews={fetchMoreReviews}
+                  isFetchingMoreReviews={isFetchingMoreReviews}
+                />
               </TabsContent>
 
               <TabsContent value="analytics" className="mt-6 space-y-6">
-                {isAnalyticsLoading && (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center space-y-2">
-                      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-                      <p className="text-sm text-muted-foreground">
-                        Loading analytics...
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {!isAnalyticsLoading && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Average Rating
-                          </CardTitle>
-                          <CardDescription>
-                            Based on all reviews
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-3xl font-bold">
-                            {reviewStats.totalReviews
-                              ? reviewStats.avgRating.toFixed(1)
-                              : "New"}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {reviewStats.totalReviews} total reviews
-                          </p>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Total Reviews
-                          </CardTitle>
-                          <CardDescription>
-                            All-time submissions
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-3xl font-bold">
-                            {reviewStats.totalReviews}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Keep collecting feedback
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Profile Visits & Clicks
-                          </CardTitle>
-                          <CardDescription>
-                            Last 14 days performance
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="h-75">
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
-                              <span className="font-medium text-foreground">
-                                {analyticsTotals.visits}
-                              </span>
-                              <span>Visits</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="h-2 w-2 rounded-full bg-[#10b981]" />
-                              <span className="font-medium text-foreground">
-                                {analyticsTotals.clicks}
-                              </span>
-                              <span>Clicks</span>
-                            </div>
-                          </div>
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={analyticsData}>
-                              <defs>
-                                <linearGradient
-                                  id="colorVisits"
-                                  x1="0"
-                                  y1="0"
-                                  x2="0"
-                                  y2="1"
-                                >
-                                  <stop
-                                    offset="5%"
-                                    stopColor="#8b5cf6"
-                                    stopOpacity={0.8}
-                                  />
-                                  <stop
-                                    offset="95%"
-                                    stopColor="#8b5cf6"
-                                    stopOpacity={0}
-                                  />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                vertical={false}
-                              />
-                              <XAxis
-                                dataKey="name"
-                                axisLine={false}
-                                tickLine={false}
-                              />
-                              <YAxis axisLine={false} tickLine={false} />
-                              <RechartsTooltip />
-                              <Area
-                                type="monotone"
-                                dataKey="visits"
-                                stroke="#8b5cf6"
-                                fillOpacity={1}
-                                fill="url(#colorVisits)"
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="clicks"
-                                stroke="#10b981"
-                                fillOpacity={0}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Review Distribution
-                          </CardTitle>
-                          <CardDescription>
-                            Breakdown of star ratings
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="h-75 flex items-center justify-center">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={pieData}
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                              >
-                                {pieData.map((entry, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={entry.color}
-                                  />
-                                ))}
-                              </Pie>
-                              <RechartsTooltip />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </>
-                )}
+                <AnalyticsTab
+                  isAnalyticsLoading={isAnalyticsLoading}
+                  reviewStats={reviewStats}
+                  analyticsTotals={analyticsTotals}
+                  analyticsData={analyticsData}
+                  pieData={pieData}
+                />
               </TabsContent>
 
               <TabsContent value="appearance">

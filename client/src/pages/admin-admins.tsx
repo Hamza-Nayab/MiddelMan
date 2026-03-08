@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
 import { AdminLayout } from "@/components/admin-layout";
 import {
   Card,
@@ -21,13 +21,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Shield } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useMeQuery } from "@/hooks/use-me";
 
 export default function AdminAdminsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -36,15 +36,13 @@ export default function AdminAdminsPage() {
     displayName: "",
   });
 
+  const { data: me } = useMeQuery();
+
   const { data: adminsResponse, isLoading: isAdminsLoading } = useQuery({
     queryKey: ["admin-admins"],
     queryFn: api.adminGetAdmins,
-  });
-
-  // Check if user is master admin
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
+    enabled: !!me?.user?.isMasterAdmin,
+    staleTime: 60_000,
   });
 
   useEffect(() => {

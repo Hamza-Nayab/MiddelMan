@@ -3,20 +3,17 @@ import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useMeQuery } from "@/hooks/use-me";
 
 export default function RoleOnboardingPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: me, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  const { data: me, isLoading } = useMeQuery();
 
   useEffect(() => {
     if (!isLoading && !me?.user) {

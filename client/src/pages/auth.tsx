@@ -25,10 +25,11 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { api, ApiError } from "@/lib/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
 import { Check, AlertCircle } from "lucide-react";
+import { useMeQuery } from "@/hooks/use-me";
 
 const BuyerLoginSchema = z.object({
   loginType: z.literal("buyer"),
@@ -94,11 +95,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const [loginType, setLoginType] = useState<"buyer" | "seller">("buyer");
 
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  const { data: me } = useMeQuery();
 
   useEffect(() => {
     if (!me?.user) return;
@@ -442,12 +439,7 @@ export default function AuthPage() {
 
                     {/* Username (Seller only) */}
                     {registerForm.watch("role") === "seller" && (
-                      <UsernameField
-                        form={registerForm}
-                        onUsernameChange={(username) => {
-                          registerForm.setValue("username", username);
-                        }}
-                      />
+                      <UsernameField form={registerForm} />
                     )}
 
                     {/* Password */}
@@ -520,11 +512,10 @@ export default function AuthPage() {
 
 interface UsernameFieldProps {
   form: any;
-  onUsernameChange: (username: string) => void;
 }
 
-function UsernameField({ form, onUsernameChange }: UsernameFieldProps) {
-  const [username, setUsername] = useState("");
+function UsernameField({ form }: UsernameFieldProps) {
+  const username = (form.watch("username") as string | undefined) ?? "";
   const usernameAvailability = useUsernameAvailability(username);
 
   return (
@@ -541,8 +532,6 @@ function UsernameField({ form, onUsernameChange }: UsernameFieldProps) {
               onChange={(e) => {
                 const value = e.target.value.toLowerCase();
                 field.onChange(value);
-                setUsername(value);
-                onUsernameChange(value);
               }}
             />
           </FormControl>
@@ -578,8 +567,6 @@ function UsernameField({ form, onUsernameChange }: UsernameFieldProps) {
                             type="button"
                             onClick={() => {
                               form.setValue("username", sug);
-                              setUsername(sug);
-                              onUsernameChange(sug);
                             }}
                             className="text-xs px-2 py-1 bg-secondary hover:bg-secondary/80 rounded cursor-pointer"
                           >

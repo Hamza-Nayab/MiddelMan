@@ -12,6 +12,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { initAuth } from "./auth";
 import { pool } from "./db";
+import { toPublicErrorResponse } from "./lib/api-response";
 
 
 console.log(process.env.NODE_ENV);
@@ -144,11 +145,9 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
+  app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+    const { status, body } = toPublicErrorResponse(err, req.requestId);
+    res.status(status).json(body);
     console.error("[express] Unhandled error", err);
   });
 

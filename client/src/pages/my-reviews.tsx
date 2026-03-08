@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, Link } from "wouter";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { api, ApiError } from "@/lib/api";
 import {
@@ -33,6 +33,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useMeQuery } from "@/hooks/use-me";
+import { useGivenReviewsQuery } from "@/hooks/use-profile";
 
 const ReviewEditSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -50,11 +52,7 @@ export default function MyReviewsPage() {
     data: me,
     isLoading: isUserLoading,
     error: meError,
-  } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  } = useMeQuery();
 
   // Handle account disabled error
   useEffect(() => {
@@ -80,11 +78,9 @@ export default function MyReviewsPage() {
     }
   }, [isUserLoading, me, setLocation]);
 
-  const { data: reviewsResponse, isLoading } = useQuery({
-    queryKey: ["given-reviews"],
-    queryFn: api.getGivenReviews,
-    enabled: !!me?.user && me.user.role === "buyer",
-  });
+  const { data: reviewsResponse, isLoading } = useGivenReviewsQuery(
+    !!me?.user && me.user.role === "buyer",
+  );
 
   const editForm = useForm<z.infer<typeof ReviewEditSchema>>({
     resolver: zodResolver(ReviewEditSchema),

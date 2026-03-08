@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star, ExternalLink, X } from "lucide-react";
+import { Star, ExternalLink } from "lucide-react";
 import {
   getAvatarUrl,
   platformIconMap,

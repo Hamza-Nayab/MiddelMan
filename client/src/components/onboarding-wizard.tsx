@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,7 +26,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api, Profile } from "@/lib/api";
 import { compressAvatar } from "@/lib/avatar";
 import { PRESET_AVATARS, getDefaultPresetAvatar } from "@/lib/preset-avatars";
-import { Upload, AlertCircle } from "lucide-react";
+import { Upload } from "lucide-react";
 
 const displayNameSchema = z
   .string()
@@ -128,6 +128,18 @@ export function OnboardingWizard({
 
   const handleNext = async () => {
     if (step === "bio") {
+      const isBioStepValid = await form.trigger(["displayName", "bio"], {
+        shouldFocus: true,
+      });
+      if (!isBioStepValid) {
+        toast({
+          title: "Please fix the highlighted fields",
+          description: "Display name and bio are required before continuing.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setStep("avatar");
     } else if (step === "avatar") {
       setStep("confirm");
@@ -143,10 +155,21 @@ export function OnboardingWizard({
   };
 
   const handleSubmit = async () => {
-    const valid = await form.trigger();
-    if (valid) {
-      completeOnboardingMutation.mutate(form.getValues());
+    const valid = await form.trigger(["displayName", "bio"], {
+      shouldFocus: true,
+    });
+
+    if (!valid) {
+      setStep("bio");
+      toast({
+        title: "Please complete required fields",
+        description: "Add a valid display name and bio to finish onboarding.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    completeOnboardingMutation.mutate(form.getValues());
   };
 
   return (

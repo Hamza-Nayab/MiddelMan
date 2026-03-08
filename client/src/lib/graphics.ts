@@ -16,7 +16,6 @@ import presetAvatar15 from "@/assets/preset-avatars/avatar-15.svg";
 import { Globe } from "lucide-react";
 import {
   SiFacebook,
-  SiLinkedin,
   SiX,
   SiYoutube,
   SiTiktok,
@@ -27,6 +26,7 @@ import {
   SiGithub,
   SiShopify,
 } from "react-icons/si";
+import { FaLinkedin } from "react-icons/fa";
 
 export const avatarOptions = [
   { id: "avatar-1", label: "Avatar 1", url: presetAvatar01 },
@@ -88,7 +88,7 @@ export const platformOptions = [
   {
     key: "linkedin",
     label: "LinkedIn",
-    icon: SiLinkedin,
+    icon: FaLinkedin,
     urlHint: "https://linkedin.com/in/",
   },
   {

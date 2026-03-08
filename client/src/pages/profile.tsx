@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,17 +38,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ReviewsSection } from "@/components/reviews-section";
+import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import generatedImage from "@assets/generated_images/abstract_soft_gradient_mesh_background.png";
 import logoImg from "@/assets/middelman-bg.png";
 import {
@@ -57,6 +54,8 @@ import {
   type PlatformKey,
 } from "@/lib/graphics";
 import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
+import { useMeQuery } from "@/hooks/use-me";
+import { useGivenReviewsQuery, useProfileBundleQuery } from "@/hooks/use-profile";
 
 const ReviewFormSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -106,14 +105,7 @@ export default function ProfilePage() {
     data,
     isLoading: profileLoading,
     error: profileError,
-  } = useQuery({
-    queryKey: ["profile-bundle", username],
-    queryFn: () =>
-      username
-        ? api.getPublicProfileBundle(username, { track: false })
-        : Promise.reject("No username"),
-    retry: false,
-  });
+  } = useProfileBundleQuery(username);
 
   // Track profile view if not owner and should sample
   const trackingMutation = useMutation({
@@ -131,25 +123,17 @@ export default function ProfilePage() {
     trackingMutation.mutate();
   }, [data, shouldSampleTrack]);
 
-  const { data: me, error: meError } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  const { data: me } = useMeQuery();
 
   // Fetch reviews given by current user to check if already reviewed
-  const { data: givenReviews } = useQuery({
-    queryKey: ["given-reviews"],
-    queryFn: api.getGivenReviews,
-    retry: false,
-  });
+  const { data: givenReviews } = useGivenReviewsQuery(
+    Boolean(me?.user && !data?.isOwner),
+  );
 
   const user = data?.user;
   const isOwner = data?.isOwner;
   const profile = data?.profile;
-  const stats = data?.stats;
   const links = data?.links || [];
-  const reviews = data?.reviews || [];
   const reviewStats = data?.stats || { avgRating: 0, totalReviews: 0 };
 
   const getPlatformIcon = (icon?: string | null) => {
@@ -163,7 +147,7 @@ export default function ProfilePage() {
     mutationFn: (values: z.infer<typeof ReviewFormSchema>) =>
       api.createReview(user!.id, values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["public-reviews", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["reviews", user!.id] });
       setIsReviewOpen(false);
       toast({
         title: "Review Submitted",
@@ -299,7 +283,7 @@ export default function ProfilePage() {
     onSuccess: (result) => {
       const newUsername = result.user.username;
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-bundle"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-bundle", username] });
       setIsUsernameDialogOpen(false);
       toast({ title: "Username updated" });
       if (newUsername) {

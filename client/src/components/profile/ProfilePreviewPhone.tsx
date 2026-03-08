@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Link } from "wouter";
 import { Link as LinkType } from "@/lib/api";
 import { Star, ExternalLink, ShieldCheck, Phone, Mail } from "lucide-react";
@@ -25,7 +26,28 @@ type ProfilePreviewPhoneProps = {
   contactEmail?: string | null;
 };
 
-export function ProfilePreviewPhone({
+const MOCK_REVIEWS = [
+  {
+    id: 1,
+    author: "Sarah M.",
+    rating: 5,
+    text: "Highly trusted! Great quality.",
+  },
+  {
+    id: 2,
+    author: "John K.",
+    rating: 5,
+    text: "Excellent experience, would recommend!",
+  },
+  {
+    id: 3,
+    author: "Emily R.",
+    rating: 4,
+    text: "Very professional and reliable.",
+  },
+];
+
+export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   displayName,
   username,
   bio,
@@ -39,42 +61,22 @@ export function ProfilePreviewPhone({
   countryCode,
   contactEmail,
 }: ProfilePreviewPhoneProps) {
-  const activeLinks = links.filter((link) => link.isActive);
+  const activeLinks = useMemo(
+    () => links.filter((link) => link.isActive),
+    [links],
+  );
   const hasReviews = (totalReviews ?? 0) > 0;
-  const ratingLabel = hasReviews
-    ? `${avgRating?.toFixed(1) ?? "0.0"} (${totalReviews} reviews)`
-    : "New (0 reviews)";
-
-  const phoneE164 = normalizeToE164(
-    phoneNumber ?? "",
-    countryCode ?? undefined,
+  const phoneE164 = useMemo(
+    () => normalizeToE164(phoneNumber ?? "", countryCode ?? undefined),
+    [phoneNumber, countryCode],
   );
-  const whatsappE164 = normalizeToE164(
-    whatsappNumber ?? "",
-    countryCode ?? undefined,
-  );
-  const whatsappUrl = whatsappE164 ? buildWhatsAppUrl(whatsappE164) : null;
-
-  const mockReviews = [
-    {
-      id: 1,
-      author: "Sarah M.",
-      rating: 5,
-      text: "Highly trusted! Great quality.",
-    },
-    {
-      id: 2,
-      author: "John K.",
-      rating: 5,
-      text: "Excellent experience, would recommend!",
-    },
-    {
-      id: 3,
-      author: "Emily R.",
-      rating: 4,
-      text: "Very professional and reliable.",
-    },
-  ];
+  const whatsappUrl = useMemo(() => {
+    const whatsappE164 = normalizeToE164(
+      whatsappNumber ?? "",
+      countryCode ?? undefined,
+    );
+    return whatsappE164 ? buildWhatsAppUrl(whatsappE164) : null;
+  }, [whatsappNumber, countryCode]);
 
   const profileHref = username ? `/${username}` : "/";
 
@@ -215,7 +217,7 @@ export function ProfilePreviewPhone({
                   Recent Reviews
                 </div>
                 <div className="space-y-3">
-                  {mockReviews.map((review) => (
+                  {MOCK_REVIEWS.map((review) => (
                     <div
                       key={review.id}
                       className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
@@ -246,4 +248,4 @@ export function ProfilePreviewPhone({
       </div>
     </div>
   );
-}
+});

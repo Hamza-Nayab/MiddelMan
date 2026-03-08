@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type Notification } from "@/lib/api";
+import { api } from "@/lib/api";
 import { Bell, Check, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ export function NotificationBell() {
     queryKey: ["notifications"],
     queryFn: () => api.getNotifications({ limit: 20 }),
     refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 15_000,
   });
 
   const markReadMutation = useMutation({

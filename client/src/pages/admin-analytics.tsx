@@ -25,6 +25,7 @@ export default function AdminAnalyticsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-analytics", days],
     queryFn: () => api.adminGetAnalyticsOverview(days),
+    staleTime: 60_000,
   });
 
   if (isLoading) {

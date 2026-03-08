@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
@@ -711,52 +711,6 @@ function MicroFeatureCard({
   );
 }
 
-function FeatureCard({
-  title,
-  description,
-  icon,
-}: {
-  title: string;
-  description: string;
-  icon: string;
-}) {
-  return (
-    <div className="p-8 rounded-xl border border-border bg-background hover:border-secondary transition-colors">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-bold text-foreground mb-3">{title}</h3>
-      <p className="text-text-secondary text-sm leading-relaxed">
-        {description}
-      </p>
-    </div>
-  );
-}
-function StepCard({
-  step,
-  title,
-  description,
-}: {
-  step: number;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="relative">
-      <div className="p-8 rounded-xl border border-border bg-card">
-        <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg mb-4">
-          {step}
-        </div>
-        <h3 className="text-xl font-bold text-text-primary mb-3">{title}</h3>
-        <p className="text-text-secondary text-sm leading-relaxed">
-          {description}
-        </p>
-      </div>
-      {step < 3 && (
-        <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-border" />
-      )}
-    </div>
-  );
-}
-
 function SellerBuyerFeature({
   icon,
   title,
@@ -810,68 +764,6 @@ function TrustStatCard({
     </div>
   );
 }
-// Lightweight SVG Icons
-function ShieldIcon() {
-  return (
-    <svg
-      width="64"
-      height="64"
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-lg"
-    >
-      <rect
-        width="64"
-        height="64"
-        rx="12"
-        fill="rgb(95, 168, 211)"
-        fillOpacity="0.1"
-      />
-      <path
-        d="M32 16L20 22V36C20 46.6274 32 52 32 52C32 52 44 46.6274 44 36V22L32 16Z"
-        stroke="#2D4B9B"
-        strokeWidth="2"
-        fill="none"
-      />
-      <path
-        d="M27 35L30.5 38.5L37.5 30"
-        stroke="#2D4B9B"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function StarIcon() {
-  return (
-    <svg
-      width="64"
-      height="64"
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-lg"
-    >
-      <rect
-        width="64"
-        height="64"
-        rx="12"
-        fill="rgb(45, 75, 155)"
-        fillOpacity="0.1"
-      />
-      <path
-        d="M32 20L38.5 38H58L43 48L49.5 66L32 56L14.5 66L21 48L6 38H25.5L32 20Z"
-        fill="#2D4B9B"
-        opacity="0.2"
-        stroke="#2D4B9B"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
 
 interface ProvideCardProps {
   title: string;
@@ -908,50 +800,5 @@ function ProvideCard({
       </p>
       <div className="mt-6 h-[3px] w-12 bg-gradient-to-r from-blue-500 to-blue-300 rounded-full" />
     </div>
-  );
-}
-
-function LinkIcon() {
-  return (
-    <svg
-      width="64"
-      height="64"
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-lg"
-    >
-      <rect
-        width="64"
-        height="64"
-        rx="12"
-        fill="rgb(95, 168, 211)"
-        fillOpacity="0.1"
-      />
-      <path
-        d="M28 36C32.4183 40.4183 39.5817 40.4183 44 36M28 28C32.4183 23.5817 39.5817 23.5817 44 28"
-        stroke="#2D4B9B"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="24"
-        y1="20"
-        x2="32"
-        y2="28"
-        stroke="#2D4B9B"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="40"
-        y1="36"
-        x2="48"
-        y2="44"
-        stroke="#2D4B9B"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }

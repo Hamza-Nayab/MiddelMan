@@ -1,11 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Loader2, LogOut } from "lucide-react";
 import logoImg from "@/assets/middelman-bg.png";
 import { NotificationBell } from "@/components/notification-bell";
+import { useMeQuery } from "@/hooks/use-me";
 
 export function Layout({
   children,
@@ -17,11 +18,7 @@ export function Layout({
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  const { data: me, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: api.getMe,
-    retry: false,
-  });
+  const { data: me, isLoading } = useMeQuery();
 
   const user = me?.user ?? null;
   const profile = user ? me?.profile : null;

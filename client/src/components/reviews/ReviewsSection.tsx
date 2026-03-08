@@ -1,6 +1,4 @@
 import { useState, memo } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { Star, ChevronDown, Loader2 } from "lucide-react";
 import {
   Card,
@@ -17,17 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Review as ApiReview } from "@/lib/api";
+import { usePublicReviewsInfinite } from "@/hooks/use-reviews";
 
 interface ReviewSectionProps {
   userId: number;
-}
-
-interface Review {
-  id: number;
-  rating: number;
-  comment: string;
-  authorName: string;
-  createdAt: string;
 }
 
 const RATING_OPTIONS = [
@@ -40,7 +32,7 @@ const RATING_OPTIONS = [
 ];
 
 // Memoized Review Item Component
-const ReviewItem = memo(({ review }: { review: Review }) => {
+const ReviewItem = memo(({ review }: { review: ApiReview }) => {
   return (
     <div className="border rounded-lg p-4 space-y-2 hover:bg-muted/50 transition-colors">
       {/* Review Header */}
@@ -89,36 +81,20 @@ const ReviewSkeleton = () => (
 
 export function ReviewsSection({ userId }: ReviewSectionProps) {
   const [rating, setRating] = useState("all");
-  const queryClient = useQueryClient();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
-    useInfiniteQuery({
-      queryKey: ["reviews", userId, rating],
-      queryFn: ({ pageParam }: { pageParam: number | undefined }) =>
-        api.getPublicReviews(userId, {
-          rating: rating === "all" ? undefined : rating,
-          cursor: pageParam,
-          limit: 5,
-        }),
-      getNextPageParam: (lastPage: any) => lastPage.nextCursor ?? undefined,
-      initialPageParam: undefined as number | undefined,
-      staleTime: 1000 * 60 * 5,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+    prefetchNextPage,
+  } = usePublicReviewsInfinite(userId, rating);
 
   // Prefetch next page on button hover
   const handlePrefetch = () => {
     if (hasNextPage && !isFetchingNextPage) {
-      queryClient.prefetchInfiniteQuery({
-        queryKey: ["reviews", userId, rating],
-        queryFn: ({ pageParam }: { pageParam: number | undefined }) =>
-          api.getPublicReviews(userId, {
-            rating: rating === "all" ? undefined : rating,
-            cursor: pageParam,
-            limit: 5,
-          }),
-        getNextPageParam: (lastPage: any) => lastPage.nextCursor ?? undefined,
-        initialPageParam: undefined as number | undefined,
-      });
+      prefetchNextPage();
     }
   };
 
@@ -233,7 +209,7 @@ export function ReviewsSection({ userId }: ReviewSectionProps) {
           <>
             {/* Fixed Size Scrollable Container - Optimized with Memoized Components */}
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-              {displayReviews.map((review: Review) => (
+              {displayReviews.map((review: ApiReview) => (
                 <ReviewItem key={review.id} review={review} />
               ))}
             </div>

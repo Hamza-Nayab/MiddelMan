@@ -16,7 +16,6 @@ const rateLimiterStore = new Map<string, Map<string, number[]>>();
 // Clean up old entries every 5 minutes to prevent memory leak
 setInterval(
   () => {
-    const now = Date.now();
     for (const [limiterName, keyMap] of Array.from(
       rateLimiterStore.entries(),
     )) {

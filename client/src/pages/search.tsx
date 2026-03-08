@@ -1,7 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { Layout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +7,48 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon, ExternalLink } from "lucide-react";
 import { getAvatarUrl } from "@/lib/graphics";
+import { useSearch } from "@/hooks/use-search";
+import type { SearchResult } from "@/lib/api";
+
+const SearchResultCard = memo(function SearchResultCard({
+  result,
+}: {
+  result: SearchResult;
+}) {
+  return (
+    <Link href={`/${encodeURIComponent(result.username)}`}>
+      <Card className="hover:shadow-md transition-all cursor-pointer group h-full overflow-hidden border-border/60">
+        <CardContent className="p-0">
+          <div className="h-24 bg-gradient-to-r from-primary/10 to-purple-400/10 group-hover:from-primary/20 group-hover:to-purple-400/20 transition-colors" />
+          <div className="px-6 pb-6 -mt-10">
+            <Avatar className="w-20 h-20 border-4 border-background shadow-sm mb-3">
+              <AvatarImage src={getAvatarUrl(result.avatarUrl, result.username)} />
+              <AvatarFallback>
+                {result.username?.[0]?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
+                  {result.displayName}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  @{result.username}
+                </p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+
+            <p className="text-sm text-slate-600 line-clamp-2 min-h-[2.5em]">
+              {result.bio || "No bio available."}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+});
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -51,29 +91,22 @@ export default function SearchPage() {
     };
   }, []);
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useInfiniteQuery({
-      queryKey: ["search", debouncedQuery],
-      queryFn: ({ pageParam = 0, signal }) =>
-        api.search(debouncedQuery, { limit: 15, offset: pageParam, signal }),
-      enabled: debouncedQuery.length >= 2,
-      initialPageParam: 0,
-      staleTime: 60_000,
-      gcTime: 5 * 60_000,
-      getNextPageParam: (lastPage) =>
-        lastPage?.meta?.hasMore ? lastPage.meta.nextOffset : undefined,
-    });
+  const {
+    results,
+    suggestions,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useSearch(debouncedQuery);
 
-  const { data: suggestData } = useQuery({
-    queryKey: ["search-suggest", debouncedQuery],
-    queryFn: ({ signal }) => api.searchSuggest(debouncedQuery, { signal }),
-    enabled: debouncedQuery.length >= 2,
-    staleTime: 60_000,
-    gcTime: 5 * 60_000,
-  });
-
-  const results = data?.pages.flatMap((page) => page.results) || [];
-  const suggestions = suggestData?.suggestions || [];
+  const handleSuggestionSelect = useCallback(
+    (username: string) => {
+      setShowSuggestions(false);
+      navigate(`/${encodeURIComponent(username)}`);
+    },
+    [navigate],
+  );
 
   return (
     <Layout>
@@ -105,10 +138,7 @@ export default function SearchPage() {
                       key={suggestion.username}
                       type="button"
                       className="w-full px-4 py-3 text-left hover:bg-accent transition-colors"
-                      onClick={() => {
-                        setShowSuggestions(false);
-                        navigate(`/${encodeURIComponent(suggestion.username)}`);
-                      }}
+                      onClick={() => handleSuggestionSelect(suggestion.username)}
                     >
                       <div className="font-medium">@{suggestion.username}</div>
                       <div className="text-sm text-muted-foreground">
@@ -132,39 +162,7 @@ export default function SearchPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {results.map((result) => (
-              <Link key={result.username} href={`/${encodeURIComponent(result.username)}`}>
-                <Card className="hover:shadow-md transition-all cursor-pointer group h-full overflow-hidden border-border/60">
-                  <CardContent className="p-0">
-                    <div className="h-24 bg-gradient-to-r from-primary/10 to-purple-400/10 group-hover:from-primary/20 group-hover:to-purple-400/20 transition-colors" />
-                    <div className="px-6 pb-6 -mt-10">
-                      <Avatar className="w-20 h-20 border-4 border-background shadow-sm mb-3">
-                        <AvatarImage
-                          src={getAvatarUrl(result.avatarUrl, result.username)}
-                        />
-                        <AvatarFallback>
-                          {result.username?.[0]?.toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
-                            {result.displayName}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            @{result.username}
-                          </p>
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-
-                      <p className="text-sm text-slate-600 line-clamp-2 min-h-[2.5em]">
-                        {result.bio || "No bio available."}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <SearchResultCard key={result.username} result={result} />
             ))}
 
             {results.length === 0 && (
