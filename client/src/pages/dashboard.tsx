@@ -7,7 +7,7 @@ import { LinksTab } from "@/components/dashboard/LinksTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { ReviewsTab } from "@/components/dashboard/ReviewsTab";
 import { AnalyticsTab } from "@/components/dashboard/AnalyticsTab";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -207,6 +207,9 @@ export default function Dashboard() {
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [isWhatsAppSameAsPhone, setIsWhatsAppSameAsPhone] = useState(false);
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
+  const [pendingTheme, setPendingTheme] = useState<
+    "light" | "dark" | "gradient"
+  >("light");
 
   // Auth Check
   const {
@@ -421,9 +424,17 @@ export default function Dashboard() {
       queryClient.setQueryData(["me"], (old: any) =>
         old ? { ...old, profile: data.profile } : undefined,
       );
+      setPendingTheme(data.profile.theme);
       toast({
         title: "Theme Updated",
         description: "Your profile look has been updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Theme update failed",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
@@ -518,6 +529,11 @@ export default function Dashboard() {
       setCustomAvatarPreview(null);
     }
   }, [profile, profileForm]);
+
+  useEffect(() => {
+    if (!profile?.theme) return;
+    setPendingTheme(profile.theme);
+  }, [profile?.theme]);
 
   const onSubmit = useCallback(
     (values: z.infer<typeof LinkFormSchema>) => {
@@ -698,6 +714,7 @@ export default function Dashboard() {
     : null;
 
   const WhatsAppIcon = platformIconMap.whatsapp;
+  const hasThemeChanges = pendingTheme !== profile.theme;
 
   return (
     <Layout>
@@ -835,10 +852,11 @@ export default function Dashboard() {
                   <CardContent>
                     <div className="grid grid-cols-3 gap-6">
                       <button
-                        onClick={() => updateThemeMutation.mutate("light")}
+                        type="button"
+                        onClick={() => setPendingTheme("light")}
                         className={cn(
                           "group relative aspect-9/16 rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
-                          profile.theme === "light"
+                          pendingTheme === "light"
                             ? "border-primary ring-2 ring-primary/20"
                             : "border-border",
                         )}
@@ -858,10 +876,11 @@ export default function Dashboard() {
                       </button>
 
                       <button
-                        onClick={() => updateThemeMutation.mutate("dark")}
+                        type="button"
+                        onClick={() => setPendingTheme("dark")}
                         className={cn(
                           "group relative aspect-9/16 rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
-                          profile.theme === "dark"
+                          pendingTheme === "dark"
                             ? "border-primary ring-2 ring-primary/20"
                             : "border-border",
                         )}
@@ -883,10 +902,11 @@ export default function Dashboard() {
                       </button>
 
                       <button
-                        onClick={() => updateThemeMutation.mutate("gradient")}
+                        type="button"
+                        onClick={() => setPendingTheme("gradient")}
                         className={cn(
                           "group relative aspect-9/16 rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
-                          profile.theme === "gradient"
+                          pendingTheme === "gradient"
                             ? "border-primary ring-2 ring-primary/20"
                             : "border-border",
                         )}
@@ -906,6 +926,20 @@ export default function Dashboard() {
                           </span>
                         </div>
                       </button>
+                    </div>
+
+                    <div className="mt-6 flex justify-end">
+                      <Button
+                        type="button"
+                        onClick={() => updateThemeMutation.mutate(pendingTheme)}
+                        disabled={
+                          updateThemeMutation.isPending || !hasThemeChanges
+                        }
+                      >
+                        {updateThemeMutation.isPending
+                          ? "Saving..."
+                          : "Save Theme"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -927,6 +961,7 @@ export default function Dashboard() {
             whatsappNumber={watchedWhatsAppNumber || profile.whatsappNumber}
             countryCode={watchedCountryCode || profile.countryCode}
             contactEmail={watchedContactEmail || profile.contactEmail}
+            theme={pendingTheme}
           />
         </div>
       </div>

@@ -500,7 +500,7 @@ export default function ProfilePage() {
           {user.username && (
             <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
               <span>@{user.username}</span>
-              {isOwner && me?.user?.role === "seller" && (
+              {false && isOwner && me?.user?.role === "seller" && (
                 <Dialog
                   open={isUsernameDialogOpen}
                   onOpenChange={setIsUsernameDialogOpen}
