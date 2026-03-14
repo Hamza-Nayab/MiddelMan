@@ -508,8 +508,8 @@ export default function Dashboard() {
       bio: profile?.bio || "",
       avatarUrl:
         profile?.avatarUrl &&
-        (profile.avatarUrl.startsWith("data:") ||
-          profile.avatarUrl.startsWith("http"))
+          (profile.avatarUrl.startsWith("data:") ||
+            profile.avatarUrl.startsWith("http"))
           ? profile.avatarUrl
           : getAvatarId(profile?.avatarUrl),
       contactEmail: profile?.contactEmail || "",
@@ -525,8 +525,8 @@ export default function Dashboard() {
       bio: profile?.bio || "",
       avatarUrl:
         profile?.avatarUrl &&
-        (profile.avatarUrl.startsWith("data:") ||
-          profile.avatarUrl.startsWith("http"))
+          (profile.avatarUrl.startsWith("data:") ||
+            profile.avatarUrl.startsWith("http"))
           ? profile.avatarUrl
           : getAvatarId(profile?.avatarUrl),
       contactEmail: profile?.contactEmail || "",
@@ -597,9 +597,9 @@ export default function Dashboard() {
     : false;
   const daysUntilUsernameChange = usernameCooldownActive
     ? Math.ceil(
-        (nextUsernameChangeAt!.getTime() - new Date().getTime()) /
-          (24 * 60 * 60 * 1000),
-      )
+      (nextUsernameChangeAt!.getTime() - new Date().getTime()) /
+      (24 * 60 * 60 * 1000),
+    )
     : 0;
   const canChangeUsername =
     user?.role === "seller" &&
@@ -889,7 +889,7 @@ export default function Dashboard() {
                         type="button"
                         onClick={() => setPendingTheme("light")}
                         className={cn(
-                          "group relative aspect-9/16 rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
+                          "group relative aspect-[9/8] rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
                           pendingTheme === "light"
                             ? "border-primary ring-2 ring-primary/20"
                             : "border-border",
@@ -913,7 +913,7 @@ export default function Dashboard() {
                         type="button"
                         onClick={() => setPendingTheme("dark")}
                         className={cn(
-                          "group relative aspect-9/16 rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
+                          "group relative aspect-[9/8] rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
                           pendingTheme === "dark"
                             ? "border-primary ring-2 ring-primary/20"
                             : "border-border",
