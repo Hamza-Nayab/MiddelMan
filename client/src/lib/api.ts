@@ -199,8 +199,8 @@ export type ProfileUpdatePayload = Partial<{
   whatsappNumber: string;
   phoneNumber: string;
   countryCode: string;
-  theme: ProfileTheme;
-  backgroundPreset: "antigravity" | "aurora" | "iridescence" | null;
+  theme: "light" | "dark";
+  backgroundPreset: "gradient" | "antigravity" | "aurora" | "iridescence" | null;
   gradientPreset: GradientPreset | null;
   accentColor: string | null;
 }>;

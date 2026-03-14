@@ -88,7 +88,7 @@ const profileUpdateSchema = z
       .optional(),
     countryCode: z.string().length(2).optional(),
     theme: z.enum(["light", "dark", "gradient"]).optional(),
-    backgroundPreset: z.enum(["antigravity", "aurora", "iridescence"]).nullable().optional(),
+    backgroundPreset: z.enum(["gradient", "antigravity", "aurora", "iridescence"]).nullable().optional(),
     gradientPreset: z.enum(["default", "ocean", "sunset", "forest", "berry"]).nullable().optional(),
     accentColor: z
       .string()

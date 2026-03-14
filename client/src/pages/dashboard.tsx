@@ -209,11 +209,9 @@ export default function Dashboard() {
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [isWhatsAppSameAsPhone, setIsWhatsAppSameAsPhone] = useState(false);
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
-  const [pendingTheme, setPendingTheme] = useState<
-    "light" | "dark" | "gradient"
-  >("light");
+  const [pendingTheme, setPendingTheme] = useState<"light" | "dark">("light");
   const [pendingBackgroundPreset, setPendingBackgroundPreset] = useState<
-    "antigravity" | "aurora" | "iridescence" | null
+    "gradient" | "antigravity" | "aurora" | "iridescence" | null
   >(null);
   const [pendingGradientPreset, setPendingGradientPreset] = useState<
     "default" | "ocean" | "sunset" | "forest" | "berry" | null
@@ -426,8 +424,8 @@ export default function Dashboard() {
 
   const updateAppearanceMutation = useMutation({
     mutationFn: (payload: {
-      theme: "light" | "dark" | "gradient";
-      backgroundPreset?: "antigravity" | "aurora" | "iridescence" | null;
+      theme: "light" | "dark";
+      backgroundPreset?: "gradient" | "antigravity" | "aurora" | "iridescence" | null;
       gradientPreset?: "default" | "ocean" | "sunset" | "forest" | "berry" | null;
       accentColor?: string | null;
     }) => api.updateProfile(payload),
@@ -436,9 +434,10 @@ export default function Dashboard() {
         old ? { ...old, profile: data.profile } : undefined,
       );
       const p = data.profile;
-      setPendingTheme(p.theme);
+      const theme = p.theme === "gradient" ? "light" : p.theme;
+      setPendingTheme(theme as "light" | "dark");
       setPendingBackgroundPreset(
-        (p.backgroundPreset as "antigravity" | "aurora" | "iridescence") ?? null,
+        (p.backgroundPreset as "gradient" | "antigravity" | "aurora" | "iridescence") ?? (p.theme === "gradient" ? "gradient" : null),
       );
       setPendingGradientPreset(
         (p.gradientPreset as "default" | "ocean" | "sunset" | "forest" | "berry") ?? null,
@@ -551,12 +550,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!profile) return;
-    setPendingTheme(profile.theme);
-    setPendingBackgroundPreset(
-      (profile.backgroundPreset as "antigravity" | "aurora" | "iridescence") ?? null,
-    );
+    const theme = profile.theme === "gradient" ? "light" : profile.theme;
+    const bgPreset = (profile.backgroundPreset as "gradient" | "antigravity" | "aurora" | "iridescence") ?? (profile.theme === "gradient" ? "gradient" : null);
+    setPendingTheme(theme as "light" | "dark");
+    setPendingBackgroundPreset(bgPreset);
     setPendingGradientPreset(
-      (profile.gradientPreset as "default" | "ocean" | "sunset" | "forest" | "berry") ?? null,
+      (profile.gradientPreset as "default" | "ocean" | "sunset" | "forest" | "berry") ?? (bgPreset === "gradient" ? "default" : null),
     );
     setPendingAccentColor(profile.accentColor ?? null);
   }, [profile]);
@@ -742,10 +741,13 @@ export default function Dashboard() {
   const WhatsAppIcon = platformIconMap.whatsapp;
   const profileGradient = profile.gradientPreset as typeof pendingGradientPreset | null;
   const profileBgPreset = profile.backgroundPreset as typeof pendingBackgroundPreset | null;
+  const effectiveTheme = profile.theme === "gradient" ? "light" : profile.theme;
+  const effectiveBg = profileBgPreset ?? (profile.theme === "gradient" ? "gradient" : null);
+  const effectiveGradient = effectiveBg === "gradient" ? (profileGradient ?? "default") : null;
   const hasAppearanceChanges =
-    pendingTheme !== profile.theme ||
-    pendingBackgroundPreset !== profileBgPreset ||
-    pendingGradientPreset !== (profileGradient ?? null) ||
+    pendingTheme !== effectiveTheme ||
+    pendingBackgroundPreset !== effectiveBg ||
+    (pendingBackgroundPreset === "gradient" && (pendingGradientPreset ?? "default") !== effectiveGradient) ||
     pendingAccentColor !== (profile.accentColor ?? null);
 
   return (
@@ -882,7 +884,7 @@ export default function Dashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-6">
+                    <div className="grid grid-cols-2 gap-6">
                       <button
                         type="button"
                         onClick={() => setPendingTheme("light")}
@@ -930,13 +932,46 @@ export default function Dashboard() {
                           <span className="font-semibold text-sm text-white">Dark</span>
                         </div>
                       </button>
+                    </div>
+                  </CardContent>
+                </Card>
 
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Background</CardTitle>
+                    <CardDescription>
+                      Choose a background for your profile: none, gradient, or an animated style.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <button
                         type="button"
-                        onClick={() => setPendingTheme("gradient")}
+                        onClick={() => {
+                          setPendingBackgroundPreset(null);
+                          setPendingGradientPreset(null);
+                        }}
                         className={cn(
-                          "group relative aspect-9/16 rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
-                          pendingTheme === "gradient"
+                          "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
+                          pendingBackgroundPreset === null
+                            ? "border-primary ring-2 ring-primary/20"
+                            : "border-border",
+                        )}
+                      >
+                        <div className="absolute inset-0 bg-muted" />
+                        <span className="absolute bottom-0 inset-x-0 py-2 bg-black/60 text-white text-xs font-medium text-center">
+                          None
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingBackgroundPreset("gradient");
+                          if (!pendingGradientPreset) setPendingGradientPreset("default");
+                        }}
+                        className={cn(
+                          "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
+                          pendingBackgroundPreset === "gradient"
                             ? "border-primary ring-2 ring-primary/20"
                             : "border-border",
                         )}
@@ -947,94 +982,11 @@ export default function Dashboard() {
                             background:
                               "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
                           }}
-                        >
-                          <div className="h-1/3 p-4 flex flex-col items-center justify-center gap-2">
-                            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md" />
-                          </div>
-                          <div className="p-4 space-y-2">
-                            <div className="h-8 rounded-lg bg-white/20 backdrop-blur-md border border-white/30" />
-                            <div className="h-8 rounded-lg bg-white/20 backdrop-blur-md border border-white/30" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-0 inset-x-0 p-3 bg-black/20 backdrop-blur-sm border-t border-white/10">
-                          <span className="font-semibold text-sm text-white">Gradient</span>
-                        </div>
+                        />
+                        <span className="absolute bottom-0 inset-x-0 py-2 bg-black/40 text-white text-xs font-medium text-center">
+                          Gradient
+                        </span>
                       </button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {pendingTheme === "gradient" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Gradient Style</CardTitle>
-                      <CardDescription>
-                        Pick a gradient preset when using the gradient theme.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                        {[
-                          {
-                            key: "default" as const,
-                            label: "Default",
-                            bg: "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
-                          },
-                          {
-                            key: "ocean" as const,
-                            label: "Ocean",
-                            bg: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%)",
-                          },
-                          {
-                            key: "sunset" as const,
-                            label: "Sunset",
-                            bg: "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)",
-                          },
-                          {
-                            key: "forest" as const,
-                            label: "Forest",
-                            bg: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
-                          },
-                          {
-                            key: "berry" as const,
-                            label: "Berry",
-                            bg: "linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #dc2626 100%)",
-                          },
-                        ].map(({ key, label, bg }) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setPendingGradientPreset(key)}
-                            className={cn(
-                              "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-105 transition-transform",
-                              pendingGradientPreset === key
-                                ? "border-primary ring-2 ring-primary/20"
-                                : "border-border",
-                            )}
-                          >
-                            <div
-                              className="absolute inset-0"
-                              style={{ background: bg }}
-                            />
-                            <span className="absolute bottom-0 inset-x-0 py-2 bg-black/40 text-white text-xs font-medium text-center">
-                              {label}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Animated Background</CardTitle>
-                    <CardDescription>
-                      Choose an animated background for your profile. Overrides gradient theme when set.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       {(["antigravity", "aurora", "iridescence"] as const).map((key) => (
                         <button
                           key={key}
@@ -1058,15 +1010,61 @@ export default function Dashboard() {
                         </button>
                       ))}
                     </div>
-                    {pendingBackgroundPreset && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => setPendingBackgroundPreset(null)}
-                      >
-                        Clear background
-                      </Button>
+                    {pendingBackgroundPreset === "gradient" && (
+                      <>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Gradient style</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                            {[
+                              {
+                                key: "default" as const,
+                                label: "Default",
+                                bg: "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
+                              },
+                              {
+                                key: "ocean" as const,
+                                label: "Ocean",
+                                bg: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%)",
+                              },
+                              {
+                                key: "sunset" as const,
+                                label: "Sunset",
+                                bg: "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)",
+                              },
+                              {
+                                key: "forest" as const,
+                                label: "Forest",
+                                bg: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
+                              },
+                              {
+                                key: "berry" as const,
+                                label: "Berry",
+                                bg: "linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #dc2626 100%)",
+                              },
+                            ].map(({ key, label, bg }) => (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => setPendingGradientPreset(key)}
+                                className={cn(
+                                  "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-105 transition-transform",
+                                  pendingGradientPreset === key
+                                    ? "border-primary ring-2 ring-primary/20"
+                                    : "border-border",
+                                )}
+                              >
+                                <div
+                                  className="absolute inset-0"
+                                  style={{ background: bg }}
+                                />
+                                <span className="absolute bottom-0 inset-x-0 py-2 bg-black/40 text-white text-xs font-medium text-center">
+                                  {label}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -1119,7 +1117,7 @@ export default function Dashboard() {
                         theme: pendingTheme,
                         backgroundPreset: pendingBackgroundPreset ?? undefined,
                         gradientPreset:
-                          pendingTheme === "gradient"
+                          pendingBackgroundPreset === "gradient"
                             ? pendingGradientPreset ?? "default"
                             : null,
                         accentColor: pendingAccentColor ?? undefined,

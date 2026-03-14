@@ -46,8 +46,8 @@ type ProfilePreviewPhoneProps = {
   whatsappNumber?: string | null;
   countryCode?: string | null;
   contactEmail?: string | null;
-  theme?: "light" | "dark" | "gradient";
-  backgroundPreset?: "antigravity" | "aurora" | "iridescence" | null;
+  theme?: "light" | "dark";
+  backgroundPreset?: "gradient" | "antigravity" | "aurora" | "iridescence" | null;
   gradientPreset?: "default" | "ocean" | "sunset" | "forest" | "berry" | null;
   accentColor?: string | null;
 };
@@ -109,64 +109,53 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
 
   const profileHref = username ? `/${username}` : "/";
   const isDarkTheme = theme === "dark";
-  const isGradientTheme = theme === "gradient";
-  const hasAnimatedBg = !!backgroundPreset;
+  const hasGradientBg = backgroundPreset === "gradient";
+  const hasAnimatedBg =
+    backgroundPreset === "antigravity" ||
+    backgroundPreset === "aurora" ||
+    backgroundPreset === "iridescence";
   const gradientStyle =
-    isGradientTheme && gradientPreset
-      ? GRADIENT_STYLES[gradientPreset] ?? GRADIENT_STYLES.default
+    hasGradientBg
+      ? GRADIENT_STYLES[gradientPreset ?? "default"] ?? GRADIENT_STYLES.default
       : GRADIENT_STYLES.default;
 
-  const headerClass = hasAnimatedBg
+  const headerClass = hasAnimatedBg || hasGradientBg
     ? "bg-transparent"
     : isDarkTheme
       ? "bg-slate-900"
-      : isGradientTheme
-        ? ""
-        : "bg-white";
+      : "bg-white";
 
-  const headerStyle =
-    !hasAnimatedBg && isGradientTheme
-      ? { background: gradientStyle.bg }
-      : undefined;
+  const headerStyle = undefined;
 
-  const contentClass = hasAnimatedBg
+  const contentClass = hasAnimatedBg || hasGradientBg
     ? "bg-transparent"
     : isDarkTheme
       ? "bg-slate-950"
-      : isGradientTheme
-        ? ""
-        : "bg-white";
+      : "bg-white";
 
-  const contentStyle =
-    !hasAnimatedBg && isGradientTheme
-      ? { background: gradientStyle.bg }
-      : undefined;
+  const contentStyle = undefined;
 
   const sectionClass = isDarkTheme || hasAnimatedBg
     ? "text-slate-100"
-    : isGradientTheme
+    : hasGradientBg
       ? "text-white"
       : "text-slate-900";
 
   const mutedTextClass = isDarkTheme || hasAnimatedBg
     ? "text-slate-300"
-    : isGradientTheme
+    : hasGradientBg
       ? "text-white/80"
       : "text-slate-600";
 
   const cardClass =
-    isDarkTheme || hasAnimatedBg
-      ? "border-white/20 bg-white/10 backdrop-blur-md"
-      : isGradientTheme
-        ? "border-white/30 bg-white/15 backdrop-blur-md"
-        : "border-slate-200 bg-white";
+    isDarkTheme || hasAnimatedBg || hasGradientBg
+      ? (hasGradientBg ? "border-white/30 bg-white/15 backdrop-blur-md" : "border-white/20 bg-white/10 backdrop-blur-md")
+      : "border-slate-200 bg-white";
 
   const iconBgClass =
-    isDarkTheme || hasAnimatedBg
+    isDarkTheme || hasAnimatedBg || hasGradientBg
       ? "bg-white/20 border-white/30"
-      : isGradientTheme
-        ? "bg-white/20 border-white/30"
-        : "bg-slate-100 border-slate-200";
+      : "bg-slate-100 border-slate-200";
 
   return (
     <div className="hidden lg:block w-83.5 shrink-0">
@@ -188,20 +177,27 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
         </div>
         <div className="border-11 border-slate-900 rounded-[2.64rem] h-165 overflow-hidden bg-white shadow-2xl relative">
           <div className="absolute top-0 inset-x-0 h-5.5 bg-slate-900 rounded-b-lg w-32 mx-auto z-20" />
-          {hasAnimatedBg && backgroundPreset && (
-            <div className="absolute inset-0 z-0 overflow-hidden">
-              {backgroundPreset === "antigravity" && (
-                <Antigravity count={120} color="#FF9FFC" particleSize={1.5} />
+          {(hasAnimatedBg && backgroundPreset) || hasGradientBg ? (
+            <div
+              className="absolute inset-0 z-0 overflow-hidden"
+              style={hasGradientBg ? { background: gradientStyle.bg } : undefined}
+            >
+              {hasAnimatedBg && backgroundPreset && (
+                <>
+                  {backgroundPreset === "antigravity" && (
+                    <Antigravity count={120} color="#FF9FFC" particleSize={1.5} />
+                  )}
+                  {backgroundPreset === "aurora" && (
+                    <Aurora colorStops={["#5227FF", "#7cff67", "#5227FF"]} amplitude={1} blend={0.5} />
+                  )}
+                  {backgroundPreset === "iridescence" && (
+                    <Iridescence speed={1} amplitude={0.1} mouseReact={false} />
+                  )}
+                  <div className="absolute inset-0 bg-black/40" />
+                </>
               )}
-              {backgroundPreset === "aurora" && (
-                <Aurora colorStops={["#5227FF", "#7cff67", "#5227FF"]} amplitude={1} blend={0.5} />
-              )}
-              {backgroundPreset === "iridescence" && (
-                <Iridescence speed={1} amplitude={0.1} mouseReact={false} />
-              )}
-              <div className="absolute inset-0 bg-black/40" />
             </div>
-          )}
+          ) : null}
           <div className="h-full w-full overflow-y-auto flex flex-col relative z-10">
             {/* Header - Fixed */}
             <div
@@ -227,7 +223,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                   "h-20 w-20 rounded-full flex items-center justify-center shadow-lg mb-4 overflow-hidden border-4",
                   isDarkTheme
                     ? "bg-slate-700 border-slate-800"
-                    : isGradientTheme || hasAnimatedBg
+                    : hasGradientBg || hasAnimatedBg
                       ? "bg-white/20 border-white/30"
                       : "bg-slate-200 border-white/70",
                 )}
@@ -262,7 +258,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shadow-sm",
                   isDarkTheme
                     ? "border-slate-700 bg-slate-800 text-slate-100"
-                    : isGradientTheme || hasAnimatedBg
+                    : hasGradientBg || hasAnimatedBg
                       ? "border-white/30 bg-white/20 text-white"
                       : "border-slate-200 bg-white text-slate-900",
                 )}
@@ -283,7 +279,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                       "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
                       isDarkTheme
                         ? "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                        : isGradientTheme || hasAnimatedBg
+                        : hasGradientBg || hasAnimatedBg
                           ? "border-white/30 bg-white/20 hover:bg-white/30"
                           : "border-slate-200 bg-white hover:bg-slate-50",
                     )}
@@ -292,7 +288,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <Phone
                       className={cn(
                         "w-3.5 h-3.5",
-                        isDarkTheme || isGradientTheme || hasAnimatedBg
+                        isDarkTheme || hasGradientBg || hasAnimatedBg
                           ? "text-white"
                           : "text-slate-700",
                       )}
@@ -309,7 +305,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                       "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
                       isDarkTheme
                         ? "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                        : isGradientTheme || hasAnimatedBg
+                        : hasGradientBg || hasAnimatedBg
                           ? "border-white/30 bg-white/20 hover:bg-white/30"
                           : "border-slate-200 bg-white hover:bg-slate-50",
                     )}
@@ -318,7 +314,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <SiWhatsapp
                       className={cn(
                         "w-3.5 h-3.5",
-                        isDarkTheme || isGradientTheme || hasAnimatedBg
+                        isDarkTheme || hasGradientBg || hasAnimatedBg
                           ? "text-white"
                           : "text-slate-700",
                       )}
@@ -333,7 +329,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                       "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
                       isDarkTheme
                         ? "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                        : isGradientTheme || hasAnimatedBg
+                        : hasGradientBg || hasAnimatedBg
                           ? "border-white/30 bg-white/20 hover:bg-white/30"
                           : "border-slate-200 bg-white hover:bg-slate-50",
                     )}
@@ -342,7 +338,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <Mail
                       className={cn(
                         "w-3.5 h-3.5",
-                        isDarkTheme || isGradientTheme || hasAnimatedBg
+                        isDarkTheme || hasGradientBg || hasAnimatedBg
                           ? "text-white"
                           : "text-slate-700",
                       )}
@@ -364,7 +360,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     "rounded-2xl border-2 border-dashed p-4 text-xs text-center",
                     isDarkTheme
                       ? "border-slate-700 text-slate-400"
-                      : isGradientTheme || hasAnimatedBg
+                      : hasGradientBg || hasAnimatedBg
                         ? "border-white/40 text-white/80"
                         : "border-slate-300 text-slate-600",
                   )}
@@ -385,9 +381,9 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                           "flex items-center justify-between rounded-2xl border transition-colors p-4 group cursor-pointer shadow-sm hover:shadow-md",
                           cardClass,
                           isDarkTheme && "hover:bg-slate-800",
-                          (isGradientTheme || hasAnimatedBg) && "hover:bg-white/20",
+                          (hasGradientBg || hasAnimatedBg) && "hover:bg-white/20",
                           !isDarkTheme &&
-                            !isGradientTheme &&
+                            !hasGradientBg &&
                             "hover:bg-slate-50",
                         )}
                       >
@@ -397,7 +393,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                               "h-9 w-9 rounded-full border flex items-center justify-center",
                               isDarkTheme
                                 ? "bg-slate-800 border-slate-700"
-                                : isGradientTheme || hasAnimatedBg
+                                : hasGradientBg || hasAnimatedBg
                                   ? "bg-white/20 border-white/30"
                                   : "bg-slate-100 border-slate-200",
                             )}
@@ -405,7 +401,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                             <Icon
                               className={cn(
                                 "h-5 w-5",
-                                isDarkTheme || isGradientTheme || hasAnimatedBg
+                                isDarkTheme || hasGradientBg || hasAnimatedBg
                                   ? "text-white"
                                   : "text-slate-700",
                               )}
@@ -423,7 +419,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                         <ExternalLink
                           className={cn(
                             "w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity",
-                            isDarkTheme || isGradientTheme || hasAnimatedBg
+                            isDarkTheme || hasGradientBg || hasAnimatedBg
                               ? "text-white/70"
                               : "text-slate-400",
                           )}
@@ -440,7 +436,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                   "border-t pt-4",
                   isDarkTheme
                     ? "border-slate-800"
-                    : isGradientTheme || hasAnimatedBg
+                    : hasGradientBg || hasAnimatedBg
                       ? "border-white/30"
                       : "border-slate-200",
                 )}

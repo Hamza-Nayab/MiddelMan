@@ -438,22 +438,28 @@ export default function ProfilePage() {
       button: "bg-slate-800 hover:bg-slate-700 text-white",
       overlay: null as React.ReactNode,
     },
-    gradient: {
-      bg: "bg-background",
-      text: "text-slate-900",
-      card: "bg-white/80 backdrop-blur-sm border-white/40 shadow-sm",
-      cardText: "text-slate-900",
-      button: "bg-white/50 backdrop-blur-sm hover:bg-white/70",
-      overlay: null as React.ReactNode,
-    },
   };
 
-  const currentTheme = themeStyles[profile.theme] || themeStyles.light;
-  const hasAnimatedBg = !!profile.backgroundPreset;
-  const gradientBg =
-    profile.theme === "gradient" && profile.gradientPreset
-      ? GRADIENT_PRESETS[profile.gradientPreset] ?? GRADIENT_PRESETS.default
-      : null;
+  const effectiveTheme = profile.theme === "gradient" ? "light" : profile.theme;
+  const hasGradientBg =
+    profile.backgroundPreset === "gradient" || profile.theme === "gradient";
+  const gradientBg = hasGradientBg
+    ? GRADIENT_PRESETS[profile.gradientPreset ?? "default"] ?? GRADIENT_PRESETS.default
+    : null;
+  const hasAnimatedBg =
+    profile.backgroundPreset === "antigravity" ||
+    profile.backgroundPreset === "aurora" ||
+    profile.backgroundPreset === "iridescence";
+  const baseTheme = themeStyles[effectiveTheme] ?? themeStyles.light;
+  const currentTheme =
+    gradientBg != null
+      ? {
+          ...baseTheme,
+          card: "bg-white/15 backdrop-blur-md border-white/30 shadow-sm",
+          cardText: "text-white",
+          button: "bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white",
+        }
+      : baseTheme;
   const accentColor = profile.accentColor ?? undefined;
 
   const bgPreset = profile.backgroundPreset as
@@ -471,20 +477,11 @@ export default function ProfilePage() {
       >
         <div className="absolute inset-0 bg-white/30 dark:bg-black/20" />
       </div>
-    ) : profile.theme === "gradient" ? (
-      <div className="fixed inset-0 z-0">
-        <img
-          src={generatedImage}
-          alt=""
-          className="w-full h-full object-cover opacity-30 blur-3xl scale-110"
-        />
-        <div className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-[2px]" />
-      </div>
     ) : (
       currentTheme.overlay
     );
   const iconWrapperClass =
-    hasAnimatedBg
+    hasAnimatedBg || gradientBg
       ? "bg-white/20 border-white/30 text-white"
       : profile.theme === "dark"
         ? "bg-slate-800 border border-slate-700 text-slate-100"
@@ -494,8 +491,8 @@ export default function ProfilePage() {
     <div
       className={cn(
         "min-h-screen relative overflow-x-hidden font-sans",
-        hasAnimatedBg ? "bg-transparent" : currentTheme.bg,
-        currentTheme.text,
+        hasAnimatedBg || gradientBg ? "bg-transparent" : currentTheme.bg,
+        gradientBg ? "text-white" : currentTheme.text,
       )}
     >
       {/* Background */}
