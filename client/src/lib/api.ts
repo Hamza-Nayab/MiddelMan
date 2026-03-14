@@ -189,6 +189,8 @@ export type LoginPayload = {
   password: string;
 };
 
+export type GradientPreset = "default" | "ocean" | "sunset" | "forest" | "berry";
+
 export type ProfileUpdatePayload = Partial<{
   displayName: string;
   bio: string;
@@ -198,6 +200,9 @@ export type ProfileUpdatePayload = Partial<{
   phoneNumber: string;
   countryCode: string;
   theme: ProfileTheme;
+  backgroundPreset: "antigravity" | "aurora" | "iridescence" | null;
+  gradientPreset: GradientPreset | null;
+  accentColor: string | null;
 }>;
 
 export type LinkCreatePayload = {

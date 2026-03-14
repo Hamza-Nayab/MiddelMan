@@ -30,6 +30,9 @@ export const profiles = pgTable("profiles", {
     .notNull()
     .default("none"),
   theme: themeEnum("theme").notNull().default("light"),
+  backgroundPreset: varchar("background_preset", { length: 20 }),
+  gradientPreset: varchar("gradient_preset", { length: 20 }),
+  accentColor: varchar("accent_color", { length: 7 }),
   avgRating: integer("avg_rating").notNull().default(0),
   totalReviews: integer("total_reviews").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -82,6 +85,9 @@ export const insertProfileSchema = createInsertSchema(profiles).pick({
   isVerified: true,
   verificationMethod: true,
   theme: true,
+  backgroundPreset: true,
+  gradientPreset: true,
+  accentColor: true,
 });
 
 export const insertLinkSchema = createInsertSchema(links).pick({

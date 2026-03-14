@@ -20,6 +20,7 @@ import MyReviewsPage from "@/pages/my-reviews";
 import DemoPage from "@/pages/demo";
 import DisabledPage from "@/pages/disabled";
 import AccessNotAvailablePage from "@/pages/access-not-available";
+import AboutPage from "@/pages/about";
 
 function Router() {
   return (
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/demo" component={DemoPage} />
       <Route path="/disabled" component={DisabledPage} />
       <Route path="/access-not-available" component={AccessNotAvailablePage} />
+      <Route path="/about" component={AboutPage} />
       {/* Dynamic route for profiles - MUST be last to avoid conflict */}
       <Route path="/:username" component={ProfilePage} />
       <Route component={NotFound} />

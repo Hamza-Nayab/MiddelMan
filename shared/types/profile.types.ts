@@ -3,6 +3,7 @@ import type { User } from "./user.types";
 export type VerificationMethod = "none" | "ig_bio_code" | "whatsapp_otp" | "manual";
 
 export type ProfileTheme = "light" | "dark" | "gradient";
+export type GradientPreset = "default" | "ocean" | "sunset" | "forest" | "berry";
 
 export type Profile = {
   userId: number;
@@ -16,6 +17,9 @@ export type Profile = {
   isVerified: boolean;
   verificationMethod: VerificationMethod;
   theme: ProfileTheme;
+  backgroundPreset: string | null;
+  gradientPreset: string | null;
+  accentColor: string | null;
   createdAt: string;
   updatedAt: string;
 };

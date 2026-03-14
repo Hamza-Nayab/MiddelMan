@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/popover";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import generatedImage from "@assets/generated_images/abstract_soft_gradient_mesh_background.png";
+import { Antigravity, Aurora, Iridescence } from "@/components/backgrounds";
 import logoImg from "@/assets/middelman-bg.png";
 import {
   getAvatarUrl,
@@ -412,7 +413,14 @@ export default function ProfilePage() {
     }
   };
 
-  // Theme Config
+  const GRADIENT_PRESETS: Record<string, string> = {
+    default: "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
+    ocean: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%)",
+    sunset: "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)",
+    forest: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
+    berry: "linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #dc2626 100%)",
+  };
+
   const themeStyles = {
     light: {
       bg: "bg-slate-50",
@@ -420,7 +428,7 @@ export default function ProfilePage() {
       card: "bg-white border-slate-200 shadow-sm",
       cardText: "text-slate-800",
       button: "bg-white/80 hover:bg-white text-slate-900",
-      overlay: null,
+      overlay: null as React.ReactNode,
     },
     dark: {
       bg: "bg-slate-950",
@@ -428,43 +436,70 @@ export default function ProfilePage() {
       card: "bg-slate-900 border-slate-800 shadow-sm",
       cardText: "text-slate-100",
       button: "bg-slate-800 hover:bg-slate-700 text-white",
-      overlay: null,
+      overlay: null as React.ReactNode,
     },
     gradient: {
-      bg: "bg-background", // Fallback, uses image
+      bg: "bg-background",
       text: "text-slate-900",
       card: "bg-white/80 backdrop-blur-sm border-white/40 shadow-sm",
       cardText: "text-slate-900",
       button: "bg-white/50 backdrop-blur-sm hover:bg-white/70",
-      overlay: (
-        <div className="fixed inset-0 z-0">
-          <img
-            src={generatedImage}
-            alt="Background"
-            className="w-full h-full object-cover opacity-30 blur-3xl scale-110"
-          />
-          <div className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-[2px]" />
-        </div>
-      ),
+      overlay: null as React.ReactNode,
     },
   };
 
   const currentTheme = themeStyles[profile.theme] || themeStyles.light;
+  const hasAnimatedBg = !!profile.backgroundPreset;
+  const gradientBg =
+    profile.theme === "gradient" && profile.gradientPreset
+      ? GRADIENT_PRESETS[profile.gradientPreset] ?? GRADIENT_PRESETS.default
+      : null;
+  const accentColor = profile.accentColor ?? undefined;
+
+  const bgPreset = profile.backgroundPreset as
+    | "antigravity"
+    | "aurora"
+    | "iridescence"
+    | null;
+  const backgroundOverlay =
+    hasAnimatedBg && bgPreset ? (
+      <ProfileAnimatedBackground preset={bgPreset} />
+    ) : gradientBg ? (
+      <div
+        className="fixed inset-0 z-0"
+        style={{ background: gradientBg }}
+      >
+        <div className="absolute inset-0 bg-white/30 dark:bg-black/20" />
+      </div>
+    ) : profile.theme === "gradient" ? (
+      <div className="fixed inset-0 z-0">
+        <img
+          src={generatedImage}
+          alt=""
+          className="w-full h-full object-cover opacity-30 blur-3xl scale-110"
+        />
+        <div className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-[2px]" />
+      </div>
+    ) : (
+      currentTheme.overlay
+    );
   const iconWrapperClass =
-    profile.theme === "dark"
-      ? "bg-slate-800 border border-slate-700 text-slate-100"
-      : "bg-white/80 text-slate-900";
+    hasAnimatedBg
+      ? "bg-white/20 border-white/30 text-white"
+      : profile.theme === "dark"
+        ? "bg-slate-800 border border-slate-700 text-slate-100"
+        : "bg-white/80 text-slate-900";
 
   return (
     <div
       className={cn(
         "min-h-screen relative overflow-x-hidden font-sans",
-        currentTheme.bg,
+        hasAnimatedBg ? "bg-transparent" : currentTheme.bg,
         currentTheme.text,
       )}
     >
       {/* Background */}
-      {currentTheme.overlay}
+      {backgroundOverlay}
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 py-12 pb-24 flex flex-col items-center">
         {/* Logo */}
@@ -970,6 +1005,31 @@ export default function ProfilePage() {
           </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ProfileAnimatedBackground({
+  preset,
+}: {
+  preset: "antigravity" | "aurora" | "iridescence";
+}) {
+  return (
+    <div className="fixed inset-0 z-0 overflow-hidden">
+      {preset === "antigravity" && (
+        <Antigravity count={300} color="#FF9FFC" particleSize={2} />
+      )}
+      {preset === "aurora" && (
+        <Aurora
+          colorStops={["#5227FF", "#7cff67", "#5227FF"]}
+          amplitude={1}
+          blend={0.5}
+        />
+      )}
+      {preset === "iridescence" && (
+        <Iridescence speed={1} amplitude={0.1} mouseReact />
+      )}
+      <div className="absolute inset-0 bg-white/40 dark:bg-black/30" />
     </div>
   );
 }

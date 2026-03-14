@@ -1,5 +1,7 @@
 import { Link, useLocation } from "wouter";
+import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -31,6 +33,26 @@ export function Layout({
     },
   });
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    const trimmed = searchQuery.trim();
+
+    // If there's no query yet, just toggle open state instead of navigating
+    if (!trimmed) {
+      setIsSearchExpanded(true);
+      return;
+    }
+
+    const params = new URLSearchParams({ q: trimmed });
+    setLocation(`/search?${params.toString()}`);
+  };
+
   if (isLoading)
     return (
       <div className="h-screen w-full flex items-center justify-center">
@@ -51,17 +73,53 @@ export function Layout({
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link href="/search">
+            <form
+              onSubmit={handleSearchSubmit}
+              className={cn(
+                "flex items-center gap-2 transition-all duration-300 group",
+                isSearchExpanded ? "w-64" : "w-[88px]",
+              )}
+              onMouseEnter={() => setIsSearchExpanded(true)}
+              onMouseLeave={() => {
+                if (!searchQuery.trim()) {
+                  setIsSearchExpanded(false);
+                }
+              }}
+            >
               <Button
+                type="submit"
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "text-muted-foreground",
-                  location === "/search" && "text-primary bg-accent",
+                  "text-muted-foreground whitespace-nowrap",
+                  location.startsWith("/search") && "text-primary bg-accent",
                 )}
               >
                 Search
               </Button>
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn(
+                  "h-8 rounded-full border-border/60 bg-background/80 pl-3 pr-3 text-sm transition-all duration-300 ease-out",
+                  "focus-visible:ring-0 focus-visible:ring-offset-0",
+                  isSearchExpanded
+                    ? "opacity-100 w-40 ml-1"
+                    : "opacity-0 w-0 ml-0 pointer-events-none",
+                )}
+              />
+            </form>
+            <Link
+              href="/about"
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "text-sm",
+                location === "/about" && "bg-accent",
+              )}
+            >
+              About
             </Link>
             {user ? (
               <>
@@ -125,8 +183,16 @@ export function Layout({
         </div>
       </nav>
       <main className={cn("flex-1", className)}>{children}</main>
-      <footer className="py-8 border-t border-border/40 text-center text-sm text-muted-foreground">
-        © 2025 MiddelMen. All rights reserved.
+      <footer className="py-8 border-t border-border/40">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-muted-foreground">
+          <Link
+            href="/about"
+            className="hover:text-foreground transition-colors"
+          >
+            About & Privacy
+          </Link>
+          <span>© 2025 MiddelMen. All rights reserved.</span>
+        </div>
       </footer>
     </div>
   );

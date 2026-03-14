@@ -88,6 +88,12 @@ const profileUpdateSchema = z
       .optional(),
     countryCode: z.string().length(2).optional(),
     theme: z.enum(["light", "dark", "gradient"]).optional(),
+    backgroundPreset: z.enum(["antigravity", "aurora", "iridescence"]).nullable().optional(),
+    gradientPreset: z.enum(["default", "ocean", "sunset", "forest", "berry"]).nullable().optional(),
+    accentColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color (e.g. #38b6ff)")
+      .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field is required",
@@ -447,6 +453,9 @@ const profileColumns = {
   isVerified: profiles.isVerified,
   verificationMethod: profiles.verificationMethod,
   theme: profiles.theme,
+  backgroundPreset: profiles.backgroundPreset,
+  gradientPreset: profiles.gradientPreset,
+  accentColor: profiles.accentColor,
   avgRating: profiles.avgRating,
   totalReviews: profiles.totalReviews,
   createdAt: profiles.createdAt,
@@ -708,7 +717,14 @@ export async function registerAllRoutes(app: Express): Promise<void> {
             whatsappNumber: null,
             phoneNumber: null,
             countryCode: null,
+            isVerified: false,
+            verificationMethod: "none" as const,
             theme: "light" as const,
+            backgroundPreset: null,
+            gradientPreset: null,
+            accentColor: null,
+            avgRating: 0,
+            totalReviews: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
           };
@@ -2107,8 +2123,9 @@ export async function registerAllRoutes(app: Express): Promise<void> {
       }
     }
 
+    const raw = parsed.data as Record<string, unknown>;
     const updates = {
-      ...parsed.data,
+      ...raw,
       updatedAt: new Date(),
     } as Record<string, unknown>;
 
