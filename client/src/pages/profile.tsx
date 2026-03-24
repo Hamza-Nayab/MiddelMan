@@ -44,7 +44,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
-import generatedImage from "@assets/generated_images/abstract_soft_gradient_mesh_background.png";
 import { Antigravity, Aurora, Iridescence } from "@/components/backgrounds";
 import logoImg from "@/assets/middelman-bg.png";
 import {
@@ -77,6 +76,7 @@ const UsernameChangeSchema = z.object({
 });
 
 const SAMPLE_RATE = 1 / 3;
+const PUBLIC_REVIEWS_PAGE_SIZE = 5;
 
 const getDayKey = () => new Date().toISOString().slice(0, 10);
 
@@ -107,7 +107,7 @@ export default function ProfilePage() {
     data,
     isLoading: profileLoading,
     error: profileError,
-  } = useProfileBundleQuery(username);
+  } = useProfileBundleQuery(username, { limit: PUBLIC_REVIEWS_PAGE_SIZE });
 
   // Track profile view if not owner and should sample
   const trackingMutation = useMutation({
@@ -191,13 +191,17 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user || !profile) return;
 
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://middelmen.com";
     const displayName = profile.displayName || user.username || "Seller";
     const title = `${displayName} | MiddelMen Trust Profile`;
     const description = `View ${displayName}'s verified reviews, seller reputation, and trusted profile on MiddelMen.`;
-    const profileUrl = `${typeof window !== "undefined" ? window.location.origin : "https://middelmen.com"}/profile/${encodeURIComponent(user.username || "")}`;
+    const profileUrl = `${origin}/${encodeURIComponent(user.username || "")}`;
     const imageUrl = profile.avatarUrl
       ? profile.avatarUrl
-      : `${typeof window !== "undefined" ? window.location.origin : "https://middelmen.com"}/default-avatar.png`;
+      : `${origin}/default-avatar.png`;
 
     // Update document title
     document.title = title;
@@ -221,6 +225,7 @@ export default function ProfilePage() {
 
     // Meta description
     updateMeta("description", description);
+    updateMeta("robots", "index, follow");
 
     // OpenGraph tags
     updateMeta("og:title", title, true);
@@ -444,7 +449,8 @@ export default function ProfilePage() {
   const hasGradientBg =
     profile.backgroundPreset === "gradient" || profile.theme === "gradient";
   const gradientBg = hasGradientBg
-    ? GRADIENT_PRESETS[profile.gradientPreset ?? "default"] ?? GRADIENT_PRESETS.default
+    ? (GRADIENT_PRESETS[profile.gradientPreset ?? "default"] ??
+      GRADIENT_PRESETS.default)
     : null;
   const hasAnimatedBg =
     profile.backgroundPreset === "antigravity" ||
@@ -457,11 +463,10 @@ export default function ProfilePage() {
           ...baseTheme,
           card: "bg-white/15 backdrop-blur-md border-white/30 shadow-sm",
           cardText: "text-white",
-          button: "bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white",
+          button:
+            "bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white",
         }
       : baseTheme;
-  const accentColor = profile.accentColor ?? undefined;
-
   const bgPreset = profile.backgroundPreset as
     | "antigravity"
     | "aurora"
@@ -471,10 +476,7 @@ export default function ProfilePage() {
     hasAnimatedBg && bgPreset ? (
       <ProfileAnimatedBackground preset={bgPreset} />
     ) : gradientBg ? (
-      <div
-        className="fixed inset-0 z-0"
-        style={{ background: gradientBg }}
-      >
+      <div className="fixed inset-0 z-0" style={{ background: gradientBg }}>
         <div className="absolute inset-0 bg-white/30 dark:bg-black/20" />
       </div>
     ) : (
@@ -573,7 +575,7 @@ export default function ProfilePage() {
                                 />
                               </FormControl>
                               {usernameInput &&
-                                usernameInput === (user.username ?? "") && (
+                                usernameInput === (user?.username ?? "") && (
                                   <p className="text-xs text-muted-foreground">
                                     This is already your current username.
                                   </p>
@@ -632,7 +634,7 @@ export default function ProfilePage() {
                           {usernameCooldownActive && nextUsernameChangeAt && (
                             <p>
                               Next change in {daysUntilUsernameChange} day(s)
-                              (available {nextUsernameChangeAt.toDateString()})
+                              (available {nextUsernameChangeAt?.toDateString()})
                             </p>
                           )}
                         </div>
@@ -990,7 +992,14 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {user && <ReviewsSection userId={user.id} />}
+          {user && (
+            <ReviewsSection
+              userId={user.id}
+              initialReviews={data?.reviews}
+              initialStats={data?.stats}
+              initialNextCursor={data?.nextCursor}
+            />
+          )}
         </div>
 
         <div className="mt-12 text-center">

@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 
 type AuroraProps = {
   colorStops?: [string, string, string];
   amplitude?: number;
   blend?: number;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function Aurora({

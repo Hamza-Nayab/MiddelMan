@@ -4,12 +4,23 @@ import { api } from "@/lib/api";
 export const profileBundleQueryKey = (username?: string) =>
   ["profile-bundle", username] as const;
 
+type ProfileBundleOptions = {
+  limit?: number;
+};
+
 export const givenReviewsQueryKey = ["given-reviews"] as const;
 
-export function useProfileBundleQuery(username?: string) {
+export function useProfileBundleQuery(
+  username?: string,
+  options?: ProfileBundleOptions,
+) {
   return useQuery({
-    queryKey: profileBundleQueryKey(username),
-    queryFn: () => api.getPublicProfileBundle(username!, { track: false }),
+    queryKey: [...profileBundleQueryKey(username), options?.limit] as const,
+    queryFn: () =>
+      api.getPublicProfileBundle(username!, {
+        track: false,
+        limit: options?.limit,
+      }),
     enabled: !!username,
     retry: false,
     staleTime: 60_000,

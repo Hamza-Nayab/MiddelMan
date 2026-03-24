@@ -152,11 +152,6 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
       ? (hasGradientBg ? "border-white/30 bg-white/15 backdrop-blur-md" : "border-white/20 bg-white/10 backdrop-blur-md")
       : "border-slate-200 bg-white";
 
-  const iconBgClass =
-    isDarkTheme || hasAnimatedBg || hasGradientBg
-      ? "bg-white/20 border-white/30"
-      : "bg-slate-100 border-slate-200";
-
   return (
     <div className="hidden lg:block w-83.5 shrink-0">
       <div className="sticky top-24">

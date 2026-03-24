@@ -36,6 +36,9 @@ type LinksTabProps = {
   setIsAddLinkOpen: (open: boolean) => void;
   orderedLinks: LinkType[];
   isLinksLoading: boolean;
+  isLinksError: boolean;
+  linksErrorMessage: string;
+  onRetryLinks: () => void;
   links: LinkType[] | undefined;
   form: any;
   onSubmit: (values: any) => void;
@@ -59,6 +62,9 @@ export const LinksTab = memo(function LinksTab({
   setIsAddLinkOpen,
   orderedLinks,
   isLinksLoading,
+  isLinksError,
+  linksErrorMessage,
+  onRetryLinks,
   links,
   form,
   onSubmit,
@@ -195,6 +201,13 @@ export const LinksTab = memo(function LinksTab({
         {isLinksLoading ? (
           <div className="text-center py-10 text-muted-foreground">
             Loading links...
+          </div>
+        ) : isLinksError ? (
+          <div className="text-center py-10 border rounded-xl border-dashed space-y-3">
+            <p className="text-sm text-destructive">{linksErrorMessage}</p>
+            <Button variant="outline" size="sm" onClick={onRetryLinks}>
+              Retry
+            </Button>
           </div>
         ) : links?.length === 0 ? (
           <div className="text-center py-10 border rounded-xl border-dashed">

@@ -46,10 +46,6 @@ export function createSearchController(deps: { ok: OkFn; error: ErrorFn }) {
       if (result.serverTiming) {
         res.setHeader("Server-Timing", result.serverTiming);
       }
-      if (result.logLine) {
-        console.log(result.logLine);
-      }
-
       return res.status(200).json(deps.ok(result.response));
     } catch (err) {
       if (err instanceof SearchValidationError) {

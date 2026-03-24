@@ -1,6 +1,8 @@
 import path from "path";
 import { config } from "dotenv";
-config({ path: path.resolve(process.cwd(), "../.env") });
+if (process.env.NODE_ENV !== "production") {
+  config({ path: path.resolve(process.cwd(), ".env") });
+}
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -12,10 +14,58 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { initAuth } from "./auth";
 import { pool } from "./db";
-import { toPublicErrorResponse } from "./lib/api-response";
+import { error, toPublicErrorResponse } from "./lib/api-response";
+import { appLog } from "./lib/logger";
 
+const isProduction = process.env.NODE_ENV === "production";
 
-console.log(process.env.NODE_ENV);
+if (isProduction) {
+  const requiredProdEnv = [
+    "DATABASE_URL",
+    "SESSION_SECRET",
+    "REVIEW_HASH_SALT",
+    "APP_URL",
+  ] as const;
+
+  const missing = requiredProdEnv.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    throw new Error(
+      `FATAL: Missing required production environment variables: ${missing.join(", ")}`,
+    );
+  }
+
+  const databaseUrl = process.env.DATABASE_URL!;
+  if (/localhost|127\.0\.0\.1/i.test(databaseUrl)) {
+    throw new Error(
+      "FATAL: Refusing to start in production with a localhost DATABASE_URL",
+    );
+  }
+
+  const hasGoogleClientId = Boolean(process.env.GOOGLE_CLIENT_ID);
+  const hasGoogleClientSecret = Boolean(process.env.GOOGLE_CLIENT_SECRET);
+  if (hasGoogleClientId !== hasGoogleClientSecret) {
+    throw new Error(
+      "FATAL: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be provided together",
+    );
+  }
+
+  const r2Keys = [
+    "R2_ACCOUNT_ID",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_ENDPOINT",
+    "R2_BUCKET",
+    "R2_PUBLIC_BASE_URL",
+  ] as const;
+  const providedR2Count = r2Keys.filter((key) =>
+    Boolean(process.env[key]),
+  ).length;
+  if (providedR2Count > 0 && providedR2Count < r2Keys.length) {
+    throw new Error(
+      "FATAL: R2 configuration is incomplete. Set all R2_* variables or none.",
+    );
+  }
+}
 
 declare global {
   namespace Express {
@@ -27,6 +77,14 @@ declare global {
 
 const app = express();
 const httpServer = createServer(app);
+
+app.disable("x-powered-by");
+app.use((_req, res, next) => {
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
 
 declare module "http" {
   interface IncomingMessage {
@@ -65,7 +123,7 @@ app.use(
       : new MemoryStoreFactory({ checkPeriod: 24 * 60 * 60 * 1000 }),
     secret: sessionSecret,
     resave: false,
-    saveUninitialized: true, // Save session immediately so cookie is set
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax", // Strict same-site policy
@@ -76,6 +134,54 @@ app.use(
 );
 
 initAuth(app);
+
+app.use(async (req, res, next) => {
+  if (!req.path.startsWith("/api/me")) {
+    return next();
+  }
+
+  const sessionUserId = req.session?.userId;
+  if (!sessionUserId) {
+    return next();
+  }
+
+  try {
+    const result = await pool.query(
+      "select is_disabled, disabled_reason from users where id = $1 limit 1",
+      [sessionUserId],
+    );
+
+    const userRow = result.rows[0] as
+      | { is_disabled?: boolean; disabled_reason?: string | null }
+      | undefined;
+
+    if (userRow?.is_disabled) {
+      req.session.destroy(() => {
+        res.clearCookie("connect.sid", {
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+        res.status(403).json(
+          error("ACCOUNT_DISABLED", "Your account has been disabled", {
+            reason: userRow.disabled_reason || undefined,
+          }),
+        );
+      });
+      return;
+    }
+  } catch (err) {
+    appLog("error", "auth", "DISABLED_USER_GUARD_FAILED", {
+      requestId: req.requestId,
+      path: req.path,
+      method: req.method,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+  }
+
+  return next();
+});
 
 // Middleware: Generate and attach requestId for tracing
 app.use((req, res, next) => {
@@ -148,7 +254,13 @@ app.use((req, res, next) => {
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     const { status, body } = toPublicErrorResponse(err, req.requestId);
     res.status(status).json(body);
-    console.error("[express] Unhandled error", err);
+    appLog("error", "express", "UNHANDLED_ROUTE_ERROR", {
+      requestId: req.requestId,
+      status,
+      path: req.path,
+      method: req.method,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
   });
 
   // importantly only setup vite in development and after

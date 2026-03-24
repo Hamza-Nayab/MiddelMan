@@ -32,7 +32,7 @@ const userColumns = {
 
 const getGoogleCallbackUrl = () => {
   if (process.env.GOOGLE_CALLBACK_URL) return process.env.GOOGLE_CALLBACK_URL;
-  const appUrl = process.env.APP_URL || "http://localhost:5010";
+  const appUrl = process.env.APP_URL || "http://localhost:5005";
   return `${appUrl}/api/auth/google/callback`;
 };
 

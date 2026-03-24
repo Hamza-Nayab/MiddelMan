@@ -154,8 +154,9 @@ export type PublicProfileBundleResponse = {
   profile: Profile;
   links: Link[];
   reviews: Review[];
-  stats: { avgRating: number; totalReviews: number };
+  stats: ReviewStats;
   isOwner: boolean;
+  nextCursor?: number;
 };
 
 export type AnalyticsDay = SharedAnalyticsDay;
@@ -417,13 +418,24 @@ export const api = {
     request<{ updated: boolean }>("PATCH", "/api/me/links/reorder", {
       orderedIds,
     }),
-  getPublicProfileBundle: (username: string, options?: { track?: boolean }) =>
-    request<PublicProfileBundleResponse>(
+  getPublicProfileBundle: (
+    username: string,
+    options?: { track?: boolean; limit?: number },
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.track) params.set("track", "1");
+    if (options?.limit !== undefined) {
+      params.set("limit", String(options.limit));
+    }
+    const queryString = params.toString();
+
+    return request<PublicProfileBundleResponse>(
       "GET",
       `/api/profile/${encodeURIComponent(username)}/bundle${
-        options?.track ? "?track=1" : ""
+        queryString ? `?${queryString}` : ""
       }`,
-    ),
+    );
+  },
   trackProfileClick: (userId: number) =>
     request<{ recorded: boolean }>("POST", `/api/profile/${userId}/click`),
   getPublicReviews: (

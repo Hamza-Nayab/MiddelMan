@@ -6,7 +6,16 @@ export const publicReviewsQueryKey = (userId: number, rating: string) =>
 
 type PublicReviewsPage = Awaited<ReturnType<typeof api.getPublicReviews>>;
 
-export function usePublicReviewsInfinite(userId: number, rating: string) {
+type InitialPublicReviewsPage = Pick<
+  PublicReviewsPage,
+  "reviews" | "stats" | "nextCursor"
+>;
+
+export function usePublicReviewsInfinite(
+  userId: number,
+  rating: string,
+  initialPage?: InitialPublicReviewsPage,
+) {
   const queryClient = useQueryClient();
 
   const queryKey = publicReviewsQueryKey(userId, rating);
@@ -17,6 +26,17 @@ export function usePublicReviewsInfinite(userId: number, rating: string) {
       limit: 5,
     });
 
+  const seededInitialPage =
+    rating === "all" && initialPage
+      ? {
+          reviews: initialPage.reviews,
+          stats: initialPage.stats,
+          ...(initialPage.nextCursor
+            ? { nextCursor: initialPage.nextCursor }
+            : {}),
+        }
+      : undefined;
+
   const query = useInfiniteQuery({
     queryKey,
     queryFn,
@@ -24,21 +44,25 @@ export function usePublicReviewsInfinite(userId: number, rating: string) {
       lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as number | undefined,
     staleTime: 1000 * 60 * 5,
-    enabled: Number.isFinite(userId) && userId > 0,
+    initialData: seededInitialPage
+      ? {
+          pages: [seededInitialPage],
+          pageParams: [undefined as number | undefined],
+        }
+      : undefined,
+    enabled: Number.isFinite(userId) && userId > 0 && !seededInitialPage,
   });
-
-  const prefetchNextPage = () =>
-    queryClient.prefetchInfiniteQuery({
-      queryKey,
-      queryFn,
-      getNextPageParam: (lastPage: PublicReviewsPage) =>
-        lastPage.nextCursor ?? undefined,
-      initialPageParam: undefined as number | undefined,
-      staleTime: 1000 * 60 * 5,
-    });
 
   return {
     ...query,
-    prefetchNextPage,
+    prefetchNextPage: () =>
+      queryClient.prefetchInfiniteQuery({
+        queryKey,
+        queryFn,
+        getNextPageParam: (lastPage: PublicReviewsPage) =>
+          lastPage.nextCursor ?? undefined,
+        initialPageParam: undefined as number | undefined,
+        staleTime: 1000 * 60 * 5,
+      }),
   };
 }

@@ -111,7 +111,12 @@ export const adminAuditLogs = pgTable(
     targetReviewId: integer("target_review_id").references(() => reviews.id, {
       onDelete: "set null",
     }),
-    targetDisputeId: integer("target_dispute_id"),
+    targetDisputeId: integer("target_dispute_id").references(
+      () => reviewDisputes.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     details: json("details"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

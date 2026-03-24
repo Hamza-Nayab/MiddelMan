@@ -37,6 +37,9 @@ const disputeReasons = [
 
 type ReviewsTabProps = {
   isReviewsLoading: boolean;
+  isReviewsError: boolean;
+  reviewsErrorMessage: string;
+  onRetryReviews: () => void;
   reviews: any[];
   disputeDialogOpen: number | null;
   setDisputeDialogOpen: (id: number | null) => void;
@@ -53,6 +56,9 @@ type ReviewsTabProps = {
 
 export const ReviewsTab = memo(function ReviewsTab({
   isReviewsLoading,
+  isReviewsError,
+  reviewsErrorMessage,
+  onRetryReviews,
   reviews,
   disputeDialogOpen,
   setDisputeDialogOpen,
@@ -71,6 +77,13 @@ export const ReviewsTab = memo(function ReviewsTab({
       <div className="grid gap-4">
         {isReviewsLoading ? (
           <p className="text-center text-muted-foreground py-6">Loading reviews...</p>
+        ) : isReviewsError ? (
+          <div className="text-center py-10 space-y-3">
+            <p className="text-sm text-destructive">{reviewsErrorMessage}</p>
+            <Button variant="outline" size="sm" onClick={onRetryReviews}>
+              Retry
+            </Button>
+          </div>
         ) : reviews.length === 0 ? (
           <p className="text-center text-muted-foreground py-10">No reviews yet.</p>
         ) : (

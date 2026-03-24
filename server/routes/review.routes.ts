@@ -1,6 +1,6 @@
 import type { Express } from "express";
-import { registerAllRoutes } from "./all.routes";
+import { registerReviewsRoutes } from "./reviews.routes";
 
-export async function registerReviewRoutes(app: Express) {
-  await registerAllRoutes(app);
+export function registerReviewRoutes(app: Express): void {
+  registerReviewsRoutes(app);
 }

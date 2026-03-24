@@ -256,7 +256,13 @@ export default function Dashboard() {
   const profile = me?.profile;
 
   // Data Fetching
-  const { data: links, isLoading: isLinksLoading } = useQuery({
+  const {
+    data: links,
+    isLoading: isLinksLoading,
+    isError: isLinksError,
+    error: linksError,
+    refetch: refetchLinks,
+  } = useQuery({
     queryKey: LINKS_QUERY_KEY,
     queryFn: () => api.getLinks().then((response) => response.links),
     enabled: !!user,
@@ -272,6 +278,9 @@ export default function Dashboard() {
   const {
     data: reviewsResponse,
     isLoading: isReviewsLoading,
+    isError: isReviewsError,
+    error: reviewsError,
+    refetch: refetchOwnerReviews,
     fetchNextPage: fetchMoreReviews,
     hasNextPage: hasMoreReviews,
     isFetchingNextPage: isFetchingMoreReviews,
@@ -314,6 +323,14 @@ export default function Dashboard() {
   });
 
   const reviews = reviewsResponse?.pages.flatMap((page) => page.reviews) || [];
+  const linksErrorMessage =
+    linksError instanceof ApiError
+      ? linksError.message
+      : "Couldn't load links right now.";
+  const reviewsErrorMessage =
+    reviewsError instanceof ApiError
+      ? reviewsError.message
+      : "Couldn't load reviews right now.";
   const reviewStats = reviewsResponse?.pages[0]?.stats || {
     avgRating: 0,
     totalReviews: 0,
@@ -795,6 +812,11 @@ export default function Dashboard() {
                   setIsAddLinkOpen={setIsAddLinkOpen}
                   orderedLinks={orderedLinks}
                   isLinksLoading={isLinksLoading}
+                  isLinksError={isLinksError}
+                  linksErrorMessage={linksErrorMessage}
+                  onRetryLinks={() => {
+                    void refetchLinks();
+                  }}
                   links={links}
                   form={form}
                   onSubmit={onSubmit}
@@ -850,6 +872,11 @@ export default function Dashboard() {
               <TabsContent value="reviews" className="mt-6">
                 <ReviewsTab
                   isReviewsLoading={isReviewsLoading}
+                  isReviewsError={isReviewsError}
+                  reviewsErrorMessage={reviewsErrorMessage}
+                  onRetryReviews={() => {
+                    void refetchOwnerReviews();
+                  }}
                   reviews={reviews}
                   disputeDialogOpen={disputeDialogOpen}
                   setDisputeDialogOpen={setDisputeDialogOpen}

@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { useMemo, useState, memo } from "react";
 import { Star, ChevronDown, Loader2 } from "lucide-react";
 import {
   Card,
@@ -15,11 +15,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Review as ApiReview } from "@/lib/api";
+import type { Review as ApiReview, ReviewStats } from "@/lib/api";
 import { usePublicReviewsInfinite } from "@/hooks/use-reviews";
 
 interface ReviewSectionProps {
   userId: number;
+  initialReviews?: ApiReview[];
+  initialStats?: ReviewStats;
+  initialNextCursor?: number;
 }
 
 const RATING_OPTIONS = [
@@ -79,24 +82,58 @@ const ReviewSkeleton = () => (
   </div>
 );
 
-export function ReviewsSection({ userId }: ReviewSectionProps) {
+export function ReviewsSection({
+  userId,
+  initialReviews,
+  initialStats,
+  initialNextCursor,
+}: ReviewSectionProps) {
   const [rating, setRating] = useState("all");
+  const seededStats = useMemo(() => {
+    if (
+      initialStats?.breakdown ||
+      !initialStats ||
+      !initialReviews ||
+      initialStats.totalReviews !== initialReviews.length
+    ) {
+      return initialStats;
+    }
+
+    const breakdown: NonNullable<ReviewStats["breakdown"]> = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    };
+
+    for (const review of initialReviews) {
+      breakdown[review.rating as keyof typeof breakdown] += 1;
+    }
+
+    return {
+      ...initialStats,
+      breakdown,
+    };
+  }, [initialReviews, initialStats]);
 
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    status,
-    prefetchNextPage,
-  } = usePublicReviewsInfinite(userId, rating);
-
-  // Prefetch next page on button hover
-  const handlePrefetch = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      prefetchNextPage();
-    }
-  };
+    isError,
+    isPending,
+    isSuccess,
+  } = usePublicReviewsInfinite(userId, rating, {
+    reviews: initialReviews ?? [],
+    stats:
+      seededStats ?? {
+        avgRating: 0,
+        totalReviews: 0,
+      },
+    nextCursor: initialNextCursor,
+  });
 
   const displayReviews = data?.pages.flatMap((page: any) => page.reviews) ?? [];
 
@@ -105,8 +142,9 @@ export function ReviewsSection({ userId }: ReviewSectionProps) {
     totalReviews: 0,
     breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
   };
+  const isEmpty = isSuccess && displayReviews.length === 0;
 
-  if (status === "error") {
+  if (isError) {
     return (
       <Card>
         <CardHeader>
@@ -170,36 +208,34 @@ export function ReviewsSection({ userId }: ReviewSectionProps) {
         </div>
 
         {/* Stats Display - Only Show Rating Breakdown */}
-        {status === "success" && stats.totalReviews > 0 && (
+        {isSuccess && stats.totalReviews > 0 && stats.breakdown && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             {/* Rating Breakdown */}
-            {stats.breakdown &&
-              [5, 4, 3, 2, 1].map((star) => (
-                <div
-                  key={star}
-                  className="bg-muted p-3 rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
-                  onClick={() => setRating(String(star))}
-                >
-                  <div className="text-xs text-muted-foreground mb-1">
-                    {star}★
-                  </div>
-                  <div className="text-lg font-semibold">
-                    {stats.breakdown?.[star as keyof typeof stats.breakdown] ??
-                      0}
-                  </div>
+            {[5, 4, 3, 2, 1].map((star) => (
+              <div
+                key={star}
+                className="bg-muted p-3 rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => setRating(String(star))}
+              >
+                <div className="text-xs text-muted-foreground mb-1">
+                  {star}★
                 </div>
-              ))}
+                <div className="text-lg font-semibold">
+                  {stats.breakdown?.[star as keyof typeof stats.breakdown] ?? 0}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Reviews List */}
-        {status === "success" && displayReviews.length === 0 ? (
+        {isEmpty ? (
           <p className="text-sm text-muted-foreground text-center py-8">
             No reviews found.
           </p>
-        ) : status === "pending" ? (
+        ) : isPending ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <ReviewSkeleton key={i} />
@@ -220,7 +256,6 @@ export function ReviewsSection({ userId }: ReviewSectionProps) {
                 <Button
                   variant="outline"
                   onClick={() => fetchNextPage()}
-                  onMouseEnter={handlePrefetch}
                   disabled={isFetchingNextPage}
                   className="w-full sm:w-auto"
                 >

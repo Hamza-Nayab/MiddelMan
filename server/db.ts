@@ -1,9 +1,8 @@
 import path from "path";
 import { config } from "dotenv";
-import { existsSync } from "fs";
-const envPath = [".env", "../.env"].map((p) => path.resolve(process.cwd(), p)).find(existsSync);
-if (envPath) config({ path: envPath });
-else config();
+if (process.env.NODE_ENV !== "production") {
+  config({ path: path.resolve(process.cwd(), ".env") });
+}
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@shared/schema";

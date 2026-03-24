@@ -14,7 +14,7 @@ type RateLimitConfig = {
 const rateLimiterStore = new Map<string, Map<string, number[]>>();
 
 // Clean up old entries every 5 minutes to prevent memory leak
-setInterval(
+const cleanupInterval = setInterval(
   () => {
     for (const [limiterName, keyMap] of Array.from(
       rateLimiterStore.entries(),
@@ -32,6 +32,8 @@ setInterval(
   },
   5 * 60 * 1000,
 );
+
+cleanupInterval.unref?.();
 
 /**
  * Check if a request is within rate limit

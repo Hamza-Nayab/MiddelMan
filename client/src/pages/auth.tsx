@@ -173,12 +173,8 @@ export default function AuthPage() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: (values: z.infer<typeof RegisterSchema>) => {
-      console.log("📝 Register mutation called with values:", values);
-      return api.register(values);
-    },
+    mutationFn: (values: z.infer<typeof RegisterSchema>) => api.register(values),
     onSuccess: async (data) => {
-      console.log("✅ Registration successful:", data);
       // Ensure getMe query is refetched and completed before redirecting
       try {
         await queryClient.refetchQueries({ queryKey: ["me"] });
@@ -353,16 +349,9 @@ export default function AuthPage() {
               <TabsContent value="signup">
                 <Form {...registerForm}>
                   <form
-                    onSubmit={(e) => {
-                      console.log("🔘 Form submit event fired");
-                      registerForm.handleSubmit((values) => {
-                        console.log(
-                          "✍️  Form validation passed, values:",
-                          values,
-                        );
-                        registerMutation.mutate(values);
-                      })(e);
-                    }}
+                    onSubmit={registerForm.handleSubmit((values) => {
+                      registerMutation.mutate(values);
+                    })}
                     className="space-y-4"
                   >
                     {/* Display Name */}
