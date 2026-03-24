@@ -506,7 +506,7 @@ export default function ProfilePage() {
           href="/"
           className="mb-8 flex items-center gap-2 hover:opacity-90 transition-opacity"
         >
-          <img src={logoImg} alt="" className="h-12 w-auto rounded-lg" />
+          <img src={logoImg} alt="" className="h-9 w-9 rounded-[4px] object-cover" />
           <span className="font-semibold">MiddelMen</span>
         </Link>
 

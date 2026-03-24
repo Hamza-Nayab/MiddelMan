@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useEffect } from "react";
 import { Layout } from "@/components/layout";
 import {
   Accordion,
@@ -20,6 +21,18 @@ const gradientStyle = {
 };
 
 export default function About() {
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+
+    requestAnimationFrame(() => {
+      const target = document.getElementById(hash);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  }, []);
+
   return (
     <Layout>
       <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">

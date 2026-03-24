@@ -50,16 +50,12 @@ type LinksTabProps = {
   lastOverIdRef: MutableRefObject<number | null>;
   moveLink: (dragId: number, targetId: number) => void;
   handleLinkDrop: (targetId: number, draggedId?: number) => void;
+  onToggleLinkActive: (id: number, isActive: boolean) => void;
   getPlatformIcon: (icon?: string | null) => any;
-  updateLinkMutation: {
-    mutate: (args: { id: number; updates: Partial<LinkType> }) => void;
-  };
   deleteLinkMutation: { mutate: (id: number) => void };
-  hasOrderChanges: boolean;
-  reorderLinksMutation: {
-    isPending: boolean;
-    mutate: (links: LinkType[]) => void;
-  };
+  hasUnsavedChanges: boolean;
+  isSavingChanges: boolean;
+  onSaveChanges: (links: LinkType[]) => void;
 };
 
 export const LinksTab = memo(function LinksTab({
@@ -81,11 +77,12 @@ export const LinksTab = memo(function LinksTab({
   lastOverIdRef,
   moveLink,
   handleLinkDrop,
+  onToggleLinkActive,
   getPlatformIcon,
-  updateLinkMutation,
   deleteLinkMutation,
-  hasOrderChanges,
-  reorderLinksMutation,
+  hasUnsavedChanges,
+  isSavingChanges,
+  onSaveChanges,
 }: LinksTabProps) {
   return (
     <>
@@ -273,10 +270,7 @@ export const LinksTab = memo(function LinksTab({
                   <Switch
                     checked={link.isActive}
                     onCheckedChange={(checked) =>
-                      updateLinkMutation.mutate({
-                        id: link.id,
-                        updates: { isActive: checked },
-                      })
+                      onToggleLinkActive(link.id, checked)
                     }
                   />
                   <Button
@@ -296,10 +290,10 @@ export const LinksTab = memo(function LinksTab({
       {orderedLinks.length > 0 ? (
         <div className="flex justify-end">
           <Button
-            variant={hasOrderChanges ? "default" : "outline"}
-            disabled={!hasOrderChanges || reorderLinksMutation.isPending}
+            variant={hasUnsavedChanges ? "default" : "outline"}
+            disabled={!hasUnsavedChanges || isSavingChanges}
             onClick={() =>
-              reorderLinksMutation.mutate(
+              onSaveChanges(
                 orderedLinks.map((link, index) => ({
                   ...link,
                   sortOrder: index,
@@ -307,7 +301,7 @@ export const LinksTab = memo(function LinksTab({
               )
             }
           >
-            {reorderLinksMutation.isPending ? "Saving..." : "Save order"}
+            {isSavingChanges ? "Saving..." : "Save order"}
           </Button>
         </div>
       ) : null}

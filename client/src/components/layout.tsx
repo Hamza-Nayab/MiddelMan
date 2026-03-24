@@ -68,7 +68,7 @@ export function Layout({
             href="/"
             className="font-heading font-bold text-xl tracking-tight text-primary hover:opacity-80 transition-opacity flex items-center gap-2"
           >
-            <img src={logoImg} alt="" className="h-10 w-auto rounded-lg" />
+            <img src={logoImg} alt="" className="h-10 w-10 rounded-[4px] object-cover" />
             MiddelMen
           </Link>
 
@@ -183,17 +183,6 @@ export function Layout({
         </div>
       </nav>
       <main className={cn("flex-1", className)}>{children}</main>
-      <footer className="py-8 border-t border-border/40">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-muted-foreground">
-          <Link
-            href="/about"
-            className="hover:text-foreground transition-colors"
-          >
-            About & Privacy
-          </Link>
-          <span>© 2025 MiddelMen. All rights reserved.</span>
-        </div>
-      </footer>
     </div>
   );
 }

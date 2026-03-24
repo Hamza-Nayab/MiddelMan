@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
+import logoImg from "@/assets/middelman-bg.png";
 import {
   UserRound,
   BadgeCheck,
@@ -11,6 +12,9 @@ import {
   Shield,
   CheckCircle,
   Lock,
+  Twitter,
+  Instagram,
+  Github,
 } from "lucide-react";
 
 export default function Home() {
@@ -634,35 +638,179 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Indicators Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <h2 className="text-4xl font-bold text-text-primary mb-16 text-center">
-            Why Trust MiddelMen
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <TrustStatCard
-              icon="🔐"
-              title="Secure Sessions"
-              stat="100%"
-              description="All transactions use end-to-end encrypted sessions."
+      <HomeFooter />
+    </Layout>
+  );
+}
+
+function HomeFooter() {
+  return (
+    <footer className="border-t border-border bg-background/95">
+      <div className="container mx-auto px-4 max-w-7xl py-12 md:py-14">
+        <div className="text-center md:text-left mb-10">
+          <div className="flex items-center justify-center md:justify-start gap-3">
+            <img
+              src={logoImg}
+              alt="MiddelMen logo"
+              className="h-9 w-9 rounded-[4px] object-cover"
             />
-            <TrustStatCard
-              icon="👮"
-              title="Admin Moderation"
-              stat="24/7"
-              description="Dedicated team reviews disputes and suspicious activity."
-            />
-            <TrustStatCard
-              icon="🚫"
-              title="Anti-Spam System"
-              stat="99.9%"
-              description="AI-powered detection blocks fake reviews and spam."
-            />
+            <h2 className="text-2xl md:text-3xl font-bold text-text-primary">
+              MiddelMen
+            </h2>
+          </div>
+          <p className="mt-2 text-sm md:text-base text-text-secondary">
+            Trusted profiles. Real reviews. Zero scams.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 pb-10 border-b border-border text-center md:text-left">
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
+              Product
+            </h3>
+            <ul className="space-y-2.5 text-sm text-text-secondary">
+              <li>
+                <Link href="/" className="hover:text-primary transition-colors">
+                  Explore
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/search"
+                  className="hover:text-primary transition-colors"
+                >
+                  Search
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-primary transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
+              Company
+            </h3>
+            <ul className="space-y-2.5 text-sm text-text-secondary">
+              <li>
+                <Link
+                  href="/about#about"
+                  className="hover:text-primary transition-colors"
+                >
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about#faq"
+                  className="hover:text-primary transition-colors"
+                >
+                  FAQs
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="/about#privacy"
+                  className="hover:text-primary transition-colors"
+                >
+                  Privacy
+                </a>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-primary transition-colors"
+                >
+                  Terms
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
+              Sellers
+            </h3>
+            <ul className="space-y-2.5 text-sm text-text-secondary">
+              <li>
+                <Link href="/auth" className="hover:text-primary transition-colors">
+                  Create profile
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-primary transition-colors"
+                >
+                  Manage links
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-primary transition-colors"
+                >
+                  Analytics
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
+              Socials
+            </h3>
+            <ul className="space-y-2.5 text-sm text-text-secondary">
+              <li>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2 hover:text-primary transition-colors"
+                >
+                  <Twitter size={15} />
+                  Twitter/X
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2 hover:text-primary transition-colors"
+                >
+                  <Instagram size={15} />
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2 hover:text-primary transition-colors"
+                >
+                  <Github size={15} />
+                  GitHub
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
-      </section>
-    </Layout>
+
+        <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-text-secondary">
+          <p>© 2025 MiddelMen. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="hover:text-primary transition-colors">
+              Terms
+            </Link>
+            <a href="#" className="hover:text-primary transition-colors">
+              Privacy
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -740,27 +888,6 @@ function SellerBuyerFeature({
         </div>
         <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
       </div>
-    </div>
-  );
-}
-
-function TrustStatCard({
-  icon,
-  title,
-  stat,
-  description,
-}: {
-  icon: string;
-  title: string;
-  stat: string;
-  description: string;
-}) {
-  return (
-    <div className="p-8 rounded-xl border border-border bg-card text-center">
-      <div className="text-5xl mb-4">{icon}</div>
-      <p className="text-4xl font-bold text-primary mb-2">{stat}</p>
-      <h3 className="text-lg font-semibold text-text-primary mb-2">{title}</h3>
-      <p className="text-sm text-text-secondary">{description}</p>
     </div>
   );
 }

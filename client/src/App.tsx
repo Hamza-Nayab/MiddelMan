@@ -21,6 +21,7 @@ import DemoPage from "@/pages/demo";
 import DisabledPage from "@/pages/disabled";
 import AccessNotAvailablePage from "@/pages/access-not-available";
 import AboutPage from "@/pages/about";
+import TermsPage from "@/pages/terms";
 
 function Router() {
   return (
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/disabled" component={DisabledPage} />
       <Route path="/access-not-available" component={AccessNotAvailablePage} />
       <Route path="/about" component={AboutPage} />
+      <Route path="/terms" component={TermsPage} />
       {/* Dynamic route for profiles - MUST be last to avoid conflict */}
       <Route path="/:username" component={ProfilePage} />
       <Route component={NotFound} />

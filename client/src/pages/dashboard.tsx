@@ -197,6 +197,9 @@ export default function Dashboard() {
   const dragStartOrderRef = useRef<number[]>([]);
   const lastOverIdRef = useRef<number | null>(null);
   const originalOrderRef = useRef<number[]>([]);
+  const originalLinkStateRef = useRef<Map<number, { isActive: boolean }>>(
+    new Map(),
+  );
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [customAvatarPreview, setCustomAvatarPreview] = useState<string | null>(
     null,
@@ -273,6 +276,9 @@ export default function Dashboard() {
     const sorted = [...links].sort((a, b) => a.sortOrder - b.sortOrder);
     setOrderedLinks(sorted);
     originalOrderRef.current = sorted.map((link) => link.id);
+    originalLinkStateRef.current = new Map(
+      sorted.map((link) => [link.id, { isActive: link.isActive }]),
+    );
   }, [links]);
 
   const {
@@ -381,23 +387,47 @@ export default function Dashboard() {
     },
   });
 
-  const updateLinkMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: number; updates: Partial<LinkType> }) =>
-      api.updateLink(id, updates as Parameters<typeof api.updateLink>[1]),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
-    },
-  });
+  const saveLinksMutation = useMutation({
+    mutationFn: async (nextLinks: LinkType[]) => {
+      const originalOrder = originalOrderRef.current;
+      const originalState = originalLinkStateRef.current;
 
-  const reorderLinksMutation = useMutation({
-    mutationFn: (nextLinks: LinkType[]) =>
-      api.reorderLinks(nextLinks.map((link) => link.id)),
+      const toggledLinks = nextLinks.filter((link) => {
+        const previous = originalState.get(link.id);
+        return previous && previous.isActive !== link.isActive;
+      });
+
+      if (toggledLinks.length > 0) {
+        await Promise.all(
+          toggledLinks.map((link) =>
+            api.updateLink(link.id, { isActive: link.isActive }),
+          ),
+        );
+      }
+
+      const hasOrderChanged =
+        nextLinks.length !== originalOrder.length ||
+        nextLinks.some((link, index) => link.id !== originalOrder[index]);
+
+      if (hasOrderChanged) {
+        await api.reorderLinks(nextLinks.map((link) => link.id));
+      }
+
+      return {
+        updatedActiveCount: toggledLinks.length,
+        reordered: hasOrderChanged,
+      };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
+      toast({
+        title: "Links updated",
+        description: "Your link order and visibility changes are saved.",
+      });
     },
     onError: (error) => {
       toast({
-        title: "Reorder failed",
+        title: "Save failed",
         description: error.message,
         variant: "destructive",
       });
@@ -433,11 +463,20 @@ export default function Dashboard() {
     [draggedLinkId, moveLink],
   );
 
-  const hasOrderChanges =
+  const hasUnsavedLinkChanges =
     orderedLinks.length !== originalOrderRef.current.length ||
     orderedLinks.some(
-      (link, index) => link.id !== originalOrderRef.current[index],
+      (link, index) =>
+        link.id !== originalOrderRef.current[index] ||
+        link.isActive !==
+          (originalLinkStateRef.current.get(link.id)?.isActive ?? link.isActive),
     );
+
+  const handleToggleLinkActive = useCallback((id: number, isActive: boolean) => {
+    setOrderedLinks((prev) =>
+      prev.map((link) => (link.id === id ? { ...link, isActive } : link)),
+    );
+  }, []);
 
   const updateAppearanceMutation = useMutation({
     mutationFn: (payload: {
@@ -865,11 +904,12 @@ export default function Dashboard() {
                   lastOverIdRef={lastOverIdRef}
                   moveLink={moveLink}
                   handleLinkDrop={handleLinkDrop}
+                  onToggleLinkActive={handleToggleLinkActive}
                   getPlatformIcon={getPlatformIcon}
-                  updateLinkMutation={updateLinkMutation}
                   deleteLinkMutation={deleteLinkMutation}
-                  hasOrderChanges={hasOrderChanges}
-                  reorderLinksMutation={reorderLinksMutation}
+                  hasUnsavedChanges={hasUnsavedLinkChanges}
+                  isSavingChanges={saveLinksMutation.isPending}
+                  onSaveChanges={(nextLinks) => saveLinksMutation.mutate(nextLinks)}
                 />
               </TabsContent>
 
@@ -1217,7 +1257,7 @@ export default function Dashboard() {
             bio={watchedBio || profile.bio}
             avatarValue={watchedAvatar || profile.avatarUrl}
             userId={user.id}
-            links={orderedLinks}
+            links={orderedLinks.filter((link) => link.isActive)}
             avgRating={reviewStats.avgRating}
             totalReviews={reviewStats.totalReviews}
             phoneNumber={watchedPhoneNumber || profile.phoneNumber}
