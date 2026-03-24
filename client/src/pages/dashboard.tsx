@@ -469,14 +469,18 @@ export default function Dashboard() {
       (link, index) =>
         link.id !== originalOrderRef.current[index] ||
         link.isActive !==
-          (originalLinkStateRef.current.get(link.id)?.isActive ?? link.isActive),
+          (originalLinkStateRef.current.get(link.id)?.isActive ??
+            link.isActive),
     );
 
-  const handleToggleLinkActive = useCallback((id: number, isActive: boolean) => {
-    setOrderedLinks((prev) =>
-      prev.map((link) => (link.id === id ? { ...link, isActive } : link)),
-    );
-  }, []);
+  const handleToggleLinkActive = useCallback(
+    (id: number, isActive: boolean) => {
+      setOrderedLinks((prev) =>
+        prev.map((link) => (link.id === id ? { ...link, isActive } : link)),
+      );
+    },
+    [],
+  );
 
   const updateAppearanceMutation = useMutation({
     mutationFn: (payload: {
@@ -909,7 +913,9 @@ export default function Dashboard() {
                   deleteLinkMutation={deleteLinkMutation}
                   hasUnsavedChanges={hasUnsavedLinkChanges}
                   isSavingChanges={saveLinksMutation.isPending}
-                  onSaveChanges={(nextLinks) => saveLinksMutation.mutate(nextLinks)}
+                  onSaveChanges={(nextLinks) =>
+                    saveLinksMutation.mutate(nextLinks)
+                  }
                 />
               </TabsContent>
 

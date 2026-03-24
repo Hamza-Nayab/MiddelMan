@@ -68,7 +68,11 @@ export function Layout({
             href="/"
             className="font-heading font-bold text-xl tracking-tight text-primary hover:opacity-80 transition-opacity flex items-center gap-2"
           >
-            <img src={logoImg} alt="" className="h-10 w-10 rounded-[4px] object-cover" />
+            <img
+              src={logoImg}
+              alt=""
+              className="h-10 w-10 rounded-[4px] object-cover"
+            />
             MiddelMen
           </Link>
 

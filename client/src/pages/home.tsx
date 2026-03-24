@@ -739,7 +739,10 @@ function HomeFooter() {
             </h3>
             <ul className="space-y-2.5 text-sm text-text-secondary">
               <li>
-                <Link href="/auth" className="hover:text-primary transition-colors">
+                <Link
+                  href="/auth"
+                  className="hover:text-primary transition-colors"
+                >
                   Create profile
                 </Link>
               </li>
@@ -801,7 +804,10 @@ function HomeFooter() {
         <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-text-secondary">
           <p>© 2025 MiddelMen. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link href="/terms" className="hover:text-primary transition-colors">
+            <Link
+              href="/terms"
+              className="hover:text-primary transition-colors"
+            >
               Terms
             </Link>
             <a href="#" className="hover:text-primary transition-colors">

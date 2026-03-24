@@ -7,14 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Shield,
-  Star,
-  Link2,
-  CheckCircle,
-  Lock,
-  Users,
-} from "lucide-react";
+import { Shield, Star, Link2, CheckCircle, Lock, Users } from "lucide-react";
 
 const gradientStyle = {
   backgroundImage: "linear-gradient(135deg, #253c97 0%, #38b6ff 100%)",
@@ -45,8 +38,8 @@ export default function About() {
             About MiddelMen
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Trust infrastructure for social commerce. We help sellers build credibility
-            and buyers make confident decisions—before they pay.
+            Trust infrastructure for social commerce. We help sellers build
+            credibility and buyers make confident decisions—before they pay.
           </p>
         </section>
 
@@ -60,19 +53,20 @@ export default function About() {
           </h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              MiddelMen is a trust layer for sellers who operate through Instagram,
-              Facebook, WhatsApp, and other social platforms. We give independent
-              sellers a public trust profile where buyers can verify identity, see
-              ratings and reviews, and feel safe paying.
+              MiddelMen is a trust layer for sellers who operate through
+              Instagram, Facebook, WhatsApp, and other social platforms. We give
+              independent sellers a public trust profile where buyers can verify
+              identity, see ratings and reviews, and feel safe paying.
             </p>
             <p>
               Our goal is to become the default “Trusted by MiddelMen” badge for
               social commerce—one shareable link that proves you’re legitimate.
             </p>
             <p>
-              Whether you sell food, handmade goods, clothing, or services, MiddelMen
-              centralizes your reputation in one place: a searchable profile, verified
-              reviews, and dispute support when things go wrong.
+              Whether you sell food, handmade goods, clothing, or services,
+              MiddelMen centralizes your reputation in one place: a searchable
+              profile, verified reviews, and dispute support when things go
+              wrong.
             </p>
           </div>
         </section>
@@ -129,35 +123,46 @@ export default function About() {
           </h2>
           <div className="space-y-6 text-muted-foreground leading-relaxed text-sm">
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Information We Collect</h3>
+              <h3 className="font-semibold text-foreground mb-2">
+                Information We Collect
+              </h3>
               <p>
-                We collect information you provide when signing up (email, display name,
-                username, phone number, and profile details). We also collect usage data
-                (profile views, link clicks) to provide analytics and improve the service.
+                We collect information you provide when signing up (email,
+                display name, username, phone number, and profile details). We
+                also collect usage data (profile views, link clicks) to provide
+                analytics and improve the service.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">How We Use Your Data</h3>
+              <h3 className="font-semibold text-foreground mb-2">
+                How We Use Your Data
+              </h3>
               <p>
-                Your data is used to create and display your public trust profile, process
-                reviews, handle disputes, and communicate with you. We do not sell your
-                personal information to third parties.
+                Your data is used to create and display your public trust
+                profile, process reviews, handle disputes, and communicate with
+                you. We do not sell your personal information to third parties.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Data Security</h3>
+              <h3 className="font-semibold text-foreground mb-2">
+                Data Security
+              </h3>
               <p>
-                We use industry-standard measures to protect your data, including encryption
-                in transit (HTTPS) and secure authentication. Sensitive information is stored
-                and processed with care.
+                We use industry-standard measures to protect your data,
+                including encryption in transit (HTTPS) and secure
+                authentication. Sensitive information is stored and processed
+                with care.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Your Rights</h3>
+              <h3 className="font-semibold text-foreground mb-2">
+                Your Rights
+              </h3>
               <p>
-                You can access, update, or delete your account and data through your
-                dashboard. For questions or requests regarding your privacy, contact us
-                through the support channels listed on the platform.
+                You can access, update, or delete your account and data through
+                your dashboard. For questions or requests regarding your
+                privacy, contact us through the support channels listed on the
+                platform.
               </p>
             </div>
           </div>
@@ -171,16 +176,20 @@ export default function About() {
           >
             Frequently Asked Questions
           </h2>
-          <Accordion type="single" collapsible className="border rounded-xl overflow-hidden">
+          <Accordion
+            type="single"
+            collapsible
+            className="border rounded-xl overflow-hidden"
+          >
             <AccordionItem value="what-is-profile">
               <AccordionTrigger className="px-6">
                 What is a trust profile?
               </AccordionTrigger>
               <AccordionContent className="px-6 text-muted-foreground">
-                A trust profile is a public page that shows your username, bio, links,
-                verified reviews, and ratings. Buyers visit this page before paying to
-                confirm you’re legitimate. You share one link (e.g. middelmen.com/yourname)
-                in your social bio.
+                A trust profile is a public page that shows your username, bio,
+                links, verified reviews, and ratings. Buyers visit this page
+                before paying to confirm you’re legitimate. You share one link
+                (e.g. middelmen.com/yourname) in your social bio.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="who-can-signup">
@@ -188,9 +197,9 @@ export default function About() {
                 Who can create a profile?
               </AccordionTrigger>
               <AccordionContent className="px-6 text-muted-foreground">
-                Anyone selling through Instagram, Facebook, WhatsApp, or similar platforms
-                can sign up as a seller. Buyers can create accounts to leave reviews.
-                Account creation requires email verification.
+                Anyone selling through Instagram, Facebook, WhatsApp, or similar
+                platforms can sign up as a seller. Buyers can create accounts to
+                leave reviews. Account creation requires email verification.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="how-reviews-work">
@@ -198,9 +207,10 @@ export default function About() {
                 How do reviews work?
               </AccordionTrigger>
               <AccordionContent className="px-6 text-muted-foreground">
-                Buyers leave a star rating (1–5) and optional text review after a purchase.
-                Reviews are linked to verified accounts to reduce fake feedback. Sellers
-                can dispute unfair reviews through our dispute system.
+                Buyers leave a star rating (1–5) and optional text review after
+                a purchase. Reviews are linked to verified accounts to reduce
+                fake feedback. Sellers can dispute unfair reviews through our
+                dispute system.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="payment-escrow">
@@ -208,8 +218,8 @@ export default function About() {
                 Does MiddelMen handle payments?
               </AccordionTrigger>
               <AccordionContent className="px-6 text-muted-foreground">
-                Not yet. Today MiddelMen focuses on profiles and reviews. Escrow and
-                integrated payment features are planned for a future phase.
+                Not yet. Today MiddelMen focuses on profiles and reviews. Escrow
+                and integrated payment features are planned for a future phase.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="contact">
@@ -217,9 +227,9 @@ export default function About() {
                 How can I contact support?
               </AccordionTrigger>
               <AccordionContent className="px-6 text-muted-foreground">
-                Use the contact information provided in your account settings or through
-                the platform. For disputes, follow the dispute resolution flow in your
-                dashboard.
+                Use the contact information provided in your account settings or
+                through the platform. For disputes, follow the dispute
+                resolution flow in your dashboard.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -266,7 +276,9 @@ function ReasonCard({
       </div>
       <div>
         <h3 className="font-semibold text-foreground mb-1">{title}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {description}
+        </p>
       </div>
     </div>
   );
