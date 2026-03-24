@@ -51,10 +51,15 @@ type LinksTabProps = {
   moveLink: (dragId: number, targetId: number) => void;
   handleLinkDrop: (targetId: number, draggedId?: number) => void;
   getPlatformIcon: (icon?: string | null) => any;
-  updateLinkMutation: { mutate: (args: { id: number; updates: Partial<LinkType> }) => void };
+  updateLinkMutation: {
+    mutate: (args: { id: number; updates: Partial<LinkType> }) => void;
+  };
   deleteLinkMutation: { mutate: (id: number) => void };
   hasOrderChanges: boolean;
-  reorderLinksMutation: { isPending: boolean; mutate: (links: LinkType[]) => void };
+  reorderLinksMutation: {
+    isPending: boolean;
+    mutate: (links: LinkType[]) => void;
+  };
 };
 
 export const LinksTab = memo(function LinksTab({
@@ -242,7 +247,10 @@ export const LinksTab = memo(function LinksTab({
                 event.preventDefault();
                 const data = event.dataTransfer.getData("text/plain");
                 const parsed = Number(data);
-                handleLinkDrop(link.id, Number.isNaN(parsed) ? undefined : parsed);
+                handleLinkDrop(
+                  link.id,
+                  Number.isNaN(parsed) ? undefined : parsed,
+                );
               }}
             >
               <CardContent className="p-4 flex items-center gap-4">
@@ -257,7 +265,9 @@ export const LinksTab = memo(function LinksTab({
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{link.title}</h3>
-                  <p className="text-sm text-muted-foreground truncate">{link.url}</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {link.url}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch

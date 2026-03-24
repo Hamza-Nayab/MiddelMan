@@ -216,9 +216,9 @@ export default function Dashboard() {
   const [pendingGradientPreset, setPendingGradientPreset] = useState<
     "default" | "ocean" | "sunset" | "forest" | "berry" | null
   >(null);
-  const [pendingAccentColor, setPendingAccentColor] = useState<
-    string | null
-  >(null);
+  const [pendingAccentColor, setPendingAccentColor] = useState<string | null>(
+    null,
+  );
 
   // Auth Check
   const { data: me, isLoading: isUserLoading, error: meError } = useMeQuery();
@@ -442,8 +442,19 @@ export default function Dashboard() {
   const updateAppearanceMutation = useMutation({
     mutationFn: (payload: {
       theme: "light" | "dark";
-      backgroundPreset?: "gradient" | "antigravity" | "aurora" | "iridescence" | null;
-      gradientPreset?: "default" | "ocean" | "sunset" | "forest" | "berry" | null;
+      backgroundPreset?:
+        | "gradient"
+        | "antigravity"
+        | "aurora"
+        | "iridescence"
+        | null;
+      gradientPreset?:
+        | "default"
+        | "ocean"
+        | "sunset"
+        | "forest"
+        | "berry"
+        | null;
       accentColor?: string | null;
     }) => api.updateProfile(payload),
     onSuccess: (data) => {
@@ -454,10 +465,19 @@ export default function Dashboard() {
       const theme = p.theme === "gradient" ? "light" : p.theme;
       setPendingTheme(theme as "light" | "dark");
       setPendingBackgroundPreset(
-        (p.backgroundPreset as "gradient" | "antigravity" | "aurora" | "iridescence") ?? (p.theme === "gradient" ? "gradient" : null),
+        (p.backgroundPreset as
+          | "gradient"
+          | "antigravity"
+          | "aurora"
+          | "iridescence") ?? (p.theme === "gradient" ? "gradient" : null),
       );
       setPendingGradientPreset(
-        (p.gradientPreset as "default" | "ocean" | "sunset" | "forest" | "berry") ?? null,
+        (p.gradientPreset as
+          | "default"
+          | "ocean"
+          | "sunset"
+          | "forest"
+          | "berry") ?? null,
       );
       setPendingAccentColor(p.accentColor ?? null);
       toast({
@@ -525,8 +545,8 @@ export default function Dashboard() {
       bio: profile?.bio || "",
       avatarUrl:
         profile?.avatarUrl &&
-          (profile.avatarUrl.startsWith("data:") ||
-            profile.avatarUrl.startsWith("http"))
+        (profile.avatarUrl.startsWith("data:") ||
+          profile.avatarUrl.startsWith("http"))
           ? profile.avatarUrl
           : getAvatarId(profile?.avatarUrl),
       contactEmail: profile?.contactEmail || "",
@@ -542,8 +562,8 @@ export default function Dashboard() {
       bio: profile?.bio || "",
       avatarUrl:
         profile?.avatarUrl &&
-          (profile.avatarUrl.startsWith("data:") ||
-            profile.avatarUrl.startsWith("http"))
+        (profile.avatarUrl.startsWith("data:") ||
+          profile.avatarUrl.startsWith("http"))
           ? profile.avatarUrl
           : getAvatarId(profile?.avatarUrl),
       contactEmail: profile?.contactEmail || "",
@@ -568,11 +588,21 @@ export default function Dashboard() {
   useEffect(() => {
     if (!profile) return;
     const theme = profile.theme === "gradient" ? "light" : profile.theme;
-    const bgPreset = (profile.backgroundPreset as "gradient" | "antigravity" | "aurora" | "iridescence") ?? (profile.theme === "gradient" ? "gradient" : null);
+    const bgPreset =
+      (profile.backgroundPreset as
+        | "gradient"
+        | "antigravity"
+        | "aurora"
+        | "iridescence") ?? (profile.theme === "gradient" ? "gradient" : null);
     setPendingTheme(theme as "light" | "dark");
     setPendingBackgroundPreset(bgPreset);
     setPendingGradientPreset(
-      (profile.gradientPreset as "default" | "ocean" | "sunset" | "forest" | "berry") ?? (bgPreset === "gradient" ? "default" : null),
+      (profile.gradientPreset as
+        | "default"
+        | "ocean"
+        | "sunset"
+        | "forest"
+        | "berry") ?? (bgPreset === "gradient" ? "default" : null),
     );
     setPendingAccentColor(profile.accentColor ?? null);
   }, [profile]);
@@ -614,9 +644,9 @@ export default function Dashboard() {
     : false;
   const daysUntilUsernameChange = usernameCooldownActive
     ? Math.ceil(
-      (nextUsernameChangeAt!.getTime() - new Date().getTime()) /
-      (24 * 60 * 60 * 1000),
-    )
+        (nextUsernameChangeAt!.getTime() - new Date().getTime()) /
+          (24 * 60 * 60 * 1000),
+      )
     : 0;
   const canChangeUsername =
     user?.role === "seller" &&
@@ -756,15 +786,22 @@ export default function Dashboard() {
     : null;
 
   const WhatsAppIcon = platformIconMap.whatsapp;
-  const profileGradient = profile.gradientPreset as typeof pendingGradientPreset | null;
-  const profileBgPreset = profile.backgroundPreset as typeof pendingBackgroundPreset | null;
+  const profileGradient = profile.gradientPreset as
+    | typeof pendingGradientPreset
+    | null;
+  const profileBgPreset = profile.backgroundPreset as
+    | typeof pendingBackgroundPreset
+    | null;
   const effectiveTheme = profile.theme === "gradient" ? "light" : profile.theme;
-  const effectiveBg = profileBgPreset ?? (profile.theme === "gradient" ? "gradient" : null);
-  const effectiveGradient = effectiveBg === "gradient" ? (profileGradient ?? "default") : null;
+  const effectiveBg =
+    profileBgPreset ?? (profile.theme === "gradient" ? "gradient" : null);
+  const effectiveGradient =
+    effectiveBg === "gradient" ? (profileGradient ?? "default") : null;
   const hasAppearanceChanges =
     pendingTheme !== effectiveTheme ||
     pendingBackgroundPreset !== effectiveBg ||
-    (pendingBackgroundPreset === "gradient" && (pendingGradientPreset ?? "default") !== effectiveGradient) ||
+    (pendingBackgroundPreset === "gradient" &&
+      (pendingGradientPreset ?? "default") !== effectiveGradient) ||
     pendingAccentColor !== (profile.accentColor ?? null);
 
   return (
@@ -956,7 +993,9 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="absolute bottom-0 inset-x-0 p-3 bg-slate-950/90 backdrop-blur-sm border-t border-white/10">
-                          <span className="font-semibold text-sm text-white">Dark</span>
+                          <span className="font-semibold text-sm text-white">
+                            Dark
+                          </span>
                         </div>
                       </button>
                     </div>
@@ -967,7 +1006,8 @@ export default function Dashboard() {
                   <CardHeader>
                     <CardTitle>Background</CardTitle>
                     <CardDescription>
-                      Choose a background for your profile: none, gradient, or an animated style.
+                      Choose a background for your profile: none, gradient, or
+                      an animated style.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -994,7 +1034,8 @@ export default function Dashboard() {
                         type="button"
                         onClick={() => {
                           setPendingBackgroundPreset("gradient");
-                          if (!pendingGradientPreset) setPendingGradientPreset("default");
+                          if (!pendingGradientPreset)
+                            setPendingGradientPreset("default");
                         }}
                         className={cn(
                           "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
@@ -1014,33 +1055,37 @@ export default function Dashboard() {
                           Gradient
                         </span>
                       </button>
-                      {(["antigravity", "aurora", "iridescence"] as const).map((key) => (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() =>
-                            setPendingBackgroundPreset(
-                              pendingBackgroundPreset === key ? null : key,
-                            )
-                          }
-                          className={cn(
-                            "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
-                            pendingBackgroundPreset === key
-                              ? "border-primary ring-2 ring-primary/20"
-                              : "border-border",
-                          )}
-                        >
-                          <BackgroundPreview preset={key} />
-                          <span className="absolute bottom-0 inset-x-0 py-2 bg-black/60 text-white text-xs font-medium text-center capitalize">
-                            {key}
-                          </span>
-                        </button>
-                      ))}
+                      {(["antigravity", "aurora", "iridescence"] as const).map(
+                        (key) => (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() =>
+                              setPendingBackgroundPreset(
+                                pendingBackgroundPreset === key ? null : key,
+                              )
+                            }
+                            className={cn(
+                              "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
+                              pendingBackgroundPreset === key
+                                ? "border-primary ring-2 ring-primary/20"
+                                : "border-border",
+                            )}
+                          >
+                            <BackgroundPreview preset={key} />
+                            <span className="absolute bottom-0 inset-x-0 py-2 bg-black/60 text-white text-xs font-medium text-center capitalize">
+                              {key}
+                            </span>
+                          </button>
+                        ),
+                      )}
                     </div>
                     {pendingBackgroundPreset === "gradient" && (
                       <>
                         <div>
-                          <p className="text-sm font-medium mb-2">Gradient style</p>
+                          <p className="text-sm font-medium mb-2">
+                            Gradient style
+                          </p>
                           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                             {[
                               {
@@ -1100,7 +1145,8 @@ export default function Dashboard() {
                   <CardHeader>
                     <CardTitle>Accent Color</CardTitle>
                     <CardDescription>
-                      Custom accent for cards and buttons. Leave empty to use theme default.
+                      Custom accent for cards and buttons. Leave empty to use
+                      theme default.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-wrap items-center gap-4">
@@ -1145,16 +1191,19 @@ export default function Dashboard() {
                         backgroundPreset: pendingBackgroundPreset ?? undefined,
                         gradientPreset:
                           pendingBackgroundPreset === "gradient"
-                            ? pendingGradientPreset ?? "default"
+                            ? (pendingGradientPreset ?? "default")
                             : null,
                         accentColor: pendingAccentColor ?? undefined,
                       })
                     }
                     disabled={
-                      updateAppearanceMutation.isPending || !hasAppearanceChanges
+                      updateAppearanceMutation.isPending ||
+                      !hasAppearanceChanges
                     }
                   >
-                    {updateAppearanceMutation.isPending ? "Saving..." : "Save Design"}
+                    {updateAppearanceMutation.isPending
+                      ? "Saving..."
+                      : "Save Design"}
                   </Button>
                 </div>
               </TabsContent>

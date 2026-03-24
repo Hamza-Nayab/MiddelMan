@@ -76,7 +76,9 @@ export const ReviewsTab = memo(function ReviewsTab({
     <>
       <div className="grid gap-4">
         {isReviewsLoading ? (
-          <p className="text-center text-muted-foreground py-6">Loading reviews...</p>
+          <p className="text-center text-muted-foreground py-6">
+            Loading reviews...
+          </p>
         ) : isReviewsError ? (
           <div className="text-center py-10 space-y-3">
             <p className="text-sm text-destructive">{reviewsErrorMessage}</p>
@@ -85,7 +87,9 @@ export const ReviewsTab = memo(function ReviewsTab({
             </Button>
           </div>
         ) : reviews.length === 0 ? (
-          <p className="text-center text-muted-foreground py-10">No reviews yet.</p>
+          <p className="text-center text-muted-foreground py-10">
+            No reviews yet.
+          </p>
         ) : (
           reviews.map((review) => (
             <Card key={review.reviewId}>
@@ -132,7 +136,9 @@ export const ReviewsTab = memo(function ReviewsTab({
                         disabled={review.disputeStatus === "open"}
                       >
                         <AlertTriangle className="w-3 h-3 mr-2" />
-                        {review.disputeStatus === "open" ? "Dispute Open" : "Dispute"}
+                        {review.disputeStatus === "open"
+                          ? "Dispute Open"
+                          : "Dispute"}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
@@ -156,13 +162,19 @@ export const ReviewsTab = memo(function ReviewsTab({
                               <FormItem>
                                 <FormLabel>Reason for Dispute</FormLabel>
                                 <FormControl>
-                                  <Select value={field.value} onValueChange={field.onChange}>
+                                  <Select
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                  >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select a reason" />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {disputeReasons.map((reason) => (
-                                        <SelectItem key={reason.value} value={reason.value}>
+                                        <SelectItem
+                                          key={reason.value}
+                                          value={reason.value}
+                                        >
                                           {reason.label}
                                         </SelectItem>
                                       ))}
@@ -198,7 +210,9 @@ export const ReviewsTab = memo(function ReviewsTab({
                             <div className="mt-2 border-2 border-dashed border-border rounded-lg p-4">
                               {evidenceFile ? (
                                 <div className="flex items-center justify-between">
-                                  <p className="text-sm text-muted-foreground">{evidenceFile.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {evidenceFile.name}
+                                  </p>
                                   <Button
                                     type="button"
                                     variant="ghost"
@@ -219,7 +233,8 @@ export const ReviewsTab = memo(function ReviewsTab({
                                         if (file.size > 5 * 1024 * 1024) {
                                           toast({
                                             title: "File too large",
-                                            description: "File must be less than 5MB",
+                                            description:
+                                              "File must be less than 5MB",
                                             variant: "destructive",
                                           });
                                         } else {
@@ -234,7 +249,9 @@ export const ReviewsTab = memo(function ReviewsTab({
                                     <p className="text-sm text-muted-foreground">
                                       Click to upload (PDF, PNG, JPEG, WebP)
                                     </p>
-                                    <p className="text-xs text-muted-foreground">Max 5MB</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Max 5MB
+                                    </p>
                                   </div>
                                 </label>
                               )}
@@ -255,7 +272,8 @@ export const ReviewsTab = memo(function ReviewsTab({
                             <Button
                               type="submit"
                               disabled={
-                                createDisputeMutation.isPending || uploadEvidenceMutation.isPending
+                                createDisputeMutation.isPending ||
+                                uploadEvidenceMutation.isPending
                               }
                             >
                               {createDisputeMutation.isPending ||
