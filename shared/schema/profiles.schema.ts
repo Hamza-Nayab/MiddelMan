@@ -15,8 +15,7 @@ export const themeEnum = pgEnum("profile_theme", ["light", "dark", "gradient"]);
 
 export const profiles = pgTable("profiles", {
   userId: integer("user_id")
-    .notNull()
-    .unique()
+    .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
   displayName: varchar("display_name", { length: 50 }).notNull(),
   bio: varchar("bio", { length: 160 }),

@@ -222,6 +222,9 @@ export default function Dashboard() {
   const [pendingAccentColor, setPendingAccentColor] = useState<string | null>(
     null,
   );
+  // Guards against the useEffect on [profile] resetting pending state
+  // while the mutation response is being processed
+  const isSavingAppearanceRef = useRef(false);
 
   // Auth Check
   const { data: me, isLoading: isUserLoading, error: meError } = useMeQuery();
@@ -499,36 +502,26 @@ export default function Dashboard() {
         | "berry"
         | null;
       accentColor?: string | null;
-    }) => api.updateProfile(payload),
+    }) => {
+      isSavingAppearanceRef.current = true;
+      return api.updateProfile(payload);
+    },
     onSuccess: (data) => {
+      // Update cache — the useEffect on [profile] will sync pending state
       queryClient.setQueryData(["me"], (old: any) =>
         old ? { ...old, profile: data.profile } : undefined,
       );
-      const p = data.profile;
-      const theme = p.theme === "gradient" ? "light" : p.theme;
-      setPendingTheme(theme as "light" | "dark");
-      setPendingBackgroundPreset(
-        (p.backgroundPreset as
-          | "gradient"
-          | "antigravity"
-          | "aurora"
-          | "iridescence") ?? (p.theme === "gradient" ? "gradient" : null),
-      );
-      setPendingGradientPreset(
-        (p.gradientPreset as
-          | "default"
-          | "ocean"
-          | "sunset"
-          | "forest"
-          | "berry") ?? null,
-      );
-      setPendingAccentColor(p.accentColor ?? null);
+      // Invalidate public profile cache so visiting the public page shows fresh data
+      queryClient.invalidateQueries({ queryKey: ["profile-bundle"] });
+      // Allow the useEffect to process the new profile
+      isSavingAppearanceRef.current = false;
       toast({
         title: "Design Updated",
         description: "Your profile look has been updated.",
       });
     },
     onError: (error) => {
+      isSavingAppearanceRef.current = false;
       toast({
         title: "Design update failed",
         description: error.message,
@@ -630,6 +623,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!profile) return;
+    // Don't reset pending state while a save is in-flight;
+    // the mutation's onSuccess already updated the cache and we need
+    // to let the new profile settle before syncing.
+    if (isSavingAppearanceRef.current) return;
     const theme = profile.theme === "gradient" ? "light" : profile.theme;
     const bgPreset =
       (profile.backgroundPreset as
@@ -1234,12 +1231,12 @@ export default function Dashboard() {
                     onClick={() =>
                       updateAppearanceMutation.mutate({
                         theme: pendingTheme,
-                        backgroundPreset: pendingBackgroundPreset ?? undefined,
+                        backgroundPreset: pendingBackgroundPreset,
                         gradientPreset:
                           pendingBackgroundPreset === "gradient"
                             ? (pendingGradientPreset ?? "default")
                             : null,
-                        accentColor: pendingAccentColor ?? undefined,
+                        accentColor: pendingAccentColor,
                       })
                     }
                     disabled={

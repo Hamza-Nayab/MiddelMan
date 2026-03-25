@@ -142,6 +142,7 @@ export const profileUpdateSchema = z
     accentColor: z
       .string()
       .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color (e.g. #38b6ff)")
+      .nullable()
       .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

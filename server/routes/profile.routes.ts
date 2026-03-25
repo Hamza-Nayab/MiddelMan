@@ -206,7 +206,13 @@ export function registerProfileRoutes(app: Express): void {
     }
 
     res.setHeader("X-Robots-Tag", "index, follow");
-    res.setHeader("Cache-Control", "public, max-age=300");
+    // Owners need to see fresh data after saving design changes;
+    // visitors can tolerate a short cache window.
+    if (isOwner) {
+      res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+    }
 
     return res.status(200).json(ok(response));
   });
@@ -247,13 +253,15 @@ export function registerProfileRoutes(app: Express): void {
       }
     }
 
-    const raw = parsed.data as Record<string, unknown>;
-    const updates = {
-      ...raw,
-      updatedAt: new Date(),
-    } as Record<string, unknown>;
+    // Build the update object explicitly to handle nullable fields correctly.
+    // Drizzle requires `null` (not `undefined`) to set a column to NULL.
+    // Fields not in the request body are `undefined` after Zod parsing and
+    // must be excluded so they don't accidentally clear existing values.
+    const data = parsed.data;
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
 
-    [
+    // String fields — sanitize and include only if provided
+    const stringFields = [
       "displayName",
       "bio",
       "avatarUrl",
@@ -261,18 +269,44 @@ export function registerProfileRoutes(app: Express): void {
       "whatsappNumber",
       "phoneNumber",
       "countryCode",
-    ].forEach((field) => {
-      const value = updates[field];
-      if (typeof value === "string") {
-        updates[field] = sanitizeString(value);
+      "theme",
+    ] as const;
+
+    for (const field of stringFields) {
+      const value = data[field as keyof typeof data];
+      if (value !== undefined) {
+        updates[field] =
+          typeof value === "string" ? sanitizeString(value) : value;
       }
-    });
+    }
+
+    // Nullable fields — explicitly include `null` when the client sent `null`
+    // (meaning "clear this value") versus `undefined` (meaning "don't touch").
+    // We check the raw request body to distinguish between "sent null" and
+    // "not sent at all", because Zod's .nullable().optional() preserves null.
+    const nullableFields = [
+      "backgroundPreset",
+      "gradientPreset",
+      "accentColor",
+    ] as const;
+
+    for (const field of nullableFields) {
+      if (field in req.body) {
+        updates[field] = data[field as keyof typeof data] ?? null;
+      }
+    }
 
     const [updated] = await db
       .update(profiles)
       .set(updates)
       .where(eq(profiles.userId, userId))
       .returning();
+
+    if (!updated) {
+      return res
+        .status(404)
+        .json(error("PROFILE_NOT_FOUND", "Profile not found"));
+    }
 
     return res.status(200).json(ok({ profile: updated }));
   });
