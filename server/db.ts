@@ -13,7 +13,18 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is required");
 }
 
-const pool = new Pool({ connectionString });
+const isProduction = process.env.NODE_ENV === "production";
+
+const pool = new Pool({
+  connectionString,
+  max: isProduction ? 20 : 5,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
+  // Prevent runaway queries from holding connections indefinitely
+  statement_timeout: 30_000,
+  // Neon and most cloud Postgres providers require SSL
+  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+});
 
 export const db = drizzle(pool, { schema });
 export { pool };
