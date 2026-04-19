@@ -7,15 +7,9 @@ import { LinksTab } from "@/components/dashboard/LinksTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { ReviewsTab } from "@/components/dashboard/ReviewsTab";
 import { AnalyticsTab } from "@/components/dashboard/AnalyticsTab";
+import { AppearanceTab } from "@/components/dashboard/AppearanceTab";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, Link as LinkType, ApiError } from "@/lib/api";
 import { compressAvatar } from "@/lib/avatar";
@@ -27,7 +21,7 @@ import {
 } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
-import { ExternalLink } from "lucide-react";
+import { CheckCircle2, Clock3, ExternalLink, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,8 +34,12 @@ import {
   platformOptions,
   type PlatformKey,
 } from "@/lib/graphics";
+import {
+  getAccentContrastWarnings,
+  resolveProfileAppearance,
+  validateHexColor,
+} from "@/lib/profile-appearance";
 import { useMeQuery } from "@/hooks/use-me";
-import { Antigravity, Aurora, Iridescence } from "@/components/backgrounds";
 
 const LINKS_QUERY_KEY = ["links"] as const;
 const OWNER_REVIEWS_QUERY_KEY = ["owner-reviews"] as const;
@@ -217,11 +215,20 @@ export default function Dashboard() {
     "gradient" | "antigravity" | "aurora" | "iridescence" | null
   >(null);
   const [pendingGradientPreset, setPendingGradientPreset] = useState<
-    "default" | "ocean" | "sunset" | "forest" | "berry" | null
+    | "default"
+    | "ocean"
+    | "sunset"
+    | "forest"
+    | "berry"
+    | "royal"
+    | "ember"
+    | "mono"
+    | null
   >(null);
   const [pendingAccentColor, setPendingAccentColor] = useState<string | null>(
     null,
   );
+  const [accentColorError, setAccentColorError] = useState<string | null>(null);
   // Guards against the useEffect on [profile] resetting pending state
   // while the mutation response is being processed
   const isSavingAppearanceRef = useRef(false);
@@ -500,6 +507,9 @@ export default function Dashboard() {
         | "sunset"
         | "forest"
         | "berry"
+        | "royal"
+        | "ember"
+        | "mono"
         | null;
       accentColor?: string | null;
     }) => {
@@ -642,7 +652,10 @@ export default function Dashboard() {
         | "ocean"
         | "sunset"
         | "forest"
-        | "berry") ?? (bgPreset === "gradient" ? "default" : null),
+        | "berry"
+        | "royal"
+        | "ember"
+        | "mono") ?? (bgPreset === "gradient" ? "default" : null),
     );
     setPendingAccentColor(profile.accentColor ?? null);
   }, [profile]);
@@ -800,6 +813,51 @@ export default function Dashboard() {
     },
   });
 
+  const requestVerificationMutation = useMutation({
+    mutationFn: () => api.requestVerification({}),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["me"], (old: any) =>
+        old ? { ...old, profile: data.profile } : old,
+      );
+      toast({
+        title: "Verification requested",
+        description: "Your request is now pending manual review.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Request failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const respondToReviewMutation = useMutation({
+    mutationFn: ({
+      reviewId,
+      response,
+    }: {
+      reviewId: number;
+      response: string | null;
+    }) => api.respondToReview(reviewId, { response }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: OWNER_REVIEWS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["profile-bundle"] });
+      toast({
+        title: "Response saved",
+        description: "Your public reply is now visible on the profile.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Response failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const watchedDisplayName = profileForm.watch("displayName");
   const watchedBio = profileForm.watch("bio");
   const watchedAvatar = profileForm.watch("avatarUrl");
@@ -837,12 +895,55 @@ export default function Dashboard() {
     profileBgPreset ?? (profile.theme === "gradient" ? "gradient" : null);
   const effectiveGradient =
     effectiveBg === "gradient" ? (profileGradient ?? "default") : null;
+  const accentValidation = pendingAccentColor
+    ? validateHexColor(pendingAccentColor)
+    : { valid: true };
+  const accentWarnings =
+    pendingAccentColor && accentValidation.valid
+      ? getAccentContrastWarnings(pendingAccentColor)
+      : [];
+  const previewAppearance = resolveProfileAppearance({
+    theme: pendingTheme,
+    backgroundPreset: pendingBackgroundPreset,
+    gradientPreset: pendingGradientPreset,
+    accentColor: pendingAccentColor,
+  });
   const hasAppearanceChanges =
     pendingTheme !== effectiveTheme ||
     pendingBackgroundPreset !== effectiveBg ||
     (pendingBackgroundPreset === "gradient" &&
       (pendingGradientPreset ?? "default") !== effectiveGradient) ||
     pendingAccentColor !== (profile.accentColor ?? null);
+  const activeLinkCount = orderedLinks.filter((link) => link.isActive).length;
+  const onboardingTasks = [
+    {
+      label: "Add an avatar",
+      done: Boolean(profile.avatarUrl || watchedAvatar),
+    },
+    {
+      label: "Write a short bio",
+      done: Boolean((profile.bio || watchedBio || "").trim()),
+    },
+    {
+      label: "Add at least one active link",
+      done: activeLinkCount > 0,
+    },
+    {
+      label: "Request verification",
+      done:
+        profile.isVerified || profile.verificationStatus === "pending",
+    },
+    {
+      label: "Collect your first review",
+      done: reviewStats.totalReviews > 0,
+    },
+  ];
+  const completedOnboardingTasks = onboardingTasks.filter(
+    (task) => task.done,
+  ).length;
+  const onboardingProgress = Math.round(
+    (completedOnboardingTasks / onboardingTasks.length) * 100,
+  );
 
   return (
     <Layout>
@@ -852,7 +953,7 @@ export default function Dashboard() {
         currentProfile={profile}
       />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
           {/* Main Content Area */}
           <div className="flex-1 space-y-8">
             <div className="flex items-center justify-between">
@@ -868,6 +969,95 @@ export default function Dashboard() {
               >
                 View Profile <ExternalLink className="w-4 h-4" />
               </Link>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)]">
+              <Card className="border-border/60">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">Launch Checklist</p>
+                      <p className="text-sm text-muted-foreground">
+                        Complete the essentials before sharing your trust link.
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">
+                        {onboardingProgress}%
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {completedOnboardingTasks}/{onboardingTasks.length} done
+                      </p>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${onboardingProgress}%` }}
+                    />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {onboardingTasks.map((task) => (
+                      <div
+                        key={task.label}
+                        className={cn(
+                          "rounded-xl border px-3 py-2 text-sm flex items-center gap-2",
+                          task.done
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-border bg-background",
+                        )}
+                      >
+                        {task.done ? (
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        ) : (
+                          <Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <span>{task.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/60">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold">Verification</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Status:{" "}
+                    <span className="font-medium text-foreground capitalize">
+                      {profile.isVerified
+                        ? "approved"
+                        : profile.verificationStatus.replace("_", " ")}
+                    </span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    A verified badge increases confidence before buyers message
+                    you.
+                  </p>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    variant={profile.verificationStatus === "pending" ? "outline" : "default"}
+                    disabled={
+                      profile.isVerified ||
+                      profile.verificationStatus === "pending" ||
+                      requestVerificationMutation.isPending
+                    }
+                    onClick={() => requestVerificationMutation.mutate()}
+                  >
+                    {profile.isVerified
+                      ? "Already verified"
+                      : profile.verificationStatus === "pending"
+                        ? "Request pending"
+                        : requestVerificationMutation.isPending
+                          ? "Requesting..."
+                          : "Request Verification"}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
 
             <Tabs
@@ -969,6 +1159,10 @@ export default function Dashboard() {
                   hasMoreReviews={hasMoreReviews}
                   fetchMoreReviews={fetchMoreReviews}
                   isFetchingMoreReviews={isFetchingMoreReviews}
+                  onSaveResponse={(reviewId, response) =>
+                    respondToReviewMutation.mutate({ reviewId, response })
+                  }
+                  isSavingResponse={respondToReviewMutation.isPending}
                 />
               </TabsContent>
 
@@ -983,272 +1177,23 @@ export default function Dashboard() {
               </TabsContent>
 
               <TabsContent value="appearance" className="space-y-6 mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Theme</CardTitle>
-                    <CardDescription>
-                      Choose a base theme for your profile.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-6">
-                      <button
-                        type="button"
-                        onClick={() => setPendingTheme("light")}
-                        className={cn(
-                          "group relative aspect-[9/8] rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
-                          pendingTheme === "light"
-                            ? "border-primary ring-2 ring-primary/20"
-                            : "border-border",
-                        )}
-                      >
-                        <div className="absolute inset-0 bg-white">
-                          <div className="h-1/3 bg-slate-100 p-4 flex flex-col items-center justify-center gap-2">
-                            <div className="w-12 h-12 rounded-full bg-slate-200" />
-                          </div>
-                          <div className="p-4 space-y-2">
-                            <div className="h-8 rounded-lg bg-slate-100 border border-slate-200" />
-                            <div className="h-8 rounded-lg bg-slate-100 border border-slate-200" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-0 inset-x-0 p-3 bg-white/90 backdrop-blur-sm border-t">
-                          <span className="font-semibold text-sm">Light</span>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPendingTheme("dark")}
-                        className={cn(
-                          "group relative aspect-[9/8] rounded-xl border-2 transition-all overflow-hidden text-left hover:scale-105",
-                          pendingTheme === "dark"
-                            ? "border-primary ring-2 ring-primary/20"
-                            : "border-border",
-                        )}
-                      >
-                        <div className="absolute inset-0 bg-slate-950">
-                          <div className="h-1/3 bg-slate-900 p-4 flex flex-col items-center justify-center gap-2">
-                            <div className="w-12 h-12 rounded-full bg-slate-800" />
-                          </div>
-                          <div className="p-4 space-y-2">
-                            <div className="h-8 rounded-lg bg-slate-900 border border-slate-800" />
-                            <div className="h-8 rounded-lg bg-slate-900 border border-slate-800" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-0 inset-x-0 p-3 bg-slate-950/90 backdrop-blur-sm border-t border-white/10">
-                          <span className="font-semibold text-sm text-white">
-                            Dark
-                          </span>
-                        </div>
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Background</CardTitle>
-                    <CardDescription>
-                      Choose a background for your profile: none, gradient, or
-                      an animated style.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPendingBackgroundPreset(null);
-                          setPendingGradientPreset(null);
-                        }}
-                        className={cn(
-                          "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
-                          pendingBackgroundPreset === null
-                            ? "border-primary ring-2 ring-primary/20"
-                            : "border-border",
-                        )}
-                      >
-                        <div className="absolute inset-0 bg-muted" />
-                        <span className="absolute bottom-0 inset-x-0 py-2 bg-black/60 text-white text-xs font-medium text-center">
-                          None
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPendingBackgroundPreset("gradient");
-                          if (!pendingGradientPreset)
-                            setPendingGradientPreset("default");
-                        }}
-                        className={cn(
-                          "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
-                          pendingBackgroundPreset === "gradient"
-                            ? "border-primary ring-2 ring-primary/20"
-                            : "border-border",
-                        )}
-                      >
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
-                          }}
-                        />
-                        <span className="absolute bottom-0 inset-x-0 py-2 bg-black/40 text-white text-xs font-medium text-center">
-                          Gradient
-                        </span>
-                      </button>
-                      {(["antigravity", "aurora", "iridescence"] as const).map(
-                        (key) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() =>
-                              setPendingBackgroundPreset(
-                                pendingBackgroundPreset === key ? null : key,
-                              )
-                            }
-                            className={cn(
-                              "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-[1.02] transition-transform",
-                              pendingBackgroundPreset === key
-                                ? "border-primary ring-2 ring-primary/20"
-                                : "border-border",
-                            )}
-                          >
-                            <BackgroundPreview preset={key} />
-                            <span className="absolute bottom-0 inset-x-0 py-2 bg-black/60 text-white text-xs font-medium text-center capitalize">
-                              {key}
-                            </span>
-                          </button>
-                        ),
-                      )}
-                    </div>
-                    {pendingBackgroundPreset === "gradient" && (
-                      <>
-                        <div>
-                          <p className="text-sm font-medium mb-2">
-                            Gradient style
-                          </p>
-                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                            {[
-                              {
-                                key: "default" as const,
-                                label: "Default",
-                                bg: "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
-                              },
-                              {
-                                key: "ocean" as const,
-                                label: "Ocean",
-                                bg: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%)",
-                              },
-                              {
-                                key: "sunset" as const,
-                                label: "Sunset",
-                                bg: "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)",
-                              },
-                              {
-                                key: "forest" as const,
-                                label: "Forest",
-                                bg: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
-                              },
-                              {
-                                key: "berry" as const,
-                                label: "Berry",
-                                bg: "linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #dc2626 100%)",
-                              },
-                            ].map(({ key, label, bg }) => (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => setPendingGradientPreset(key)}
-                                className={cn(
-                                  "relative aspect-video rounded-xl border-2 overflow-hidden hover:scale-105 transition-transform",
-                                  pendingGradientPreset === key
-                                    ? "border-primary ring-2 ring-primary/20"
-                                    : "border-border",
-                                )}
-                              >
-                                <div
-                                  className="absolute inset-0"
-                                  style={{ background: bg }}
-                                />
-                                <span className="absolute bottom-0 inset-x-0 py-2 bg-black/40 text-white text-xs font-medium text-center">
-                                  {label}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Accent Color</CardTitle>
-                    <CardDescription>
-                      Custom accent for cards and buttons. Leave empty to use
-                      theme default.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={pendingAccentColor ?? "#38b6ff"}
-                        onChange={(e) =>
-                          setPendingAccentColor(e.target.value || null)
-                        }
-                        className="h-10 w-14 cursor-pointer rounded border border-border"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="#38b6ff"
-                        value={pendingAccentColor ?? ""}
-                        onChange={(e) => {
-                          const v = e.target.value.trim();
-                          setPendingAccentColor(
-                            /^#[0-9A-Fa-f]{6}$/.test(v) ? v : v || null,
-                          );
-                        }}
-                        className="font-mono w-28"
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPendingAccentColor(null)}
-                    >
-                      Reset to default
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      updateAppearanceMutation.mutate({
-                        theme: pendingTheme,
-                        backgroundPreset: pendingBackgroundPreset,
-                        gradientPreset:
-                          pendingBackgroundPreset === "gradient"
-                            ? (pendingGradientPreset ?? "default")
-                            : null,
-                        accentColor: pendingAccentColor,
-                      })
-                    }
-                    disabled={
-                      updateAppearanceMutation.isPending ||
-                      !hasAppearanceChanges
-                    }
-                  >
-                    {updateAppearanceMutation.isPending
-                      ? "Saving..."
-                      : "Save Design"}
-                  </Button>
-                </div>
+                <AppearanceTab
+                  pendingTheme={pendingTheme}
+                  setPendingTheme={setPendingTheme}
+                  pendingBackgroundPreset={pendingBackgroundPreset}
+                  setPendingBackgroundPreset={setPendingBackgroundPreset}
+                  pendingGradientPreset={pendingGradientPreset}
+                  setPendingGradientPreset={setPendingGradientPreset}
+                  pendingAccentColor={pendingAccentColor}
+                  setPendingAccentColor={setPendingAccentColor}
+                  accentColorError={accentColorError}
+                  setAccentColorError={setAccentColorError}
+                  accentWarnings={accentWarnings}
+                  accentValidation={accentValidation}
+                  previewAppearance={previewAppearance}
+                  hasAppearanceChanges={hasAppearanceChanges}
+                  updateAppearanceMutation={updateAppearanceMutation}
+                />
               </TabsContent>
             </Tabs>
           </div>
@@ -1275,41 +1220,5 @@ export default function Dashboard() {
         </div>
       </div>
     </Layout>
-  );
-}
-
-function BackgroundPreview({
-  preset,
-}: {
-  preset: "antigravity" | "aurora" | "iridescence";
-}) {
-  const base = "absolute inset-0 w-full h-full";
-  return (
-    <div className="relative w-full h-full min-h-[80px] bg-slate-900">
-      {preset === "antigravity" && (
-        <Antigravity
-          count={80}
-          color="#FF9FFC"
-          particleSize={1.5}
-          className={base}
-        />
-      )}
-      {preset === "aurora" && (
-        <Aurora
-          colorStops={["#5227FF", "#7cff67", "#5227FF"]}
-          amplitude={1}
-          blend={0.6}
-          className={base}
-        />
-      )}
-      {preset === "iridescence" && (
-        <Iridescence
-          speed={1}
-          amplitude={0.1}
-          mouseReact={false}
-          className={base}
-        />
-      )}
-    </div>
   );
 }

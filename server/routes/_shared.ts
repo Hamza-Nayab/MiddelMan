@@ -19,8 +19,10 @@ import {
   links,
   profileDailyStats,
   profiles,
+  reviewReports,
   reviews,
   reviewDisputes,
+  sellerReports,
   users,
   adminAuditLogs,
   notifications,
@@ -60,8 +62,10 @@ export {
   links,
   profileDailyStats,
   profiles,
+  reviewReports,
   reviews,
   reviewDisputes,
+  sellerReports,
   users,
   adminAuditLogs,
   notifications,
@@ -136,7 +140,16 @@ export const profileUpdateSchema = z
       .nullable()
       .optional(),
     gradientPreset: z
-      .enum(["default", "ocean", "sunset", "forest", "berry"])
+      .enum([
+        "default",
+        "ocean",
+        "sunset",
+        "forest",
+        "berry",
+        "royal",
+        "ember",
+        "mono",
+      ])
       .nullable()
       .optional(),
     accentColor: z
@@ -208,6 +221,10 @@ export const reviewUpdateSchema = z.object({
   comment: z.string().min(1).max(500),
 });
 
+export const reviewResponseSchema = z.object({
+  response: z.string().trim().min(1).max(300).nullable(),
+});
+
 export const reviewHideSchema = z.object({
   isHidden: z.boolean(),
   reason: z.string().max(500).optional(),
@@ -215,6 +232,20 @@ export const reviewHideSchema = z.object({
 
 export const reviewDisputeCreateSchema = z.object({
   reason: z.string().min(1).max(200),
+  message: z.string().max(1000).optional(),
+});
+
+export const verificationRequestSchema = z.object({
+  note: z.string().max(500).optional(),
+});
+
+export const sellerReportCreateSchema = z.object({
+  reason: z.string().min(1).max(120),
+  message: z.string().max(1000).optional(),
+});
+
+export const reviewReportCreateSchema = z.object({
+  reason: z.string().min(1).max(120),
   message: z.string().max(1000).optional(),
 });
 
@@ -500,6 +531,10 @@ export const profileColumns = {
   countryCode: profiles.countryCode,
   isVerified: profiles.isVerified,
   verificationMethod: profiles.verificationMethod,
+  verificationStatus: profiles.verificationStatus,
+  verificationRequestNote: profiles.verificationRequestNote,
+  verificationRequestedAt: profiles.verificationRequestedAt,
+  verificationReviewedAt: profiles.verificationReviewedAt,
   theme: profiles.theme,
   backgroundPreset: profiles.backgroundPreset,
   gradientPreset: profiles.gradientPreset,
@@ -529,6 +564,8 @@ export const reviewColumns = {
   authorName: reviews.authorName,
   rating: reviews.rating,
   comment: reviews.comment,
+  sellerResponse: reviews.sellerResponse,
+  sellerRespondedAt: reviews.sellerRespondedAt,
   isHidden: reviews.isHidden,
   ipHash: reviews.ipHash,
   userAgentHash: reviews.userAgentHash,

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star, AlertTriangle, Upload } from "lucide-react";
+import { Star, AlertTriangle, MessageSquare, Upload } from "lucide-react";
 
 const disputeReasons = [
   { value: "inappropriate-review", label: "Inappropriate Review" },
@@ -52,6 +52,8 @@ type ReviewsTabProps = {
   hasMoreReviews: boolean | undefined;
   fetchMoreReviews: () => void;
   isFetchingMoreReviews: boolean;
+  onSaveResponse: (reviewId: number, response: string | null) => void;
+  isSavingResponse: boolean;
 };
 
 export const ReviewsTab = memo(function ReviewsTab({
@@ -71,7 +73,14 @@ export const ReviewsTab = memo(function ReviewsTab({
   hasMoreReviews,
   fetchMoreReviews,
   isFetchingMoreReviews,
+  onSaveResponse,
+  isSavingResponse,
 }: ReviewsTabProps) {
+  const [responseDialogOpen, setResponseDialogOpen] = useState<number | null>(
+    null,
+  );
+  const [responseDraft, setResponseDraft] = useState("");
+
   return (
     <>
       <div className="grid gap-4">
@@ -110,12 +119,98 @@ export const ReviewsTab = memo(function ReviewsTab({
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <p className="text-sm mb-3">{review.comment}</p>
+                {review.sellerResponse ? (
+                  <div className="mb-3 rounded-lg border bg-muted/40 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                      Your public response
+                    </p>
+                    <p className="text-sm">{review.sellerResponse}</p>
+                  </div>
+                ) : null}
                 {review.disputeStatus && (
                   <p className="text-xs text-muted-foreground mb-3">
                     Dispute: {review.disputeStatus}
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2">
+                  <Dialog
+                    open={responseDialogOpen === review.reviewId}
+                    onOpenChange={(open) => {
+                      if (open) {
+                        setResponseDialogOpen(review.reviewId);
+                        setResponseDraft(review.sellerResponse ?? "");
+                      } else {
+                        setResponseDialogOpen(null);
+                        setResponseDraft("");
+                      }
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-7 text-xs">
+                        <MessageSquare className="w-3 h-3 mr-2" />
+                        {review.sellerResponse ? "Edit Response" : "Respond"}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Seller Response</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <Textarea
+                          value={responseDraft}
+                          onChange={(event) =>
+                            setResponseDraft(event.target.value.slice(0, 300))
+                          }
+                          placeholder="Reply publicly to add context for future buyers..."
+                          className="min-h-28 resize-none"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {responseDraft.length}/300 characters
+                        </p>
+                        <DialogFooter>
+                          {review.sellerResponse ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => {
+                                onSaveResponse(review.reviewId, null);
+                                setResponseDialogOpen(null);
+                                setResponseDraft("");
+                              }}
+                              disabled={isSavingResponse}
+                            >
+                              Remove
+                            </Button>
+                          ) : null}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setResponseDialogOpen(null);
+                              setResponseDraft("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            disabled={
+                              isSavingResponse || responseDraft.trim().length === 0
+                            }
+                            onClick={() => {
+                              onSaveResponse(
+                                review.reviewId,
+                                responseDraft.trim(),
+                              );
+                              setResponseDialogOpen(null);
+                            }}
+                          >
+                            {isSavingResponse ? "Saving..." : "Publish Response"}
+                          </Button>
+                        </DialogFooter>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   <Dialog
                     open={disputeDialogOpen === review.reviewId}
                     onOpenChange={(open) => {

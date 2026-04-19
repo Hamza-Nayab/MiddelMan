@@ -1,9 +1,22 @@
 import type { User } from "./user.types";
 
 export type VerificationMethod = "none" | "ig_bio_code" | "whatsapp_otp" | "manual";
+export type VerificationStatus =
+  | "not_requested"
+  | "pending"
+  | "approved"
+  | "rejected";
 
 export type ProfileTheme = "light" | "dark" | "gradient";
-export type GradientPreset = "default" | "ocean" | "sunset" | "forest" | "berry";
+export type GradientPreset =
+  | "default"
+  | "ocean"
+  | "sunset"
+  | "forest"
+  | "berry"
+  | "royal"
+  | "ember"
+  | "mono";
 
 export type Profile = {
   userId: number;
@@ -16,6 +29,10 @@ export type Profile = {
   countryCode: string | null;
   isVerified: boolean;
   verificationMethod: VerificationMethod;
+  verificationStatus: VerificationStatus;
+  verificationRequestNote: string | null;
+  verificationRequestedAt: string | null;
+  verificationReviewedAt: string | null;
   theme: ProfileTheme;
   backgroundPreset: string | null;
   gradientPreset: string | null;

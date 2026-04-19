@@ -10,6 +10,12 @@ export const verificationMethodEnum = pgEnum("verification_method", [
   "whatsapp_otp",
   "manual",
 ]);
+export const verificationStatusEnum = pgEnum("verification_status", [
+  "not_requested",
+  "pending",
+  "approved",
+  "rejected",
+]);
 
 export const themeEnum = pgEnum("profile_theme", ["light", "dark", "gradient"]);
 
@@ -28,6 +34,16 @@ export const profiles = pgTable("profiles", {
   verificationMethod: verificationMethodEnum("verification_method")
     .notNull()
     .default("none"),
+  verificationStatus: verificationStatusEnum("verification_status")
+    .notNull()
+    .default("not_requested"),
+  verificationRequestNote: text("verification_request_note"),
+  verificationRequestedAt: timestamp("verification_requested_at", {
+    withTimezone: true,
+  }),
+  verificationReviewedAt: timestamp("verification_reviewed_at", {
+    withTimezone: true,
+  }),
   theme: themeEnum("theme").notNull().default("light"),
   backgroundPreset: varchar("background_preset", { length: 20 }),
   gradientPreset: varchar("gradient_preset", { length: 20 }),
@@ -83,6 +99,10 @@ export const insertProfileSchema = createInsertSchema(profiles).pick({
   countryCode: true,
   isVerified: true,
   verificationMethod: true,
+  verificationStatus: true,
+  verificationRequestNote: true,
+  verificationRequestedAt: true,
+  verificationReviewedAt: true,
   theme: true,
   backgroundPreset: true,
   gradientPreset: true,

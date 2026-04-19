@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Copy,
+  Flag,
   Star,
   MessageCircle,
   ExternalLink,
   ShieldCheck,
   Phone,
   Mail,
+  QrCode,
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { motion } from "framer-motion";
@@ -51,6 +54,7 @@ import {
   platformIconMap,
   type PlatformKey,
 } from "@/lib/graphics";
+import { resolveProfileAppearance } from "@/lib/profile-appearance";
 import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
 import { useMeQuery } from "@/hooks/use-me";
 import {
@@ -95,6 +99,8 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
+  const [reportSellerReason, setReportSellerReason] = useState("");
+  const [reportSellerMessage, setReportSellerMessage] = useState("");
 
   // Compute sampling decision (before we know if owner)
   const shouldSampleTrack = useMemo(() => {
@@ -308,6 +314,51 @@ export default function ProfilePage() {
     },
   });
 
+  const reportSellerMutation = useMutation({
+    mutationFn: (values: { reason: string; message?: string }) =>
+      api.reportSellerByUsername(username!, values),
+    onSuccess: () => {
+      setReportSellerReason("");
+      setReportSellerMessage("");
+      toast({
+        title: "Report submitted",
+        description: "Thanks. Our team will review this seller report.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Report failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reportReviewMutation = useMutation({
+    mutationFn: ({
+      reviewId,
+      reason,
+      message,
+    }: {
+      reviewId: number;
+      reason: string;
+      message?: string;
+    }) => api.reportReview(reviewId, { reason, message }),
+    onSuccess: () => {
+      toast({
+        title: "Review reported",
+        description: "Thanks. Our team will review this report.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Report failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (profileLoading)
     return (
       <div className="h-screen flex items-center justify-center bg-background">
@@ -389,6 +440,11 @@ export default function ProfilePage() {
     profile.countryCode ?? undefined,
   );
   const whatsappUrl = whatsappE164 ? buildWhatsAppUrl(whatsappE164) : null;
+  const profileUrl =
+    typeof window !== "undefined" ? window.location.href : `/${username ?? ""}`;
+  const instagramBioCopy = `${profile.displayName} | Reviews & trust profile ${profileUrl}`;
+  const whatsappShareCopy = `Check ${profile.displayName}'s trust profile on MiddelMen: ${profileUrl}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(profileUrl)}`;
 
   const handleCopyPhone = async () => {
     if (!phoneE164) return;
@@ -418,93 +474,88 @@ export default function ProfilePage() {
     }
   };
 
-  const GRADIENT_PRESETS: Record<string, string> = {
-    default: "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
-    ocean: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%)",
-    sunset: "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)",
-    forest: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
-    berry: "linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #dc2626 100%)",
+  const handleCopyText = async (value: string, label = "Copied") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast({ title: label });
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Please copy manually.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const themeStyles = {
-    light: {
-      bg: "bg-slate-50",
-      text: "text-slate-900",
-      card: "bg-white border-slate-200 shadow-sm",
-      cardText: "text-slate-800",
-      button: "bg-white/80 hover:bg-white text-slate-900",
-      overlay: null as React.ReactNode,
-    },
-    dark: {
-      bg: "bg-slate-950",
-      text: "text-white",
-      card: "bg-slate-900 border-slate-800 shadow-sm",
-      cardText: "text-slate-100",
-      button: "bg-slate-800 hover:bg-slate-700 text-white",
-      overlay: null as React.ReactNode,
-    },
-  };
-
-  const effectiveTheme = profile.theme === "gradient" ? "light" : profile.theme;
-  const hasGradientBg =
-    profile.backgroundPreset === "gradient" || profile.theme === "gradient";
-  const gradientBg = hasGradientBg
-    ? (GRADIENT_PRESETS[profile.gradientPreset ?? "default"] ??
-      GRADIENT_PRESETS.default)
-    : null;
-  const hasAnimatedBg =
-    profile.backgroundPreset === "antigravity" ||
-    profile.backgroundPreset === "aurora" ||
-    profile.backgroundPreset === "iridescence";
-  const baseTheme = themeStyles[effectiveTheme] ?? themeStyles.light;
-  const currentTheme =
-    gradientBg != null
-      ? {
-          ...baseTheme,
-          card: "bg-white/15 backdrop-blur-md border-white/30 shadow-sm",
-          cardText: "text-white",
-          button:
-            "bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white",
-        }
-      : baseTheme;
-  const bgPreset = profile.backgroundPreset as
+  const appearance = resolveProfileAppearance({
+    theme: profile.theme,
+    backgroundPreset: profile.backgroundPreset as
+      | "gradient"
+      | "antigravity"
+      | "aurora"
+      | "iridescence"
+      | null,
+    gradientPreset: profile.gradientPreset as
+      | "default"
+      | "ocean"
+      | "sunset"
+      | "forest"
+      | "berry"
+      | "royal"
+      | "ember"
+      | "mono"
+      | null,
+    accentColor: profile.accentColor,
+  });
+  const bgPreset = appearance.backgroundPreset as
     | "antigravity"
     | "aurora"
     | "iridescence"
     | null;
   const backgroundOverlay =
-    hasAnimatedBg && bgPreset ? (
-      <ProfileAnimatedBackground preset={bgPreset} />
-    ) : gradientBg ? (
-      <div className="fixed inset-0 z-0" style={{ background: gradientBg }}>
-        <div className="absolute inset-0 bg-white/30 dark:bg-black/20" />
+    appearance.hasAnimatedBackground && bgPreset ? (
+      <ProfileAnimatedBackground
+        preset={bgPreset}
+        overlayClass={appearance.overlayClass}
+      />
+    ) : appearance.hasGradientBackground && appearance.gradientBackground ? (
+      <div
+        className="fixed inset-0 z-0"
+        style={{ background: appearance.gradientBackground }}
+      >
+        {appearance.overlayClass && (
+          <div className={cn("absolute inset-0", appearance.overlayClass)} />
+        )}
       </div>
-    ) : (
-      currentTheme.overlay
-    );
-  const iconWrapperClass =
-    hasAnimatedBg || gradientBg
-      ? "bg-white/20 border-white/30 text-white"
-      : profile.theme === "dark"
-        ? "bg-slate-800 border border-slate-700 text-slate-100"
-        : "bg-white/80 text-slate-900";
+    ) : null;
+  const activeLinks = links?.filter((link) => link.isActive) ?? [];
+  const trustBadgeLabel = profile.isVerified
+    ? "Verified Seller"
+    : profile.verificationStatus === "pending"
+      ? "Verification Pending"
+      : reviewStats.totalReviews > 0
+        ? "Trusted Seller"
+        : "New Seller";
+  const joinedLabel = new Date(user.createdAt).toLocaleDateString(undefined, {
+    month: "short",
+    year: "numeric",
+  });
 
   return (
     <div
       className={cn(
         "min-h-screen relative overflow-x-hidden font-sans",
-        hasAnimatedBg || gradientBg ? "bg-transparent" : currentTheme.bg,
-        gradientBg ? "text-white" : currentTheme.text,
+        appearance.pageBgClass,
+        appearance.pageTextClass,
       )}
     >
       {/* Background */}
       {backgroundOverlay}
 
-      <div className="relative z-10 container max-w-lg mx-auto px-4 py-12 pb-24 flex flex-col items-center">
-        {/* Logo */}
+      <div className="relative z-10 container max-w-6xl mx-auto px-4 py-8 md:py-12 pb-24">
         <Link
           href="/"
-          className="mb-8 flex items-center gap-2 hover:opacity-90 transition-opacity"
+          className="mb-8 inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
         >
           <img
             src={logoImg}
@@ -514,373 +565,452 @@ export default function ProfilePage() {
           <span className="font-semibold">MiddelMen</span>
         </Link>
 
-        {/* Profile Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center text-center mb-10 w-full"
+          className={cn(
+            "mb-8 rounded-[2rem] border p-5 md:p-7",
+            appearance.surfaceClass,
+          )}
+          style={appearance.accentCardStyle}
         >
-          <Avatar className="w-24 h-24 border-4 border-white/50 shadow-xl mb-4">
-            <AvatarImage src={getAvatarUrl(profile.avatarUrl, user?.id)} />
-            <AvatarFallback>
-              {user.username?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-
-          <h1 className="text-2xl font-bold font-heading mb-1 flex items-center gap-2">
-            {profile.displayName}
-            {profile.isVerified ? (
-              <ShieldCheck
-                className="w-5 h-5 text-blue-500"
-                fill="currentColor"
-                stroke="white"
-              />
-            ) : null}
-          </h1>
-          <p className={cn("mb-4 opacity-80")}>{profile.bio}</p>
-
-          {user.username && (
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
-              <span>@{user.username}</span>
-              {false && isOwner && me?.user?.role === "seller" && (
-                <Dialog
-                  open={isUsernameDialogOpen}
-                  onOpenChange={setIsUsernameDialogOpen}
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.92fr)]">
+            <div className="space-y-6">
+              <div className="flex flex-col gap-5 md:flex-row md:items-start">
+                <Avatar
+                  className={cn(
+                    "h-24 w-24 shrink-0 border-4 shadow-xl md:h-28 md:w-28",
+                    appearance.usesDynamicBackground
+                      ? appearance.usesBrightBackground
+                        ? "border-slate-300"
+                        : "border-white/50"
+                      : profile.theme === "dark"
+                        ? "border-slate-700"
+                        : "border-white/70",
+                  )}
                 >
+                  <AvatarImage src={getAvatarUrl(profile.avatarUrl, user?.id)} />
+                  <AvatarFallback>
+                    {user.username?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="min-w-0 flex-1 space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]",
+                        appearance.surfaceMutedClass,
+                      )}
+                    >
+                      {profile.isVerified ? (
+                        <ShieldCheck
+                          className="w-3.5 h-3.5 text-blue-500"
+                          fill="currentColor"
+                          stroke="white"
+                        />
+                      ) : null}
+                      {trustBadgeLabel}
+                    </div>
+                    <div
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
+                        appearance.surfaceMutedClass,
+                      )}
+                    >
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      {averageRating} rating
+                    </div>
+                  </div>
+
+                  <div>
+                    <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
+                      {profile.displayName}
+                    </h1>
+                    <div
+                      className={cn(
+                        "mt-2 flex flex-wrap items-center gap-3 text-sm",
+                        appearance.mutedTextClass,
+                      )}
+                    >
+                      <span>@{user.username}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span>Joined {joinedLabel}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span>{reviewStats.totalReviews} reviews</span>
+                    </div>
+                  </div>
+
+                  <p
+                    className={cn(
+                      "max-w-3xl text-sm leading-7 md:text-base",
+                      appearance.mutedTextClass,
+                    )}
+                  >
+                    {profile.bio ||
+                      "A public trust profile where buyers can check reviews, seller links, and contact details before placing an order."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: "Trust Badge", value: trustBadgeLabel },
+                  { label: "Joined", value: joinedLabel },
+                  { label: "Total Reviews", value: String(reviewStats.totalReviews) },
+                  { label: "Average Rating", value: averageRating },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className={cn(
+                      "rounded-2xl border p-4",
+                      appearance.surfaceMutedClass,
+                    )}
+                  >
+                    <p
+                      className={cn(
+                        "text-[11px] uppercase tracking-[0.18em]",
+                        appearance.mutedTextClass,
+                      )}
+                    >
+                      {item.label}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-2 text-sm font-semibold md:text-base",
+                        appearance.primaryTextClass,
+                      )}
+                    >
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div
+                className={cn(
+                  "rounded-[1.75rem] border p-5",
+                  appearance.surfaceMutedClass,
+                )}
+                style={appearance.accentCardStyle}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">Trust Snapshot</p>
+                    <p className={cn("mt-1 text-sm leading-6", appearance.mutedTextClass)}>
+                      Buyers can quickly see this seller&apos;s rating, review count, and verification progress before reaching out.
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
+                      appearance.surfaceClass,
+                    )}
+                    style={appearance.accentButtonStyle}
+                  >
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    {averageRating}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-1">
+                  <div className={cn("rounded-2xl border p-4", appearance.surfaceClass)}>
+                    <p className={cn("text-xs uppercase tracking-[0.18em]", appearance.mutedTextClass)}>
+                      Verification
+                    </p>
+                    <p className="mt-2 font-semibold">
+                      {profile.isVerified
+                        ? "Approved"
+                        : profile.verificationStatus.replace("_", " ")}
+                    </p>
+                  </div>
+                  <div className={cn("rounded-2xl border p-4", appearance.surfaceClass)}>
+                    <p className={cn("text-xs uppercase tracking-[0.18em]", appearance.mutedTextClass)}>
+                      Buyer Confidence
+                    </p>
+                    <p className="mt-2 font-semibold">
+                      {reviewStats.totalReviews > 0
+                        ? "Live social proof"
+                        : "Building first reviews"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  "rounded-[1.75rem] border p-5",
+                  appearance.surfaceMutedClass,
+                )}
+                style={appearance.accentCardStyle}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">Actions</p>
+                    <p className={cn("mt-1 text-sm", appearance.mutedTextClass)}>
+                      Share this profile, contact the seller, or raise a concern.
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
+                      appearance.surfaceClass,
+                    )}
+                    style={appearance.accentButtonStyle}
+                  >
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    {averageRating}
+                  </div>
+                </div>
+
+              <TooltipProvider>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {phoneE164 && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="Show phone number"
+                          className={cn(
+                            "flex h-11 w-11 items-center justify-center rounded-full border transition",
+                            appearance.contactButtonClass,
+                          )}
+                          style={appearance.accentIconStyle}
+                        >
+                          <Phone
+                            className={cn("w-4 h-4", appearance.iconColorClass)}
+                            style={appearance.accentTextStyle}
+                          />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64">
+                        <div className="text-lg font-semibold tracking-wide">
+                          {phoneE164}
+                        </div>
+                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Copy</span>
+                          <button
+                            type="button"
+                            onClick={handleCopyPhone}
+                            className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
+                            aria-label="Copy phone number"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+
+                  {whatsappUrl && (
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Open WhatsApp"
+                      className={cn(
+                        "flex h-11 min-w-[140px] items-center justify-center gap-2 rounded-full border px-4 transition",
+                        appearance.contactButtonClass,
+                      )}
+                      style={appearance.accentIconStyle}
+                    >
+                      <SiWhatsapp
+                        className={cn("h-4 w-4", appearance.iconColorClass)}
+                        style={appearance.accentTextStyle}
+                      />
+                      <span
+                        className={cn("text-sm font-medium", appearance.iconColorClass)}
+                        style={appearance.accentTextStyle}
+                      >
+                        WhatsApp
+                      </span>
+                    </a>
+                  )}
+
+                  {profile.contactEmail && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="Show email"
+                          className={cn(
+                            "flex h-11 min-w-[140px] items-center justify-center gap-2 rounded-full border px-4 transition",
+                            appearance.contactButtonClass,
+                          )}
+                          style={appearance.accentIconStyle}
+                        >
+                          <Mail
+                            className={cn("h-4 w-4", appearance.iconColorClass)}
+                            style={appearance.accentTextStyle}
+                          />
+                          <span
+                            className={cn("text-sm font-medium", appearance.iconColorClass)}
+                            style={appearance.accentTextStyle}
+                          >
+                            Email
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64">
+                        <div className="text-lg font-semibold tracking-wide break-all">
+                          {profile.contactEmail}
+                        </div>
+                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Copy</span>
+                          <button
+                            type="button"
+                            onClick={handleCopyEmail}
+                            className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
+                            aria-label="Copy email"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </div>
+              </TooltipProvider>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Change username
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("rounded-full", appearance.buttonClass)}
+                      style={appearance.accentButtonStyle}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Share Kit
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Change username</DialogTitle>
+                      <DialogTitle>Share Kit</DialogTitle>
                     </DialogHeader>
-                    <Form {...usernameForm}>
-                      <form
-                        onSubmit={usernameForm.handleSubmit((values) =>
-                          changeUsernameMutation.mutate(values),
-                        )}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={usernameForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>New username</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="5-20 chars, lowercase only"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.value.toLowerCase())
-                                  }
-                                />
-                              </FormControl>
-                              {usernameInput &&
-                                usernameInput === (user?.username ?? "") && (
-                                  <p className="text-xs text-muted-foreground">
-                                    This is already your current username.
-                                  </p>
-                                )}
-                              {usernameAvailability.status === "checking" && (
-                                <p className="text-xs text-muted-foreground">
-                                  Checking availability...
-                                </p>
-                              )}
-                              {usernameAvailability.status === "available" && (
-                                <p className="text-xs text-emerald-600">
-                                  Username is available.
-                                </p>
-                              )}
-                              {usernameAvailability.status === "taken" && (
-                                <div className="space-y-2">
-                                  <p className="text-xs text-amber-600">
-                                    Username is taken.
-                                  </p>
-                                  {usernameAvailability.suggestions.length >
-                                    0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                      {usernameAvailability.suggestions.map(
-                                        (suggestion) => (
-                                          <button
-                                            key={suggestion}
-                                            type="button"
-                                            onClick={() =>
-                                              usernameForm.setValue(
-                                                "username",
-                                                suggestion,
-                                              )
-                                            }
-                                            className="text-xs px-2 py-1 bg-muted rounded"
-                                          >
-                                            {suggestion}
-                                          </button>
-                                        ),
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {usernameAvailability.status === "invalid" && (
-                                <p className="text-xs text-destructive">
-                                  5-20 chars, lowercase only (a-z, 0-9, ._-)
-                                </p>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <div className="space-y-4">
+                      <div className="flex flex-col items-center gap-3">
+                        <img
+                          src={qrCodeUrl}
+                          alt="QR code for seller profile"
+                          className="h-40 w-40 rounded-lg border bg-white p-2"
                         />
-
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>Remaining changes: {remainingUsernameChanges}</p>
-                          {usernameCooldownActive && nextUsernameChangeAt && (
-                            <p>
-                              Next change in {daysUntilUsernameChange} day(s)
-                              (available {nextUsernameChangeAt?.toDateString()})
-                            </p>
-                          )}
-                        </div>
-
-                        <Button
-                          type="submit"
-                          disabled={
-                            !canChangeUsername ||
-                            !usernameAvailability.available ||
-                            changeUsernameMutation.isPending
-                          }
-                          className="w-full"
-                        >
-                          {changeUsernameMutation.isPending
-                            ? "Updating..."
-                            : "Update username"}
-                        </Button>
-
-                        <p className="text-xs text-muted-foreground">
-                          Max 3 lifetime changes. 30-day cooldown between
-                          changes. Support@MiddelMen.com for further questions.
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <QrCode className="w-3.5 h-3.5" />
+                          QR code for packaging, stories, or receipts
                         </p>
-                      </form>
-                    </Form>
+                      </div>
+                      <div className="grid gap-2">
+                        <Button type="button" variant="outline" onClick={() => handleCopyText(profileUrl)}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Profile Link
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleCopyText(whatsappShareCopy, "WhatsApp text copied")}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy WhatsApp Share Text
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleCopyText(instagramBioCopy, "Instagram bio text copied")}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Instagram Bio Copy
+                        </Button>
+                      </div>
+                    </div>
                   </DialogContent>
                 </Dialog>
-              )}
-            </div>
-          )}
 
-          <div
-            className={cn(
-              "flex items-center gap-2 px-3 py-1 rounded-full border shadow-sm text-sm font-medium",
-              currentTheme.card,
-            )}
-          >
-            <Star className="w-4 h-4 text-yellow-500 fill-current" />
-            <span>{averageRating}</span>
-            <span className="opacity-70">
-              ({reviewStats?.totalReviews || 0} reviews)
-            </span>
+                {!isOwner && me?.user ? (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="rounded-full">
+                        <Flag className="w-4 h-4 mr-2" />
+                        Report Seller
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Report Seller</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <Input
+                          value={reportSellerReason}
+                          onChange={(event) =>
+                            setReportSellerReason(event.target.value)
+                          }
+                          placeholder="Reason"
+                        />
+                        <Textarea
+                          value={reportSellerMessage}
+                          onChange={(event) =>
+                            setReportSellerMessage(event.target.value)
+                          }
+                          placeholder="Add details (optional)"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setReportSellerReason("");
+                              setReportSellerMessage("");
+                            }}
+                          >
+                            Clear
+                          </Button>
+                          <Button
+                            type="button"
+                            disabled={
+                              reportSellerMutation.isPending ||
+                              !reportSellerReason.trim()
+                            }
+                            onClick={() =>
+                              reportSellerMutation.mutate({
+                                reason: reportSellerReason.trim(),
+                                message: reportSellerMessage.trim() || undefined,
+                              })
+                            }
+                          >
+                            {reportSellerMutation.isPending
+                              ? "Submitting..."
+                              : "Submit Report"}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                ) : null}
+              </div>
+              </div>
+            </div>
           </div>
+        </motion.section>
 
-          <TooltipProvider>
-            <div className="mt-3 flex items-center gap-2">
-              {phoneE164 && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Show phone number"
-                      className={cn(
-                        "h-9 w-9 rounded-full border flex items-center justify-center transition",
-                        currentTheme.card,
-                      )}
-                    >
-                      <Phone className="w-4 h-4" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-64">
-                    <div className="text-lg font-semibold tracking-wide">
-                      {phoneE164}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Copy</span>
-                      <button
-                        type="button"
-                        onClick={handleCopyPhone}
-                        className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
-                        aria-label="Copy phone number"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M9 9H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M12 4h8v8"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M12 12L20 4"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-
-              {whatsappUrl && (
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open WhatsApp"
-                  className={cn(
-                    "h-9 w-9 rounded-full border flex items-center justify-center transition",
-                    currentTheme.card,
-                  )}
-                >
-                  <SiWhatsapp className="w-4 h-4" />
-                </a>
-              )}
-
-              {profile.contactEmail && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Show email"
-                      className={cn(
-                        "h-9 w-9 rounded-full border flex items-center justify-center transition",
-                        currentTheme.card,
-                      )}
-                    >
-                      <Mail className="w-4 h-4" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-64">
-                    <div className="text-lg font-semibold tracking-wide break-all">
-                      {profile.contactEmail}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Copy</span>
-                      <button
-                        type="button"
-                        onClick={handleCopyEmail}
-                        className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
-                        aria-label="Copy email"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M9 9H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M12 4h8v8"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M12 12L20 4"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </div>
-          </TooltipProvider>
-        </motion.div>
-
-        {/* Links */}
-        <div className="w-full space-y-4 mb-12">
-          {links
-            ?.filter((l) => l.isActive)
-            .map((link, i) => (
-              <motion.a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  if (!user?.id) return;
-                  const key = `tt-click-${user.id}-${getDayKey()}`;
-                  if (shouldSampleSessionEvent(key)) {
-                    void api.trackProfileClick(user.id).catch(() => {});
-                  }
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="block"
-              >
-                <div
-                  className={cn(
-                    "p-4 rounded-2xl border transition-all flex items-center justify-between group",
-                    currentTheme.card,
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        "h-9 w-9 rounded-full flex items-center justify-center",
-                        iconWrapperClass,
-                      )}
-                    >
-                      {(() => {
-                        const Icon = getPlatformIcon(link.icon);
-                        return <Icon className="h-5 w-5" />;
-                      })()}
-                    </div>
-                    <span
-                      className={cn("font-semibold", currentTheme.cardText)}
-                    >
-                      {link.title}
-                    </span>
-                  </div>
-                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-50 transition-opacity" />
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.9fr)]">
+          <div className="order-2 space-y-8 xl:order-1">
+            <section className="w-full">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className={cn("text-xs uppercase tracking-[0.22em]", appearance.mutedTextClass)}>
+                    Buyer Proof
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
+                    Reviews and buyer confidence
+                  </h2>
+                  <p className={cn("mt-2 max-w-2xl text-sm leading-6", appearance.mutedTextClass)}>
+                    Buyers can see recent experiences, seller responses, and the overall rating before they decide to place an order.
+                  </p>
                 </div>
-              </motion.a>
-            ))}
-        </div>
-
-        {/* Review Section */}
-        <div className="w-full">
-          <div className="mb-6 flex items-center justify-between gap-4 flex-col md:flex-row">
+                <div className="flex shrink-0">
             {me?.user && me.user.role === "buyer" ? (
               givenReviews?.reviews.some(
                 (review) => review.sellerId === user?.id,
@@ -891,8 +1021,9 @@ export default function ProfilePage() {
                   disabled
                   className={cn(
                     "rounded-full border-0 opacity-50 cursor-not-allowed",
-                    currentTheme.button,
+                    appearance.buttonClass,
                   )}
+                  style={appearance.accentButtonStyle}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" /> Already Reviewed
                 </Button>
@@ -904,8 +1035,9 @@ export default function ProfilePage() {
                       size="sm"
                       className={cn(
                         "rounded-full border-0",
-                        currentTheme.button,
+                        appearance.buttonClass,
                       )}
+                      style={appearance.accentButtonStyle}
                     >
                       <MessageCircle className="w-4 h-4 mr-2" /> Write Review
                     </Button>
@@ -969,6 +1101,7 @@ export default function ProfilePage() {
                         <Button
                           type="submit"
                           className="w-full"
+                          style={appearance.accentButtonStyle}
                           disabled={addReviewMutation.isPending}
                         >
                           {addReviewMutation.isPending
@@ -987,23 +1120,149 @@ export default function ProfilePage() {
                 disabled
                 className={cn(
                   "rounded-full border-0 opacity-50 cursor-not-allowed",
-                  currentTheme.button,
+                  appearance.buttonClass,
                 )}
+                style={appearance.accentButtonStyle}
               >
                 <MessageCircle className="w-4 h-4 mr-2" /> Sign in as a user to
                 give review
               </Button>
             )}
+                </div>
+              </div>
+
+              {user && (
+                <ReviewsSection
+                  userId={user.id}
+                  initialReviews={data?.reviews}
+                  initialStats={data?.stats}
+                  initialNextCursor={data?.nextCursor}
+                  appearance={appearance}
+                  canReport={!isOwner && Boolean(me?.user)}
+                  onReportReview={(reviewId, payload) =>
+                    reportReviewMutation.mutate({ reviewId, ...payload })
+                  }
+                  isSubmittingReport={reportReviewMutation.isPending}
+                />
+              )}
+            </section>
           </div>
 
-          {user && (
-            <ReviewsSection
-              userId={user.id}
-              initialReviews={data?.reviews}
-              initialStats={data?.stats}
-              initialNextCursor={data?.nextCursor}
-            />
-          )}
+          <div className="order-1 space-y-6 xl:order-2">
+            <motion.section
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className={cn("rounded-[1.75rem] border p-5", appearance.surfaceClass)}
+              style={appearance.accentCardStyle}
+            >
+              <div className="mb-5">
+                <p className={cn("text-xs uppercase tracking-[0.22em]", appearance.mutedTextClass)}>
+                  Buy Channels
+                </p>
+                <h2 className="mt-2 text-xl font-semibold">Shop & contact</h2>
+                <p className={cn("text-sm mt-1", appearance.mutedTextClass)}>
+                  Direct ways to reach this seller and buy with confidence.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {activeLinks.length > 0 ? (
+                  activeLinks.map((link, index) => (
+                    <motion.a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        if (!user?.id) return;
+                        const key = `tt-click-${user.id}-${getDayKey()}`;
+                        if (shouldSampleSessionEvent(key)) {
+                          void api.trackProfileClick(user.id).catch(() => {});
+                        }
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.06 }}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      className="block"
+                    >
+                      <div
+                        className={cn(
+                          "p-4 rounded-2xl border transition-all flex items-center justify-between group",
+                          appearance.surfaceMutedClass,
+                        )}
+                        style={appearance.accentCardStyle}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={cn(
+                              "h-10 w-10 rounded-full border flex items-center justify-center shrink-0",
+                              appearance.linkIconClass,
+                            )}
+                            style={appearance.accentIconStyle}
+                          >
+                            {(() => {
+                              const Icon = getPlatformIcon(link.icon);
+                              return (
+                                <Icon
+                                  className={cn("h-5 w-5", appearance.iconColorClass)}
+                                  style={appearance.accentTextStyle}
+                                />
+                              );
+                            })()}
+                          </div>
+                          <div className="min-w-0">
+                            <p
+                              className={cn("font-semibold truncate", appearance.primaryTextClass)}
+                              style={appearance.accentTextStyle}
+                            >
+                              {link.title}
+                            </p>
+                            <p className={cn("text-xs truncate", appearance.mutedTextClass)}>
+                              Open link
+                            </p>
+                          </div>
+                        </div>
+                        <ExternalLink
+                          className={cn(
+                            "w-4 h-4 opacity-50 transition-opacity",
+                            appearance.iconColorClass,
+                          )}
+                        />
+                      </div>
+                    </motion.a>
+                  ))
+                ) : (
+                  <div
+                    className={cn(
+                      "rounded-2xl border border-dashed p-5 text-sm text-center",
+                      appearance.surfaceMutedClass,
+                    )}
+                  >
+                    No public links yet.
+                  </div>
+                )}
+              </div>
+            </motion.section>
+
+            <motion.section
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className={cn("rounded-[1.75rem] border p-5", appearance.surfaceClass)}
+              style={appearance.accentCardStyle}
+            >
+              <p className={cn("text-xs uppercase tracking-[0.22em]", appearance.mutedTextClass)}>
+                Why It Matters
+              </p>
+              <h2 className="mt-2 text-xl font-semibold">Trust-first storefront</h2>
+              <p className={cn("mt-2 text-sm leading-6", appearance.mutedTextClass)}>
+                This profile combines identity, reviews, and direct buying links in one place so buyers can verify before they message or pay.
+              </p>
+            </motion.section>
+          </div>
         </div>
 
         <div className="mt-12 text-center">
@@ -1021,8 +1280,10 @@ export default function ProfilePage() {
 
 function ProfileAnimatedBackground({
   preset,
+  overlayClass,
 }: {
   preset: "antigravity" | "aurora" | "iridescence";
+  overlayClass?: string | null;
 }) {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden">
@@ -1039,7 +1300,7 @@ function ProfileAnimatedBackground({
       {preset === "iridescence" && (
         <Iridescence speed={1} amplitude={0.1} mouseReact />
       )}
-      <div className="absolute inset-0 bg-white/40 dark:bg-black/30" />
+      {overlayClass && <div className={cn("absolute inset-0", overlayClass)} />}
     </div>
   );
 }

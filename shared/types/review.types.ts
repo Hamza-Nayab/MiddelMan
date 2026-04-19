@@ -5,6 +5,8 @@ export type Review = {
   authorName: string;
   rating: number;
   comment: string;
+  sellerResponse?: string | null;
+  sellerRespondedAt?: string | null;
   isHidden: boolean;
   createdAt: string;
 };

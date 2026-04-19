@@ -15,9 +15,12 @@ import {
   recordDailyStat,
   requireAuth,
   requireRole,
+  sellerReportCreateSchema,
+  sellerReports,
   reviewColumns,
   reviews,
   sanitizeString,
+  verificationRequestSchema,
   userColumns,
   users,
 } from "./_shared";
@@ -137,6 +140,10 @@ export function registerProfileRoutes(app: Express): void {
             countryCode: null,
             isVerified: false,
             verificationMethod: "none" as const,
+            verificationStatus: "not_requested" as const,
+            verificationRequestNote: null,
+            verificationRequestedAt: null,
+            verificationReviewedAt: null,
             theme: "light" as const,
             backgroundPreset: null,
             gradientPreset: null,
@@ -309,5 +316,130 @@ export function registerProfileRoutes(app: Express): void {
     }
 
     return res.status(200).json(ok({ profile: updated }));
+  });
+
+  app.post("/api/me/verification/request", async (req, res) => {
+    try {
+      requireAuth(req.session.userId);
+      await requireRole(req.session.userId, "seller");
+    } catch {
+      return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const parsed = verificationRequestSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const userId = req.session.userId!;
+    const [existingProfile] = await db
+      .select(profileColumns)
+      .from(profiles)
+      .where(eq(profiles.userId, userId));
+
+    if (!existingProfile) {
+      return res
+        .status(404)
+        .json(error("PROFILE_NOT_FOUND", "Profile not found"));
+    }
+
+    if (existingProfile.isVerified) {
+      return res
+        .status(409)
+        .json(error("ALREADY_VERIFIED", "Seller is already verified"));
+    }
+
+    if (existingProfile.verificationStatus === "pending") {
+      return res
+        .status(409)
+        .json(error("REQUEST_PENDING", "Verification request already pending"));
+    }
+
+    const [updated] = await db
+      .update(profiles)
+      .set({
+        verificationStatus: "pending",
+        verificationRequestNote: sanitizeString(parsed.data.note ?? ""),
+        verificationRequestedAt: new Date(),
+        verificationReviewedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(profiles.userId, userId))
+      .returning(profileColumns);
+
+    return res.status(200).json(ok({ profile: updated }));
+  });
+
+  app.post("/api/profile/:username/report", async (req, res) => {
+    try {
+      requireAuth(req.session.userId);
+    } catch {
+      return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const username = sanitizeString(req.params.username || "");
+    if (!username) {
+      return res
+        .status(400)
+        .json(error("VALIDATION_ERROR", "Username is required"));
+    }
+
+    const parsed = sellerReportCreateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const [seller] = await db
+      .select({ id: users.id, role: users.role })
+      .from(users)
+      .where(sql`lower(${users.username}) = lower(${username})`);
+
+    if (!seller || seller.role !== "seller") {
+      return res
+        .status(404)
+        .json(error("SELLER_NOT_FOUND", "Seller not found"));
+    }
+
+    if (seller.id === req.session.userId) {
+      return res
+        .status(400)
+        .json(error("INVALID_REPORT", "You cannot report yourself"));
+    }
+
+    const [existingReport] = await db
+      .select({ id: sellerReports.id })
+      .from(sellerReports)
+      .where(
+        and(
+          eq(sellerReports.sellerId, seller.id),
+          eq(sellerReports.reporterUserId, req.session.userId!),
+        ),
+      );
+
+    if (existingReport) {
+      return res
+        .status(409)
+        .json(error("REPORT_EXISTS", "You have already reported this seller"));
+    }
+
+    const [created] = await db
+      .insert(sellerReports)
+      .values({
+        sellerId: seller.id,
+        reporterUserId: req.session.userId!,
+        reason: sanitizeString(parsed.data.reason),
+        message: sanitizeString(parsed.data.message ?? ""),
+      })
+      .returning();
+
+    return res.status(201).json(ok({ report: created }));
   });
 }

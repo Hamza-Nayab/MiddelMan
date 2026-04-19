@@ -1,8 +1,14 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./users.schema";
+
+export const reportStatusEnum = pgEnum("report_status", [
+  "open",
+  "reviewed",
+  "dismissed",
+]);
 
 export const reviews = pgTable(
   "reviews",
@@ -17,6 +23,8 @@ export const reviews = pgTable(
     authorName: varchar("author_name", { length: 50 }).notNull(),
     rating: integer("rating").notNull(),
     comment: text("comment").notNull(),
+    sellerResponse: text("seller_response"),
+    sellerRespondedAt: timestamp("seller_responded_at", { withTimezone: true }),
     isHidden: boolean("is_hidden").notNull().default(false),
     ipHash: text("ip_hash"),
     userAgentHash: text("user_agent_hash"),
@@ -48,12 +56,67 @@ export const reviews = pgTable(
   }),
 );
 
+export const sellerReports = pgTable(
+  "seller_reports",
+  {
+    id: serial("id").primaryKey(),
+    sellerId: integer("seller_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reporterUserId: integer("reporter_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reason: varchar("reason", { length: 120 }).notNull(),
+    message: text("message"),
+    status: reportStatusEnum("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => ({
+    sellerReporterIndex: index("seller_reports_seller_reporter_idx").on(
+      table.sellerId,
+      table.reporterUserId,
+    ),
+  }),
+);
+
+export const reviewReports = pgTable(
+  "review_reports",
+  {
+    id: serial("id").primaryKey(),
+    reviewId: integer("review_id")
+      .notNull()
+      .references(() => reviews.id, { onDelete: "cascade" }),
+    sellerId: integer("seller_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reporterUserId: integer("reporter_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reason: varchar("reason", { length: 120 }).notNull(),
+    message: text("message"),
+    status: reportStatusEnum("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => ({
+    reviewReporterIndex: index("review_reports_review_reporter_idx").on(
+      table.reviewId,
+      table.reporterUserId,
+    ),
+  }),
+);
+
 export const insertReviewSchema = createInsertSchema(reviews).pick({
   sellerId: true,
   reviewerUserId: true,
   authorName: true,
   rating: true,
   comment: true,
+  sellerResponse: true,
+  sellerRespondedAt: true,
   isHidden: true,
   ipHash: true,
   userAgentHash: true,
@@ -61,3 +124,5 @@ export const insertReviewSchema = createInsertSchema(reviews).pick({
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+export type SellerReport = typeof sellerReports.$inferSelect;
+export type ReviewReport = typeof reviewReports.$inferSelect;

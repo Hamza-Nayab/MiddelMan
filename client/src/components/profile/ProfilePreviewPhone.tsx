@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import { Link } from "wouter";
 import { Link as LinkType } from "@/lib/api";
-import { Star, ExternalLink, ShieldCheck, Phone, Mail } from "lucide-react";
+import { ExternalLink, Mail, Phone, ShieldCheck, Star } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import {
   getAvatarUrl,
@@ -11,27 +11,12 @@ import {
 import { cn } from "@/lib/utils";
 import { normalizeToE164, buildWhatsAppUrl } from "@/lib/phone";
 import { Antigravity, Aurora, Iridescence } from "@/components/backgrounds";
-
-const GRADIENT_STYLES: Record<
-  string,
-  { bg: string }
-> = {
-  default: {
-    bg: "linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)",
-  },
-  ocean: {
-    bg: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%)",
-  },
-  sunset: {
-    bg: "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)",
-  },
-  forest: {
-    bg: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
-  },
-  berry: {
-    bg: "linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #dc2626 100%)",
-  },
-};
+import {
+  resolveProfileAppearance,
+  type ProfileBackgroundPreset,
+  type ProfileBaseTheme,
+  type ProfileGradientPreset,
+} from "@/lib/profile-appearance";
 
 type ProfilePreviewPhoneProps = {
   displayName: string;
@@ -46,9 +31,9 @@ type ProfilePreviewPhoneProps = {
   whatsappNumber?: string | null;
   countryCode?: string | null;
   contactEmail?: string | null;
-  theme?: "light" | "dark";
-  backgroundPreset?: "gradient" | "antigravity" | "aurora" | "iridescence" | null;
-  gradientPreset?: "default" | "ocean" | "sunset" | "forest" | "berry" | null;
+  theme?: ProfileBaseTheme;
+  backgroundPreset?: ProfileBackgroundPreset;
+  gradientPreset?: ProfileGradientPreset;
   accentColor?: string | null;
 };
 
@@ -89,6 +74,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   theme = "light",
   backgroundPreset,
   gradientPreset,
+  accentColor,
 }: ProfilePreviewPhoneProps) {
   const activeLinks = useMemo(
     () => links.filter((link) => link.isActive),
@@ -108,53 +94,16 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   }, [whatsappNumber, countryCode]);
 
   const profileHref = username ? `/${username}` : "/";
-  const isDarkTheme = theme === "dark";
-  const hasGradientBg = backgroundPreset === "gradient";
-  const hasAnimatedBg =
-    backgroundPreset === "antigravity" ||
-    backgroundPreset === "aurora" ||
-    backgroundPreset === "iridescence";
-  const gradientStyle =
-    hasGradientBg
-      ? GRADIENT_STYLES[gradientPreset ?? "default"] ?? GRADIENT_STYLES.default
-      : GRADIENT_STYLES.default;
-
-  const headerClass = hasAnimatedBg || hasGradientBg
-    ? "bg-transparent"
-    : isDarkTheme
-      ? "bg-slate-900"
-      : "bg-white";
-
-  const headerStyle = undefined;
-
-  const contentClass = hasAnimatedBg || hasGradientBg
-    ? "bg-transparent"
-    : isDarkTheme
-      ? "bg-slate-950"
-      : "bg-white";
-
-  const contentStyle = undefined;
-
-  const sectionClass = isDarkTheme || hasAnimatedBg
-    ? "text-slate-100"
-    : hasGradientBg
-      ? "text-white"
-      : "text-slate-900";
-
-  const mutedTextClass = isDarkTheme || hasAnimatedBg
-    ? "text-slate-300"
-    : hasGradientBg
-      ? "text-white/80"
-      : "text-slate-600";
-
-  const cardClass =
-    isDarkTheme || hasAnimatedBg || hasGradientBg
-      ? (hasGradientBg ? "border-white/30 bg-white/15 backdrop-blur-md" : "border-white/20 bg-white/10 backdrop-blur-md")
-      : "border-slate-200 bg-white";
+  const appearance = resolveProfileAppearance({
+    theme,
+    backgroundPreset,
+    gradientPreset,
+    accentColor,
+  });
 
   return (
-    <div className="hidden lg:block w-83.5 shrink-0">
-      <div className="sticky top-24">
+    <div className="w-full max-w-[22rem] shrink-0 mx-auto xl:mx-0">
+      <div className="xl:sticky xl:top-24">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium text-sm text-muted-foreground">
             Live Preview
@@ -170,56 +119,69 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
             Open public profile
           </Link>
         </div>
-        <div className="border-11 border-slate-900 rounded-[2.64rem] h-165 overflow-hidden bg-white shadow-2xl relative">
+
+        <div className="border-[11px] border-slate-900 rounded-[2.64rem] h-[41.25rem] overflow-hidden bg-white shadow-2xl relative">
           <div className="absolute top-0 inset-x-0 h-5.5 bg-slate-900 rounded-b-lg w-32 mx-auto z-20" />
-          {(hasAnimatedBg && backgroundPreset) || hasGradientBg ? (
+
+          {appearance.usesDynamicBackground ? (
             <div
               className="absolute inset-0 z-0 overflow-hidden"
-              style={hasGradientBg ? { background: gradientStyle.bg } : undefined}
+              style={
+                appearance.hasGradientBackground && appearance.gradientBackground
+                  ? { background: appearance.gradientBackground }
+                  : undefined
+              }
             >
-              {hasAnimatedBg && backgroundPreset && (
-                <>
-                  {backgroundPreset === "antigravity" && (
-                    <Antigravity count={120} color="#FF9FFC" particleSize={1.5} />
-                  )}
-                  {backgroundPreset === "aurora" && (
-                    <Aurora colorStops={["#5227FF", "#7cff67", "#5227FF"]} amplitude={1} blend={0.5} />
-                  )}
-                  {backgroundPreset === "iridescence" && (
-                    <Iridescence speed={1} amplitude={0.1} mouseReact={false} />
-                  )}
-                  <div className="absolute inset-0 bg-black/40" />
-                </>
+              {appearance.backgroundPreset === "antigravity" && (
+                <Antigravity count={120} color="#FF9FFC" particleSize={1.5} />
+              )}
+              {appearance.backgroundPreset === "aurora" && (
+                <Aurora
+                  colorStops={["#5227FF", "#7cff67", "#5227FF"]}
+                  amplitude={1}
+                  blend={0.5}
+                />
+              )}
+              {appearance.backgroundPreset === "iridescence" && (
+                <Iridescence speed={1} amplitude={0.1} mouseReact={false} />
+              )}
+              {appearance.overlayClass && (
+                <div className={cn("absolute inset-0", appearance.overlayClass)} />
               )}
             </div>
           ) : null}
-          <div className="h-full w-full overflow-y-auto flex flex-col relative z-10">
-            {/* Header - Fixed */}
+
+          <div
+            className={cn(
+              "h-full w-full overflow-y-auto flex flex-col relative z-10",
+              appearance.pageTextClass,
+            )}
+          >
             <div
               className={cn(
                 "px-4 pt-12 pb-6 flex flex-col items-center text-center shrink-0",
-                headerClass,
+                appearance.usesDynamicBackground ? "bg-transparent" : appearance.pageBgClass,
               )}
-              style={headerStyle}
             >
               <div
                 className={cn(
                   "flex items-center gap-1.5 text-xs font-semibold mb-6",
-                  sectionClass,
+                  appearance.primaryTextClass,
                 )}
               >
                 <ShieldCheck className="w-3.5 h-3.5" fill="currentColor" />
                 MiddelMen
               </div>
 
-              {/* Avatar */}
               <div
                 className={cn(
                   "h-20 w-20 rounded-full flex items-center justify-center shadow-lg mb-4 overflow-hidden border-4",
-                  isDarkTheme
-                    ? "bg-slate-700 border-slate-800"
-                    : hasGradientBg || hasAnimatedBg
-                      ? "bg-white/20 border-white/30"
+                  appearance.usesDynamicBackground
+                    ? appearance.usesBrightBackground
+                      ? "bg-slate-100 border-slate-300"
+                      : "bg-white/20 border-white/30"
+                    : appearance.theme === "dark"
+                      ? "bg-slate-700 border-slate-800"
                       : "bg-slate-200 border-white/70",
                 )}
               >
@@ -230,63 +192,48 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                 />
               </div>
 
-              {/* Name */}
-              <div className={cn("text-lg font-bold mb-1", sectionClass)}>
+              <div className={cn("text-lg font-bold mb-1", appearance.primaryTextClass)}>
                 {displayName}
               </div>
 
-              {/* Username */}
-              <div className={cn("text-xs mb-2", mutedTextClass)}>
+              <div className={cn("text-xs mb-2", appearance.mutedTextClass)}>
                 @{username || "username"}
               </div>
 
-              {/* Bio */}
               {bio ? (
-                <p className={cn("text-xs mb-4 line-clamp-2", mutedTextClass)}>
+                <p className={cn("text-xs mb-4 line-clamp-2", appearance.mutedTextClass)}>
                   {bio}
                 </p>
               ) : null}
 
-              {/* Rating Badge */}
               <div
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shadow-sm",
-                  isDarkTheme
-                    ? "border-slate-700 bg-slate-800 text-slate-100"
-                    : hasGradientBg || hasAnimatedBg
-                      ? "border-white/30 bg-white/20 text-white"
-                      : "border-slate-200 bg-white text-slate-900",
+                  appearance.surfaceClass,
                 )}
+                style={appearance.accentButtonStyle}
               >
                 <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
                 <span>{hasReviews ? avgRating?.toFixed(1) : "New"}</span>
-                <span className={cn(mutedTextClass)}>
+                <span className={cn(appearance.mutedTextClass)}>
                   ({totalReviews || 0})
                 </span>
               </div>
 
-              {/* Contact Icons */}
               <div className="flex items-center gap-2 mt-3">
                 {phoneE164 && (
                   <a
                     href={`tel:${phoneE164}`}
                     className={cn(
                       "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
-                      isDarkTheme
-                        ? "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                        : hasGradientBg || hasAnimatedBg
-                          ? "border-white/30 bg-white/20 hover:bg-white/30"
-                          : "border-slate-200 bg-white hover:bg-slate-50",
+                      appearance.contactButtonClass,
                     )}
+                    style={appearance.accentIconStyle}
                     aria-label="Call phone number"
                   >
                     <Phone
-                      className={cn(
-                        "w-3.5 h-3.5",
-                        isDarkTheme || hasGradientBg || hasAnimatedBg
-                          ? "text-white"
-                          : "text-slate-700",
-                      )}
+                      className={cn("w-3.5 h-3.5", appearance.iconColorClass)}
+                      style={appearance.accentTextStyle}
                     />
                   </a>
                 )}
@@ -298,21 +245,14 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     rel="noopener noreferrer"
                     className={cn(
                       "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
-                      isDarkTheme
-                        ? "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                        : hasGradientBg || hasAnimatedBg
-                          ? "border-white/30 bg-white/20 hover:bg-white/30"
-                          : "border-slate-200 bg-white hover:bg-slate-50",
+                      appearance.contactButtonClass,
                     )}
+                    style={appearance.accentIconStyle}
                     aria-label="Open WhatsApp"
                   >
                     <SiWhatsapp
-                      className={cn(
-                        "w-3.5 h-3.5",
-                        isDarkTheme || hasGradientBg || hasAnimatedBg
-                          ? "text-white"
-                          : "text-slate-700",
-                      )}
+                      className={cn("w-3.5 h-3.5", appearance.iconColorClass)}
+                      style={appearance.accentTextStyle}
                     />
                   </a>
                 )}
@@ -322,41 +262,36 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     href={`mailto:${contactEmail}`}
                     className={cn(
                       "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
-                      isDarkTheme
-                        ? "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                        : hasGradientBg || hasAnimatedBg
-                          ? "border-white/30 bg-white/20 hover:bg-white/30"
-                          : "border-slate-200 bg-white hover:bg-slate-50",
+                      appearance.contactButtonClass,
                     )}
+                    style={appearance.accentIconStyle}
                     aria-label="Send email"
                   >
                     <Mail
-                      className={cn(
-                        "w-3.5 h-3.5",
-                        isDarkTheme || hasGradientBg || hasAnimatedBg
-                          ? "text-white"
-                          : "text-slate-700",
-                      )}
+                      className={cn("w-3.5 h-3.5", appearance.iconColorClass)}
+                      style={appearance.accentTextStyle}
                     />
                   </a>
                 )}
               </div>
             </div>
 
-            {/* Links + Reviews - Scrollable */}
             <div
-              className={cn("px-4 pb-6 space-y-4", contentClass)}
-              style={contentStyle}
+              className={cn(
+                "px-4 pb-6 space-y-4",
+                appearance.usesDynamicBackground ? "bg-transparent" : appearance.pageBgClass,
+              )}
             >
-              {/* Links Section */}
               {activeLinks.length === 0 ? (
                 <div
                   className={cn(
                     "rounded-2xl border-2 border-dashed p-4 text-xs text-center",
-                    isDarkTheme
-                      ? "border-slate-700 text-slate-400"
-                      : hasGradientBg || hasAnimatedBg
-                        ? "border-white/40 text-white/80"
+                    appearance.usesDynamicBackground
+                      ? appearance.usesBrightBackground
+                        ? "border-slate-300 text-slate-700"
+                        : "border-white/40 text-white/80"
+                      : appearance.theme === "dark"
+                        ? "border-slate-700 text-slate-400"
                         : "border-slate-300 text-slate-600",
                   )}
                 >
@@ -369,44 +304,42 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                       platformIconMap[
                         (link.icon as PlatformKey) || "website"
                       ] || platformIconMap.website;
+
                     return (
                       <div
                         key={link.id}
                         className={cn(
                           "flex items-center justify-between rounded-2xl border transition-colors p-4 group cursor-pointer shadow-sm hover:shadow-md",
-                          cardClass,
-                          isDarkTheme && "hover:bg-slate-800",
-                          (hasGradientBg || hasAnimatedBg) && "hover:bg-white/20",
-                          !isDarkTheme &&
-                            !hasGradientBg &&
-                            "hover:bg-slate-50",
+                          appearance.surfaceClass,
+                          appearance.usesDynamicBackground
+                            ? appearance.usesBrightBackground
+                              ? "hover:bg-white"
+                              : "hover:bg-white/20"
+                            : appearance.theme === "dark"
+                              ? "hover:bg-slate-800"
+                              : "hover:bg-slate-50",
                         )}
+                        style={appearance.accentCardStyle}
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
                               "h-9 w-9 rounded-full border flex items-center justify-center",
-                              isDarkTheme
-                                ? "bg-slate-800 border-slate-700"
-                                : hasGradientBg || hasAnimatedBg
-                                  ? "bg-white/20 border-white/30"
-                                  : "bg-slate-100 border-slate-200",
+                              appearance.linkIconClass,
                             )}
+                            style={appearance.accentIconStyle}
                           >
                             <Icon
-                              className={cn(
-                                "h-5 w-5",
-                                isDarkTheme || hasGradientBg || hasAnimatedBg
-                                  ? "text-white"
-                                  : "text-slate-700",
-                              )}
+                              className={cn("h-5 w-5", appearance.iconColorClass)}
+                              style={appearance.accentTextStyle}
                             />
                           </div>
                           <span
                             className={cn(
                               "text-sm font-semibold",
-                              sectionClass,
+                              appearance.primaryTextClass,
                             )}
+                            style={appearance.accentTextStyle}
                           >
                             {link.title}
                           </span>
@@ -414,9 +347,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                         <ExternalLink
                           className={cn(
                             "w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity",
-                            isDarkTheme || hasGradientBg || hasAnimatedBg
-                              ? "text-white/70"
-                              : "text-slate-400",
+                            appearance.iconColorClass,
                           )}
                         />
                       </div>
@@ -425,18 +356,8 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                 </div>
               )}
 
-              {/* Reviews Section */}
-              <div
-                className={cn(
-                  "border-t pt-4",
-                  isDarkTheme
-                    ? "border-slate-800"
-                    : hasGradientBg || hasAnimatedBg
-                      ? "border-white/30"
-                      : "border-slate-200",
-                )}
-              >
-                <div className={cn("text-sm font-semibold mb-3", sectionClass)}>
+              <div className={cn("border-t pt-4", appearance.dividerClass)}>
+                <div className={cn("text-sm font-semibold mb-3", appearance.primaryTextClass)}>
                   Recent Reviews
                 </div>
                 <div className="space-y-3">
@@ -445,25 +366,26 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                       key={review.id}
                       className={cn(
                         "rounded-xl border p-3 shadow-sm",
-                        cardClass,
+                        appearance.surfaceClass,
                       )}
+                      style={appearance.accentCardStyle}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
-                          className={cn("text-xs font-semibold", sectionClass)}
+                          className={cn("text-xs font-semibold", appearance.primaryTextClass)}
                         >
                           {review.author}
                         </span>
                         <div className="flex gap-0.5">
-                          {Array.from({ length: review.rating }).map((_, i) => (
+                          {Array.from({ length: review.rating }).map((_, index) => (
                             <Star
-                              key={i}
+                              key={index}
                               className="h-3 w-3 fill-yellow-500 text-yellow-500"
                             />
                           ))}
                         </div>
                       </div>
-                      <p className={cn("text-xs line-clamp-2", mutedTextClass)}>
+                      <p className={cn("text-xs line-clamp-2", appearance.mutedTextClass)}>
                         {review.text}
                       </p>
                     </div>

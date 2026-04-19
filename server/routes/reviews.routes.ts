@@ -8,6 +8,9 @@ import {
   ok,
   profiles,
   refreshSellerReviewStatsCache,
+  reviewReportCreateSchema,
+  reviewReports,
+  reviewResponseSchema,
   respondForbiddenFromAuthError,
   requireAuth,
   requireRole,
@@ -284,6 +287,8 @@ export function registerReviewsRoutes(app: Express): void {
         reviewId: reviews.id,
         rating: reviews.rating,
         comment: reviews.comment,
+        sellerResponse: reviews.sellerResponse,
+        sellerRespondedAt: reviews.sellerRespondedAt,
         createdAt: reviews.createdAt,
         reviewerName: sql<string>`coalesce(nullif(${profiles.displayName}, ''), nullif(${users.username}, ''), nullif(${reviews.authorName}, ''), 'Buyer')`,
         disputeStatus: reviewDisputes.status,
@@ -314,6 +319,8 @@ export function registerReviewsRoutes(app: Express): void {
           reviewId: row.reviewId,
           rating: row.rating,
           comment: row.comment,
+          sellerResponse: row.sellerResponse,
+          sellerRespondedAt: row.sellerRespondedAt,
           createdAt: row.createdAt,
           reviewerName: row.reviewerName || "Buyer",
           disputeStatus: row.disputeStatus || null,
@@ -430,5 +437,130 @@ export function registerReviewsRoutes(app: Express): void {
     await refreshSellerReviewStatsCache(existing.sellerId);
 
     return res.status(200).json(ok({ review: updated }));
+  });
+
+  app.patch("/api/me/reviews/:id/response", async (req, res) => {
+    try {
+      requireAuth(req.session.userId);
+      await requireRole(req.session.userId, "seller");
+    } catch {
+      return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const reviewId = Number(req.params.id);
+    if (Number.isNaN(reviewId)) {
+      return res
+        .status(400)
+        .json(error("VALIDATION_ERROR", "Invalid review id"));
+    }
+
+    const parsed = reviewResponseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const sellerId = req.session.userId!;
+    const [existing] = await db
+      .select({ id: reviews.id })
+      .from(reviews)
+      .where(and(eq(reviews.id, reviewId), eq(reviews.sellerId, sellerId)));
+
+    if (!existing) {
+      return res
+        .status(404)
+        .json(error("REVIEW_NOT_FOUND", "Review not found"));
+    }
+
+    const responseText = parsed.data.response
+      ? sanitizeString(parsed.data.response)
+      : null;
+
+    const [updated] = await db
+      .update(reviews)
+      .set({
+        sellerResponse: responseText,
+        sellerRespondedAt: responseText ? new Date() : null,
+      })
+      .where(eq(reviews.id, reviewId))
+      .returning(reviewColumns);
+
+    return res.status(200).json(ok({ review: updated }));
+  });
+
+  app.post("/api/reviews/:id/report", async (req, res) => {
+    try {
+      requireAuth(req.session.userId);
+    } catch {
+      return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const reviewId = Number(req.params.id);
+    if (Number.isNaN(reviewId)) {
+      return res
+        .status(400)
+        .json(error("VALIDATION_ERROR", "Invalid review id"));
+    }
+
+    const parsed = reviewReportCreateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const [review] = await db
+      .select({ id: reviews.id, sellerId: reviews.sellerId, reviewerUserId: reviews.reviewerUserId })
+      .from(reviews)
+      .where(eq(reviews.id, reviewId));
+
+    if (!review) {
+      return res
+        .status(404)
+        .json(error("REVIEW_NOT_FOUND", "Review not found"));
+    }
+
+    if (
+      review.sellerId === req.session.userId ||
+      review.reviewerUserId === req.session.userId
+    ) {
+      return res
+        .status(400)
+        .json(error("INVALID_REPORT", "You cannot report your own review"));
+    }
+
+    const [existing] = await db
+      .select({ id: reviewReports.id })
+      .from(reviewReports)
+      .where(
+        and(
+          eq(reviewReports.reviewId, reviewId),
+          eq(reviewReports.reporterUserId, req.session.userId!),
+        ),
+      );
+
+    if (existing) {
+      return res
+        .status(409)
+        .json(error("REPORT_EXISTS", "You have already reported this review"));
+    }
+
+    const [created] = await db
+      .insert(reviewReports)
+      .values({
+        reviewId,
+        sellerId: review.sellerId,
+        reporterUserId: req.session.userId!,
+        reason: sanitizeString(parsed.data.reason),
+        message: sanitizeString(parsed.data.message ?? ""),
+      })
+      .returning();
+
+    return res.status(201).json(ok({ report: created }));
   });
 }

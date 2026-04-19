@@ -132,6 +132,8 @@ export type OwnerDashboardReview = {
   reviewId: number;
   rating: number;
   comment: string;
+  sellerResponse?: string | null;
+  sellerRespondedAt?: string | null;
   createdAt: string;
   reviewerName: string;
   disputeStatus: string | null;
@@ -190,7 +192,15 @@ export type LoginPayload = {
   password: string;
 };
 
-export type GradientPreset = "default" | "ocean" | "sunset" | "forest" | "berry";
+export type GradientPreset =
+  | "default"
+  | "ocean"
+  | "sunset"
+  | "forest"
+  | "berry"
+  | "royal"
+  | "ember"
+  | "mono";
 
 export type ProfileUpdatePayload = Partial<{
   displayName: string;
@@ -225,9 +235,22 @@ export type ReviewCreatePayload = {
   comment: string;
 };
 
+export type ReviewResponsePayload = {
+  response: string | null;
+};
+
 export type ReviewUpdatePayload = {
   rating: number;
   comment: string;
+};
+
+export type VerificationRequestPayload = {
+  note?: string;
+};
+
+export type ReportCreatePayload = {
+  reason: string;
+  message?: string;
 };
 
 export type GivenReview = Review & {
@@ -456,6 +479,30 @@ export const api = {
     request<{ review: Review }>(
       "POST",
       `/api/profile/${userId}/reviews`,
+      payload,
+    ),
+  respondToReview: (reviewId: number, payload: ReviewResponsePayload) =>
+    request<{ review: Review }>(
+      "PATCH",
+      `/api/me/reviews/${reviewId}/response`,
+      payload,
+    ),
+  requestVerification: (payload: VerificationRequestPayload) =>
+    request<{ profile: Profile }>(
+      "POST",
+      "/api/me/verification/request",
+      payload,
+    ),
+  reportSellerByUsername: (username: string, payload: ReportCreatePayload) =>
+    request<{ report: { id: number } }>(
+      "POST",
+      `/api/profile/${encodeURIComponent(username)}/report`,
+      payload,
+    ),
+  reportReview: (reviewId: number, payload: ReportCreatePayload) =>
+    request<{ report: { id: number } }>(
+      "POST",
+      `/api/reviews/${reviewId}/report`,
       payload,
     ),
   getOwnerReviewsPage: (options?: {
