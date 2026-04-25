@@ -173,6 +173,12 @@ const buyerUser = makeUser({
   role: "buyer",
   email: "buyer@example.com",
 });
+const buyerWithoutUsername = makeUser({
+  id: 12,
+  username: null,
+  role: "buyer",
+  email: "buyer.no.username@example.com",
+});
 const adminUser = makeUser({
   id: 9,
   username: "admin-one",
@@ -262,6 +268,7 @@ const expectedRoutes = [
   "PATCH /api/me/notifications/:id/read",
   "PATCH /api/me/onboarding",
   "PATCH /api/me/profile",
+  "PATCH /api/me/reviews/:id/response",
   "PATCH /api/me/reviews/given/:id",
   "PATCH /api/me/role",
   "PATCH /api/me/username",
@@ -274,8 +281,11 @@ const expectedRoutes = [
   "POST /api/me/notifications/mark-all-read",
   "POST /api/me/reviews/:reviewId/dispute",
   "POST /api/me/reviews/:reviewId/dispute/evidence",
+  "POST /api/me/verification/request",
   "POST /api/profile/:userId/click",
   "POST /api/profile/:userId/reviews",
+  "POST /api/profile/:username/report",
+  "POST /api/reviews/:id/report",
 ].sort();
 
 const routeSignatures = () => {
@@ -634,6 +644,7 @@ describe("route groups", () => {
         [buyerUser],
         [{ id: sellerUser.id, role: "seller" }],
         [buyerUser],
+        [{ displayName: "Buyer One" }],
         [{ count: 0 }],
         [],
         [],
@@ -662,6 +673,43 @@ describe("route groups", () => {
     );
     assert.equal(createdReview.status, 201);
     assert.equal(createdReview.body.data.review.id, 77);
+    assertDbQueuesEmpty();
+
+    setDbQueues({
+      select: [
+        [buyerWithoutUsername],
+        [{ id: sellerUser.id, role: "seller" }],
+        [buyerWithoutUsername],
+        [{ displayName: "Rana" }],
+        [{ count: 0 }],
+        [],
+        [],
+        [{ avgRating: 4, totalReviews: 2 }],
+      ],
+      insert: [
+        [
+          {
+            id: 78,
+            sellerId: sellerUser.id,
+            reviewerUserId: buyerWithoutUsername.id,
+            authorName: "Rana",
+            rating: 5,
+            comment: "Great seller again",
+          },
+        ],
+      ],
+      update: [[]],
+    });
+    const createdReviewWithoutUsername = await request(
+      "POST",
+      `/api/profile/${sellerUser.id}/reviews`,
+      {
+        headers: { "x-test-user-id": String(buyerWithoutUsername.id) },
+        body: { rating: 5, comment: "Great seller again" },
+      },
+    );
+    assert.equal(createdReviewWithoutUsername.status, 201);
+    assert.equal(createdReviewWithoutUsername.body.data.review.authorName, "Rana");
     assertDbQueuesEmpty();
   });
 

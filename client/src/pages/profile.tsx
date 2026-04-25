@@ -58,6 +58,7 @@ import { resolveProfileAppearance } from "@/lib/profile-appearance";
 import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
 import { useMeQuery } from "@/hooks/use-me";
 import {
+  givenReviewsQueryKey,
   useGivenReviewsQuery,
   useProfileBundleQuery,
 } from "@/hooks/use-profile";
@@ -156,7 +157,12 @@ export default function ProfilePage() {
       api.createReview(user!.id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reviews", user!.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["profile-bundle", username],
+      });
+      queryClient.invalidateQueries({ queryKey: givenReviewsQueryKey });
       setIsReviewOpen(false);
+      form.reset({ rating: 5, comment: "" });
       toast({
         title: "Review Submitted",
         description: "Thanks for your feedback!",

@@ -50,7 +50,7 @@ export function usePublicReviewsInfinite(
           pageParams: [undefined as number | undefined],
         }
       : undefined,
-    enabled: Number.isFinite(userId) && userId > 0 && !seededInitialPage,
+    enabled: Number.isFinite(userId) && userId > 0,
   });
 
   return {

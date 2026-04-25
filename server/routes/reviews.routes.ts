@@ -166,11 +166,20 @@ export function registerReviewsRoutes(app: Express): void {
     }
 
     const reviewer = await getSessionUser(req.session.userId);
-    if (!reviewer || !reviewer.username) {
+    if (!reviewer) {
       return res
         .status(400)
-        .json(error("VALIDATION_ERROR", "Reviewer username is required"));
+        .json(error("VALIDATION_ERROR", "Reviewer account not found"));
     }
+
+    const [reviewerProfile] = await db
+      .select({ displayName: profiles.displayName })
+      .from(profiles)
+      .where(eq(profiles.userId, reviewer.id));
+
+    const authorName = sanitizeString(
+      reviewer.username || reviewerProfile?.displayName || "Buyer",
+    );
 
     const salt = process.env.REVIEW_HASH_SALT;
     if (!salt) {
@@ -247,7 +256,7 @@ export function registerReviewsRoutes(app: Express): void {
       .values({
         sellerId,
         reviewerUserId: reviewer.id,
-        authorName: reviewer.username,
+        authorName,
         rating: parsed.data.rating,
         comment: sanitizeString(parsed.data.comment),
         ipHash,

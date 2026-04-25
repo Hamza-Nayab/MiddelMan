@@ -28,6 +28,7 @@ import {
 import { appLog } from "../lib/logger";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+type UploadError = Error & { code?: string };
 
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
@@ -47,7 +48,12 @@ const avatarUploadSingle = (req: any, res: any, next: any) => {
   avatarUpload.single("avatar")(req, res, (err: unknown) => {
     if (!err) return next();
 
-    if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+    const uploadError = err as UploadError;
+
+    if (
+      err instanceof multer.MulterError &&
+      uploadError.code === "LIMIT_FILE_SIZE"
+    ) {
       appLog("warn", "upload", "AVATAR_UPLOAD_REJECTED", {
         requestId: req.requestId,
         reason: "FILE_TOO_LARGE",

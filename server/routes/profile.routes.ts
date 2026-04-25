@@ -165,7 +165,7 @@ export function registerProfileRoutes(app: Express): void {
         .where(
           and(eq(reviews.sellerId, seller.id), eq(reviews.isHidden, false)),
         )
-        .orderBy(desc(reviews.createdAt))
+        .orderBy(desc(reviews.createdAt), desc(reviews.id))
         .limit(limit + 1),
       getReviewStats(seller.id),
     ]);

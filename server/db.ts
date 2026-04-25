@@ -15,15 +15,34 @@ if (!connectionString) {
 
 const isProduction = process.env.NODE_ENV === "production";
 
+const parsedUrl = new URL(connectionString);
+const sslMode = parsedUrl.searchParams.get("sslmode");
+const channelBinding = parsedUrl.searchParams.get("channel_binding");
+
+parsedUrl.searchParams.delete("sslmode");
+parsedUrl.searchParams.delete("channel_binding");
+
+const normalizedConnectionString = parsedUrl.toString();
+const shouldUseSsl =
+  isProduction ||
+  ["require", "verify-ca", "verify-full"].includes(sslMode ?? "") ||
+  /\.neon\.tech$/i.test(parsedUrl.hostname) ||
+  /\.aws\.neon\.tech$/i.test(parsedUrl.hostname);
+const enableChannelBinding =
+  channelBinding === "require" || channelBinding === "prefer";
+
 const pool = new Pool({
-  connectionString,
+  connectionString: normalizedConnectionString,
   max: isProduction ? 20 : 5,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
   // Prevent runaway queries from holding connections indefinitely
   statement_timeout: 30_000,
-  // Neon and most cloud Postgres providers require SSL
-  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+  // Respect sslmode from the connection string and cloud-hosted Postgres defaults.
+  ssl: shouldUseSsl ? { rejectUnauthorized: false } : undefined,
+  enableChannelBinding,
+} as ConstructorParameters<typeof Pool>[0] & {
+  enableChannelBinding?: boolean;
 });
 
 export const db = drizzle(pool, { schema });
