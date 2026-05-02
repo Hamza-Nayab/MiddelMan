@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import AuthPage from "@/pages/auth";
+import VerifiedPage from "@/pages/verified";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
 import RoleOnboardingPage from "@/pages/onboarding-role";
 import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
@@ -28,6 +31,9 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/verified" component={VerifiedPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/onboarding/role" component={RoleOnboardingPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/my-reviews" component={MyReviewsPage} />

@@ -114,11 +114,14 @@ if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
 
 const PgSession = connectPgSimple(session);
 const MemoryStoreFactory = MemoryStore(session);
+const usePgSessionStore =
+  Boolean(process.env.DATABASE_URL) &&
+  (isProduction || process.env.USE_PG_SESSION_IN_DEV === "true");
 
 app.set("trust proxy", 1);
 app.use(
   session({
-    store: process.env.DATABASE_URL
+    store: usePgSessionStore
       ? new PgSession({ pool, createTableIfMissing: true })
       : new MemoryStoreFactory({ checkPeriod: 24 * 60 * 60 * 1000 }),
     secret: sessionSecret,
@@ -145,17 +148,40 @@ app.use(async (req, res, next) => {
     return next();
   }
 
+  const now = Date.now();
+  const sessionData = req.session as typeof req.session & {
+    disabledGuardCheckedAt?: number;
+    disabledGuardResult?: {
+      isDisabled: boolean;
+      disabledReason?: string | null;
+    };
+  };
+
+  // Avoid hitting the database on every /api/me* request in development/runtime loops.
+  // A short cache window preserves disabled-user enforcement while reducing latency.
+  const shouldRecheckDisabledStatus =
+    !sessionData.disabledGuardCheckedAt ||
+    now - sessionData.disabledGuardCheckedAt > 5 * 60 * 1000;
+
   try {
-    const result = await pool.query(
-      "select is_disabled, disabled_reason from users where id = $1 limit 1",
-      [sessionUserId],
-    );
+    if (shouldRecheckDisabledStatus) {
+      const result = await pool.query(
+        "select is_disabled, disabled_reason from users where id = $1 limit 1",
+        [sessionUserId],
+      );
 
-    const userRow = result.rows[0] as
-      | { is_disabled?: boolean; disabled_reason?: string | null }
-      | undefined;
+      const userRow = result.rows[0] as
+        | { is_disabled?: boolean; disabled_reason?: string | null }
+        | undefined;
 
-    if (userRow?.is_disabled) {
+      sessionData.disabledGuardCheckedAt = now;
+      sessionData.disabledGuardResult = {
+        isDisabled: Boolean(userRow?.is_disabled),
+        disabledReason: userRow?.disabled_reason ?? null,
+      };
+    }
+
+    if (sessionData.disabledGuardResult?.isDisabled) {
       req.session.destroy(() => {
         res.clearCookie("connect.sid", {
           path: "/",
@@ -165,7 +191,8 @@ app.use(async (req, res, next) => {
         });
         res.status(403).json(
           error("ACCOUNT_DISABLED", "Your account has been disabled", {
-            reason: userRow.disabled_reason || undefined,
+            reason:
+              sessionData.disabledGuardResult?.disabledReason || undefined,
           }),
         );
       });

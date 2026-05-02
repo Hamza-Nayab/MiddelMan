@@ -39,6 +39,11 @@ export class MemStorage implements IStorage {
       passwordHash: insertUser.passwordHash ?? null,
       googleId: insertUser.googleId ?? null,
       role: insertUser.role ?? "buyer",
+      emailVerified: false,
+      verificationToken: null,
+      verificationTokenExpires: null,
+      resetToken: null,
+      resetTokenExpires: null,
       lastUsernameChangedAt: null, // Only set when username is changed
       usernameChangeCount: 0,
       createdAt: now,

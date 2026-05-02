@@ -76,6 +76,11 @@ export function registerProfileRoutes(app: Express): void {
       } catch {}
     }
 
+    const normalizedProfile = sellerProfileReflectingEmailVerification(
+      profile,
+      user.emailVerified,
+    );
+
     return res.status(200).json(
       ok({
         user: {
@@ -84,7 +89,7 @@ export function registerProfileRoutes(app: Express): void {
           role: user.role,
           createdAt: user.createdAt,
         },
-        profile,
+        profile: normalizedProfile,
         stats,
       }),
     );
@@ -194,6 +199,11 @@ export function registerProfileRoutes(app: Express): void {
       nextCursor = paginatedReviews[paginatedReviews.length - 1]?.id ?? null;
     }
 
+    const normalizedProfile = sellerProfileReflectingEmailVerification(
+      profile,
+      seller.emailVerified,
+    );
+
     const response: any = {
       user: {
         id: seller.id,
@@ -201,7 +211,7 @@ export function registerProfileRoutes(app: Express): void {
         role: seller.role,
         createdAt: seller.createdAt,
       },
-      profile,
+      profile: normalizedProfile,
       links: userLinks,
       reviews: paginatedReviews,
       stats,
@@ -218,7 +228,10 @@ export function registerProfileRoutes(app: Express): void {
     if (isOwner) {
       res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
     } else {
-      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=60, stale-while-revalidate=120",
+      );
     }
 
     return res.status(200).json(ok(response));
@@ -442,4 +455,21 @@ export function registerProfileRoutes(app: Express): void {
 
     return res.status(201).json(ok({ report: created }));
   });
+}
+
+function sellerProfileReflectingEmailVerification<
+  T extends {
+    isVerified: boolean;
+    verificationStatus: "not_requested" | "pending" | "approved" | "rejected";
+  },
+>(profile: T, emailVerified: boolean | null | undefined): T {
+  if (!emailVerified) {
+    return profile;
+  }
+
+  return {
+    ...profile,
+    isVerified: true,
+    verificationStatus: "approved",
+  };
 }

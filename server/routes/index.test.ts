@@ -137,6 +137,11 @@ const makeUser = (
     passwordHash: string | null;
     googleId: string | null;
     role: "buyer" | "seller" | "admin";
+    emailVerified: boolean;
+    verificationToken: string | null;
+    verificationTokenExpires: Date | null;
+    resetToken: string | null;
+    resetTokenExpires: Date | null;
     lastUsernameChangedAt: Date | null;
     usernameChangeCount: number;
     createdAt: Date;
@@ -154,6 +159,11 @@ const makeUser = (
   passwordHash: "hashed",
   googleId: null,
   role: "seller" as const,
+  emailVerified: false,
+  verificationToken: null,
+  verificationTokenExpires: null,
+  resetToken: null,
+  resetTokenExpires: null,
   lastUsernameChangedAt: null,
   usernameChangeCount: 0,
   createdAt: new Date("2026-03-01T00:00:00.000Z"),
@@ -243,6 +253,7 @@ const expectedRoutes = [
   "GET /api/admin/users",
   "GET /api/auth/google",
   "GET /api/auth/google/callback",
+  "GET /api/auth/verify-email",
   "GET /api/health",
   "GET /api/me",
   "GET /api/me/analytics",
@@ -276,6 +287,9 @@ const expectedRoutes = [
   "POST /api/auth/login",
   "POST /api/auth/logout",
   "POST /api/auth/register",
+  "POST /api/auth/forgot-password",
+  "POST /api/auth/resend-verification",
+  "POST /api/auth/reset-password",
   "POST /api/me/avatar",
   "POST /api/me/links",
   "POST /api/me/notifications/mark-all-read",
@@ -306,10 +320,11 @@ const request = async (
   options: {
     body?: unknown;
     headers?: Record<string, string>;
+    redirect?: RequestRedirect;
   } = {},
 ) => {
   const headers = new Headers(options.headers);
-  const init: RequestInit = { method, headers };
+  const init: RequestInit = { method, headers, redirect: options.redirect };
 
   if (options.body !== undefined) {
     headers.set("content-type", "application/json");
@@ -430,6 +445,7 @@ describe("route groups", () => {
     setDbQueues({
       select: [[], []],
       insert: [[createdSeller], []],
+      update: [[]],
     });
     const registerSeller = await request("POST", "/api/auth/register", {
       body: {
@@ -443,6 +459,165 @@ describe("route groups", () => {
     });
     assert.equal(registerSeller.status, 201);
     assert.equal(registerSeller.body.data.user.username, "seller-new");
+    assertDbQueuesEmpty();
+
+    const verifiedSeller = makeUser({
+      id: 22,
+      username: "seller-new",
+      email: "seller.new@example.com",
+      role: "seller",
+      passwordHash: hashedPassword,
+      verificationToken: "verify-token",
+      verificationTokenExpires: new Date("2030-04-30T00:00:00.000Z"),
+    });
+
+    setDbQueues({
+      select: [[verifiedSeller]],
+      update: [[]],
+    });
+    const verifyEmail = await request(
+      "GET",
+      "/api/auth/verify-email?token=verify-token",
+      {
+        redirect: "manual",
+      },
+    );
+    assert.equal(verifyEmail.status, 302);
+    assert.match(
+      verifyEmail.response.headers.get("location") || "",
+      /\/verified\?success=1/,
+    );
+    assertDbQueuesEmpty();
+
+    const expiredSeller = makeUser({
+      id: 23,
+      username: "seller-old",
+      email: "seller.old@example.com",
+      role: "seller",
+      passwordHash: hashedPassword,
+      verificationToken: "expired-token",
+      verificationTokenExpires: new Date("2020-01-01T00:00:00.000Z"),
+    });
+
+    setDbQueues({
+      select: [[expiredSeller]],
+      update: [[]],
+    });
+    const expiredVerify = await request(
+      "GET",
+      "/api/auth/verify-email?token=expired-token",
+      {
+        redirect: "manual",
+      },
+    );
+    assert.equal(expiredVerify.status, 302);
+    assert.match(
+      expiredVerify.response.headers.get("location") || "",
+      /error=expired/,
+    );
+    assertDbQueuesEmpty();
+
+    setDbQueues({ select: [[]] });
+    const forgotMissing = await request("POST", "/api/auth/forgot-password", {
+      body: { email: "missing@example.com" },
+    });
+    assert.equal(forgotMissing.status, 200);
+    assert.equal(
+      forgotMissing.body.data.message,
+      "If this email exists, a reset link has been sent.",
+    );
+    assertDbQueuesEmpty();
+
+    const forgotSeller = makeUser({
+      id: 25,
+      username: "seller-forgot",
+      email: "seller.forgot@example.com",
+      role: "seller",
+      passwordHash: hashedPassword,
+      resetToken: null,
+      resetTokenExpires: null,
+    });
+
+    setDbQueues({
+      select: [[forgotSeller]],
+      update: [[]],
+    });
+    const forgotExisting = await request("POST", "/api/auth/forgot-password", {
+      body: { email: "seller.forgot@example.com" },
+    });
+    assert.equal(forgotExisting.status, 200);
+    assert.equal(
+      forgotExisting.body.data.message,
+      "If this email exists, a reset link has been sent.",
+    );
+    assertDbQueuesEmpty();
+
+    // Second forgot-password for same account should be rate limited (3 days)
+    setDbQueues({ select: [[forgotSeller]] });
+    const forgotAgain = await request("POST", "/api/auth/forgot-password", {
+      body: { email: "seller.forgot@example.com" },
+    });
+    assert.equal(forgotAgain.status, 429);
+    assert.equal(forgotAgain.body.error.code, "RATE_LIMIT");
+    assertDbQueuesEmpty();
+
+    const resetSeller = makeUser({
+      id: 24,
+      username: "seller-reset",
+      email: "seller.reset@example.com",
+      role: "seller",
+      passwordHash: hashedPassword,
+      resetToken: "reset-token",
+      resetTokenExpires: new Date("2030-05-01T01:00:00.000Z"),
+    });
+
+    setDbQueues({
+      select: [[resetSeller]],
+      update: [[]],
+    });
+    const resetPassword = await request("POST", "/api/auth/reset-password", {
+      body: { token: "reset-token", newPassword: "newpassword123" },
+    });
+    assert.equal(resetPassword.status, 200);
+    assert.equal(
+      resetPassword.body.data.message,
+      "Password changed successfully!",
+    );
+    assertDbQueuesEmpty();
+
+    // Resend verification endpoint: seller can request a resend once
+    const resendSeller = makeUser({
+      id: 26,
+      username: "seller-resend",
+      email: "seller.resend@example.com",
+      role: "seller",
+      passwordHash: hashedPassword,
+      emailVerified: false,
+    });
+
+    setDbQueues({ select: [[resendSeller]], update: [[]] });
+    const resendResp = await request("POST", "/api/auth/resend-verification", {
+      headers: { "x-test-user-id": String(resendSeller.id) },
+    });
+    assert.equal(resendResp.status, 200);
+    assert.equal(resendResp.body.data.message, "Verification email sent");
+    assertDbQueuesEmpty();
+
+    // Second resend within 3 days should be rate limited
+    setDbQueues({ select: [[resendSeller]] });
+    const resendAgain = await request("POST", "/api/auth/resend-verification", {
+      headers: { "x-test-user-id": String(resendSeller.id) },
+    });
+    assert.equal(resendAgain.status, 429);
+    assert.equal(resendAgain.body.error.code, "RATE_LIMIT");
+    assertDbQueuesEmpty();
+
+    setDbQueues({ select: [[]] });
+    const invalidReset = await request("POST", "/api/auth/reset-password", {
+      body: { token: "bad-token", newPassword: "newpassword123" },
+    });
+    assert.equal(invalidReset.status, 400);
+    assert.equal(invalidReset.body.error.code, "INVALID_TOKEN");
     assertDbQueuesEmpty();
 
     setDbQueues({
@@ -709,7 +884,10 @@ describe("route groups", () => {
       },
     );
     assert.equal(createdReviewWithoutUsername.status, 201);
-    assert.equal(createdReviewWithoutUsername.body.data.review.authorName, "Rana");
+    assert.equal(
+      createdReviewWithoutUsername.body.data.review.authorName,
+      "Rana",
+    );
     assertDbQueuesEmpty();
   });
 

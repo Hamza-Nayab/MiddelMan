@@ -26,6 +26,13 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   googleId: text("google_id").unique(),
   role: userRoleEnum("role").notNull().default("buyer"),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  verificationToken: text("verification_token"),
+  verificationTokenExpires: timestamp("verification_token_expires", {
+    withTimezone: true,
+  }),
+  resetToken: text("reset_token"),
+  resetTokenExpires: timestamp("reset_token_expires", { withTimezone: true }),
   lastUsernameChangedAt: timestamp("last_username_changed_at", {
     withTimezone: true,
   }),

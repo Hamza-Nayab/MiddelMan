@@ -2,6 +2,7 @@ import type { Express } from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import sharp from "sharp";
+import { randomBytes } from "crypto";
 import { and, eq, inArray, ne, sql, z } from "./_shared";
 import {
   db,
@@ -17,6 +18,7 @@ import {
   profiles,
   registerSchema,
   requireAuth,
+  requireRole,
   sanitizeString,
   uploadAvatarToR2,
   userColumns,
@@ -26,8 +28,26 @@ import {
   checkRateLimit,
 } from "./_shared";
 import { appLog } from "../lib/logger";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../lib/auth-email";
+import { respondForbiddenFromAuthError } from "./_shared";
+import { getFrontendUrl } from "../lib/resend";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email"),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 type UploadError = Error & { code?: string };
 
 const avatarUpload = multer({
@@ -183,6 +203,44 @@ export function registerAuthRoutes(app: Express): void {
 
     await db.insert(profiles).values(profileData);
 
+    if (role === "seller") {
+      const verificationToken = randomBytes(32).toString("hex");
+      const verificationTokenExpires = new Date(
+        Date.now() + VERIFICATION_TOKEN_TTL_MS,
+      );
+
+      await db
+        .update(users)
+        .set({
+          emailVerified: false,
+          verificationToken,
+          verificationTokenExpires,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, createdUser.id));
+
+      try {
+        await sendVerificationEmail({
+          to: email,
+          token: verificationToken,
+        });
+      } catch (err) {
+        appLog("error", "auth", "VERIFICATION_EMAIL_FAILED", {
+          requestId: req.requestId,
+          userId: createdUser.id,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
+
+        await db.delete(users).where(eq(users.id, createdUser.id));
+
+        return res
+          .status(500)
+          .json(
+            error("EMAIL_SEND_FAILED", "Failed to send verification email"),
+          );
+      }
+    }
+
     req.session.userId = createdUser.id;
 
     req.session.save((err) => {
@@ -204,6 +262,68 @@ export function registerAuthRoutes(app: Express): void {
         }),
       );
     });
+  });
+
+  app.get("/api/auth/verify-email", async (req, res) => {
+    const token =
+      typeof req.query.token === "string"
+        ? sanitizeString(req.query.token)
+        : "";
+    const verifiedUrl = new URL("/verified", getFrontendUrl());
+
+    if (!token) {
+      verifiedUrl.searchParams.set("error", "invalid-token");
+      verifiedUrl.searchParams.set("message", "Verification token is missing.");
+      return res.redirect(302, verifiedUrl.toString());
+    }
+
+    const [seller] = await db
+      .select(userColumns)
+      .from(users)
+      .where(and(eq(users.verificationToken, token), eq(users.role, "seller")));
+
+    if (!seller) {
+      verifiedUrl.searchParams.set("error", "not-found");
+      verifiedUrl.searchParams.set(
+        "message",
+        "Verification token was not found or has already been used.",
+      );
+      return res.redirect(302, verifiedUrl.toString());
+    }
+
+    if (
+      seller.verificationTokenExpires &&
+      seller.verificationTokenExpires.getTime() < Date.now()
+    ) {
+      await db
+        .update(users)
+        .set({
+          verificationToken: null,
+          verificationTokenExpires: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, seller.id));
+
+      verifiedUrl.searchParams.set("error", "expired");
+      verifiedUrl.searchParams.set(
+        "message",
+        "Verification token has expired. Please request a new verification email.",
+      );
+      return res.redirect(302, verifiedUrl.toString());
+    }
+
+    await db
+      .update(users)
+      .set({
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenExpires: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, seller.id));
+
+    verifiedUrl.searchParams.set("success", "1");
+    return res.redirect(302, verifiedUrl.toString());
   });
 
   app.get("/api/username/check", async (req, res) => {
@@ -578,6 +698,226 @@ export function registerAuthRoutes(app: Express): void {
     });
   });
 
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    const parsed = forgotPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const email = sanitizeString(parsed.data.email);
+    const [seller] = await db
+      .select(userColumns)
+      .from(users)
+      .where(and(eq(users.email, email), eq(users.role, "seller")));
+
+    const genericMessage = "If this email exists, a reset link has been sent.";
+
+    if (!seller) {
+      return res.status(200).json(ok({ message: genericMessage }));
+    }
+
+    // Enforce one forgot-password request per account every 3 days
+    const forgotLimit = checkRateLimit(
+      "forgot-password",
+      seller ? String(seller.id) : email,
+      {
+        maxRequests: 1,
+        windowMs: 3 * 24 * 60 * 60 * 1000,
+      },
+    );
+
+    if (!forgotLimit.allowed) {
+      return res.status(429).json(
+        error("RATE_LIMIT", "Password reset already requested recently", {
+          retryAfter: forgotLimit.resetIn,
+        }),
+      );
+    }
+
+    const resetToken = randomBytes(32).toString("hex");
+    const resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+
+    await db
+      .update(users)
+      .set({
+        resetToken,
+        resetTokenExpires,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, seller.id));
+
+    try {
+      await sendPasswordResetEmail({
+        to: email,
+        token: resetToken,
+      });
+    } catch (err) {
+      appLog("error", "auth", "RESET_EMAIL_FAILED", {
+        requestId: req.requestId,
+        userId: seller.id,
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
+
+      await db
+        .update(users)
+        .set({
+          resetToken: null,
+          resetTokenExpires: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, seller.id));
+
+      return res
+        .status(500)
+        .json(
+          error("EMAIL_SEND_FAILED", "Failed to send password reset email"),
+        );
+    }
+
+    return res.status(200).json(ok({ message: genericMessage }));
+  });
+
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const seller = await requireRole(req.session.userId, "seller");
+
+      // Prevent frequent resends: allow once every 3 days per seller
+      const resendLimit = checkRateLimit(
+        "resend-verification",
+        String(seller.id),
+        {
+          maxRequests: 1,
+          windowMs: 3 * 24 * 60 * 60 * 1000,
+        },
+      );
+
+      if (!resendLimit.allowed) {
+        return res.status(429).json(
+          error("RATE_LIMIT", "Verification email already sent recently", {
+            retryAfter: resendLimit.resetIn,
+          }),
+        );
+      }
+
+      if (!seller.email) {
+        return res.status(400).json(error("NO_EMAIL", "No email on account"));
+      }
+
+      if (seller.emailVerified) {
+        return res
+          .status(400)
+          .json(error("ALREADY_VERIFIED", "Email is already verified"));
+      }
+
+      const verificationToken = randomBytes(32).toString("hex");
+      const verificationTokenExpires = new Date(
+        Date.now() + VERIFICATION_TOKEN_TTL_MS,
+      );
+
+      await db
+        .update(users)
+        .set({
+          verificationToken,
+          verificationTokenExpires,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, seller.id));
+
+      try {
+        await sendVerificationEmail({
+          to: seller.email,
+          token: verificationToken,
+        });
+      } catch (err) {
+        appLog("error", "auth", "RESEND_VERIFICATION_EMAIL_FAILED", {
+          requestId: req.requestId,
+          userId: seller.id,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
+
+        await db
+          .update(users)
+          .set({
+            verificationToken: null,
+            verificationTokenExpires: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, seller.id));
+
+        return res
+          .status(500)
+          .json(
+            error("EMAIL_SEND_FAILED", "Failed to send verification email"),
+          );
+      }
+
+      return res.status(200).json(ok({ message: "Verification email sent" }));
+    } catch (err) {
+      return respondForbiddenFromAuthError(res, err);
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    const parsed = resetPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const token = sanitizeString(parsed.data.token);
+    const [seller] = await db
+      .select(userColumns)
+      .from(users)
+      .where(and(eq(users.resetToken, token), eq(users.role, "seller")));
+
+    if (!seller) {
+      return res
+        .status(400)
+        .json(error("INVALID_TOKEN", "Reset token is invalid or has expired"));
+    }
+
+    if (
+      seller.resetTokenExpires &&
+      seller.resetTokenExpires.getTime() < Date.now()
+    ) {
+      await db
+        .update(users)
+        .set({
+          resetToken: null,
+          resetTokenExpires: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, seller.id));
+
+      return res
+        .status(400)
+        .json(error("TOKEN_EXPIRED", "Reset token has expired"));
+    }
+
+    const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);
+
+    await db
+      .update(users)
+      .set({
+        passwordHash,
+        resetToken: null,
+        resetTokenExpires: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, seller.id));
+
+    return res
+      .status(200)
+      .json(ok({ message: "Password changed successfully!" }));
+  });
+
   app.post("/api/me/avatar", avatarUploadSingle, async (req, res) => {
     try {
       requireAuth(req.session.userId);
@@ -788,6 +1128,15 @@ export function registerAuthRoutes(app: Express): void {
       profile = createdProfile;
     }
 
+    const normalizedProfile =
+      profile && user.emailVerified
+        ? {
+            ...profile,
+            isVerified: true,
+            verificationStatus: "approved" as const,
+          }
+        : profile;
+
     return res.status(200).json(
       ok({
         user: {
@@ -795,12 +1144,13 @@ export function registerAuthRoutes(app: Express): void {
           username: user.username,
           role: user.role,
           email: user.email,
+          emailVerified: user.emailVerified,
           lastUsernameChangedAt: user.lastUsernameChangedAt,
           usernameChangeCount: user.usernameChangeCount,
           createdAt: user.createdAt,
           isMasterAdmin: user.isMasterAdmin,
         },
-        profile,
+        profile: normalizedProfile,
       }),
     );
   });

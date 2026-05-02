@@ -5,6 +5,11 @@ export type User = {
   username: string | null;
   email?: string | null;
   role: UserRole;
+  emailVerified?: boolean;
+  verificationToken?: string | null;
+  verificationTokenExpires?: string | null;
+  resetToken?: string | null;
+  resetTokenExpires?: string | null;
   lastUsernameChangedAt?: string | null;
   usernameChangeCount?: number;
   createdAt: string;

@@ -833,6 +833,21 @@ export default function Dashboard() {
     },
   });
 
+  const resendVerificationMutation = useMutation({
+    mutationFn: () => api.resendVerification(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast({ title: "Verification email sent" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Send failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const respondToReviewMutation = useMutation({
     mutationFn: ({
       reviewId,
@@ -930,8 +945,7 @@ export default function Dashboard() {
     },
     {
       label: "Request verification",
-      done:
-        profile.isVerified || profile.verificationStatus === "pending",
+      done: profile.isVerified || profile.verificationStatus === "pending",
     },
     {
       label: "Collect your first review",
@@ -944,6 +958,8 @@ export default function Dashboard() {
   const onboardingProgress = Math.round(
     (completedOnboardingTasks / onboardingTasks.length) * 100,
   );
+  const showVerificationPanel = !profile.isVerified;
+  const showLaunchChecklist = onboardingProgress < 100;
 
   return (
     <Layout>
@@ -971,94 +987,118 @@ export default function Dashboard() {
               </Link>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)]">
-              <Card className="border-border/60">
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold">Launch Checklist</p>
-                      <p className="text-sm text-muted-foreground">
-                        Complete the essentials before sharing your trust link.
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">
-                        {onboardingProgress}%
+            {showLaunchChecklist && (
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)]">
+                <Card className="border-border/60">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">
+                          Launch Checklist
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Complete the essentials before sharing your trust
+                          link.
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {completedOnboardingTasks}/{onboardingTasks.length} done
-                      </p>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">
+                          {onboardingProgress}%
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {completedOnboardingTasks}/{onboardingTasks.length}{" "}
+                          done
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${onboardingProgress}%` }}
-                    />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {onboardingTasks.map((task) => (
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <div
-                        key={task.label}
-                        className={cn(
-                          "rounded-xl border px-3 py-2 text-sm flex items-center gap-2",
-                          task.done
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-border bg-background",
-                        )}
-                      >
-                        {task.done ? (
-                          <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        ) : (
-                          <Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        )}
-                        <span>{task.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${onboardingProgress}%` }}
+                      />
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {onboardingTasks.map((task) => (
+                        <div
+                          key={task.label}
+                          className={cn(
+                            "rounded-xl border px-3 py-2 text-sm flex items-center gap-2",
+                            task.done
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-border bg-background",
+                          )}
+                        >
+                          {task.done ? (
+                            <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          ) : (
+                            <Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span>{task.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-border/60">
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-semibold">Verification</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Status:{" "}
-                    <span className="font-medium text-foreground capitalize">
-                      {profile.isVerified
-                        ? "approved"
-                        : profile.verificationStatus.replace("_", " ")}
-                    </span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    A verified badge increases confidence before buyers message
-                    you.
-                  </p>
-                  <Button
-                    type="button"
-                    className="w-full"
-                    variant={profile.verificationStatus === "pending" ? "outline" : "default"}
-                    disabled={
-                      profile.isVerified ||
-                      profile.verificationStatus === "pending" ||
-                      requestVerificationMutation.isPending
-                    }
-                    onClick={() => requestVerificationMutation.mutate()}
-                  >
-                    {profile.isVerified
-                      ? "Already verified"
-                      : profile.verificationStatus === "pending"
-                        ? "Request pending"
-                        : requestVerificationMutation.isPending
-                          ? "Requesting..."
-                          : "Request Verification"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                {showVerificationPanel ? (
+                  <Card className="border-border/60">
+                    <CardContent className="p-5 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        <p className="text-sm font-semibold">Verification</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Status:{" "}
+                        <span className="font-medium text-foreground capitalize">
+                          {profile.verificationStatus.replace("_", " ")}
+                        </span>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        A verified badge increases confidence before buyers
+                        message you.
+                      </p>
+                      <Button
+                        type="button"
+                        className="w-full"
+                        variant={
+                          profile.verificationStatus === "pending"
+                            ? "outline"
+                            : "default"
+                        }
+                        disabled={
+                          profile.verificationStatus === "pending" ||
+                          requestVerificationMutation.isPending
+                        }
+                        onClick={() => requestVerificationMutation.mutate()}
+                      >
+                        {profile.verificationStatus === "pending"
+                          ? "Request pending"
+                          : requestVerificationMutation.isPending
+                            ? "Requesting..."
+                            : "Request Verification"}
+                      </Button>
+                      {user?.role === "seller" &&
+                        user?.email &&
+                        !user?.emailVerified && (
+                          <Button
+                            type="button"
+                            className="w-full mt-2"
+                            variant={"outline"}
+                            disabled={resendVerificationMutation.isPending}
+                            onClick={() => resendVerificationMutation.mutate()}
+                          >
+                            {resendVerificationMutation.isPending
+                              ? "Sending..."
+                              : "Resend verification email"}
+                          </Button>
+                        )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="hidden lg:block" aria-hidden="true" />
+                )}
+              </div>
+            )}
 
             <Tabs
               value={activeTab}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -173,7 +173,8 @@ export default function AuthPage() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: (values: z.infer<typeof RegisterSchema>) => api.register(values),
+    mutationFn: (values: z.infer<typeof RegisterSchema>) =>
+      api.register(values),
     onSuccess: async (data) => {
       // Ensure getMe query is refetched and completed before redirecting
       try {
@@ -325,6 +326,14 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
+                    <div className="flex justify-end">
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <Button
                       type="submit"
                       className="w-full"

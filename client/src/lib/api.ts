@@ -192,6 +192,15 @@ export type LoginPayload = {
   password: string;
 };
 
+export type ForgotPasswordPayload = {
+  email: string;
+};
+
+export type ResetPasswordPayload = {
+  token: string;
+  newPassword: string;
+};
+
 export type GradientPreset =
   | "default"
   | "ocean"
@@ -211,7 +220,12 @@ export type ProfileUpdatePayload = Partial<{
   phoneNumber: string;
   countryCode: string;
   theme: "light" | "dark";
-  backgroundPreset: "gradient" | "antigravity" | "aurora" | "iridescence" | null;
+  backgroundPreset:
+    | "gradient"
+    | "antigravity"
+    | "aurora"
+    | "iridescence"
+    | null;
   gradientPreset: GradientPreset | null;
   accentColor: string | null;
 }>;
@@ -409,6 +423,10 @@ export const api = {
     request<{ user: User }>("POST", "/api/auth/register", payload),
   login: (payload: LoginPayload) =>
     request<{ user: User }>("POST", "/api/auth/login", payload),
+  forgotPassword: (payload: ForgotPasswordPayload) =>
+    request<{ message: string }>("POST", "/api/auth/forgot-password", payload),
+  resetPassword: (payload: ResetPasswordPayload) =>
+    request<{ message: string }>("POST", "/api/auth/reset-password", payload),
   logout: () => request<{ loggedOut: boolean }>("POST", "/api/auth/logout"),
   getMe: () => request<MeResponse>("GET", "/api/me"),
   updateRole: (role: "buyer" | "seller") =>
@@ -493,6 +511,8 @@ export const api = {
       "/api/me/verification/request",
       payload,
     ),
+  resendVerification: () =>
+    request<{ message: string }>("POST", "/api/auth/resend-verification"),
   reportSellerByUsername: (username: string, payload: ReportCreatePayload) =>
     request<{ report: { id: number } }>(
       "POST",
