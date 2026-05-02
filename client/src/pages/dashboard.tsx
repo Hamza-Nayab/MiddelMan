@@ -832,6 +832,15 @@ export default function Dashboard() {
       });
     },
   });
+  const formatMs = (ms: number) => {
+    const seconds = Math.ceil(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.ceil(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.ceil(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    return `${Math.ceil(hours / 24)}d`;
+  };
 
   const resendVerificationMutation = useMutation({
     mutationFn: () => api.resendVerification(),
@@ -840,9 +849,20 @@ export default function Dashboard() {
       toast({ title: "Verification email sent" });
     },
     onError: (error) => {
+      if (error instanceof ApiError && error.code === "RATE_LIMIT") {
+        const retry = Number(error.details?.retryAfter ?? 0);
+        const when = retry > 0 ? formatMs(retry) : "later";
+        toast({
+          title: "Send limited",
+          description: `Verification email was sent recently — try again in ${when}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Send failed",
-        description: error.message,
+        description: error instanceof ApiError ? error.message : String(error),
         variant: "destructive",
       });
     },
@@ -945,7 +965,7 @@ export default function Dashboard() {
     },
     {
       label: "Request verification",
-      done: profile.isVerified || profile.verificationStatus === "pending",
+      done: profile.isVerified,
     },
     {
       label: "Collect your first review",
@@ -1060,38 +1080,18 @@ export default function Dashboard() {
                       <Button
                         type="button"
                         className="w-full"
-                        variant={
-                          profile.verificationStatus === "pending"
-                            ? "outline"
-                            : "default"
-                        }
                         disabled={
-                          profile.verificationStatus === "pending" ||
                           requestVerificationMutation.isPending
                         }
-                        onClick={() => requestVerificationMutation.mutate()}
+                        onClick={() => {
+                          // Request verification sends an email that verifies both email and profile
+                          requestVerificationMutation.mutate();
+                        }}
                       >
-                        {profile.verificationStatus === "pending"
-                          ? "Request pending"
-                          : requestVerificationMutation.isPending
-                            ? "Requesting..."
-                            : "Request Verification"}
+                        {requestVerificationMutation.isPending
+                          ? "Sending verification email..."
+                          : "Ask for verification"}
                       </Button>
-                      {user?.role === "seller" &&
-                        user?.email &&
-                        !user?.emailVerified && (
-                          <Button
-                            type="button"
-                            className="w-full mt-2"
-                            variant={"outline"}
-                            disabled={resendVerificationMutation.isPending}
-                            onClick={() => resendVerificationMutation.mutate()}
-                          >
-                            {resendVerificationMutation.isPending
-                              ? "Sending..."
-                              : "Resend verification email"}
-                          </Button>
-                        )}
                     </CardContent>
                   </Card>
                 ) : (

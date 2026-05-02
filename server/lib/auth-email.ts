@@ -1,6 +1,6 @@
 import { resend, hasResendApiKey, getFrontendUrl } from "./resend";
 
-const EMAIL_FROM = "onboarding@resend.dev";
+const EMAIL_FROM = process.env.RESEND_FROM || "onboarding@resend.dev";
 
 const buildEmailShell = (title: string, body: string, action: string) => `
   <div style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">

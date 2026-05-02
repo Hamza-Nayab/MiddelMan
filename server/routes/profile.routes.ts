@@ -1,5 +1,9 @@
 import type { Express } from "express";
 import { and, desc, eq, ne, sql } from "./_shared";
+import { sendVerificationEmail } from "../lib/auth-email";
+import { appLog } from "../lib/logger";
+
+import { randomBytes } from "crypto";
 import {
   checkRateLimit,
   db,
@@ -366,25 +370,49 @@ export function registerProfileRoutes(app: Express): void {
         .json(error("ALREADY_VERIFIED", "Seller is already verified"));
     }
 
-    if (existingProfile.verificationStatus === "pending") {
-      return res
-        .status(409)
-        .json(error("REQUEST_PENDING", "Verification request already pending"));
+    // Instead of creating a pending manual-request, send an email verification
+    // that when completed will mark the profile as verified (email verification == profile verification)
+    const [userRow] = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    if (!userRow || !userRow.email) {
+      return res.status(400).json(error("NO_EMAIL", "No email available"));
     }
 
-    const [updated] = await db
-      .update(profiles)
-      .set({
-        verificationStatus: "pending",
-        verificationRequestNote: sanitizeString(parsed.data.note ?? ""),
-        verificationRequestedAt: new Date(),
-        verificationReviewedAt: null,
-        updatedAt: new Date(),
-      })
-      .where(eq(profiles.userId, userId))
-      .returning(profileColumns);
+    const verificationToken = randomBytes(32).toString("hex");
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    return res.status(200).json(ok({ profile: updated }));
+    try {
+      await db
+        .update(users)
+        .set({ verificationToken, verificationTokenExpires, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      // Record when the seller requested verification for auditing, but keep status unchanged
+      const [updatedProfile] = await db
+        .update(profiles)
+        .set({
+          verificationRequestNote: sanitizeString(parsed.data.note ?? ""),
+          verificationRequestedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.userId, userId))
+        .returning(profileColumns);
+
+      await sendVerificationEmail({ to: userRow.email, token: verificationToken });
+
+      return res.status(200).json(ok({ profile: updatedProfile }));
+    } catch (err) {
+      appLog("error", "profile", "VERIFICATION_REQUEST_FAILED", {
+        requestId: req.requestId,
+        userId,
+        error: err instanceof Error ? err.message : "Unknown",
+      });
+
+      return res.status(500).json(error("EMAIL_SEND_FAILED", "Failed to send verification email"));
+    }
   });
 
   app.post("/api/profile/:username/report", async (req, res) => {

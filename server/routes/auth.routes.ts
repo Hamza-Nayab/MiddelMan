@@ -37,7 +37,8 @@ import { getFrontendUrl } from "../lib/resend";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
-const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+// Reduce password reset token TTL to 2 minutes to match verification behavior
+const RESET_TOKEN_TTL_MS = 2 * 60 * 1000;
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -322,6 +323,24 @@ export function registerAuthRoutes(app: Express): void {
       })
       .where(eq(users.id, seller.id));
 
+    // Also mark the seller profile as verified so email verification == profile verification
+    try {
+      await db
+        .update(profiles)
+        .set({
+          isVerified: true,
+          verificationStatus: "approved",
+          verificationReviewedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.userId, seller.id));
+    } catch (err) {
+      appLog("error", "auth", "PROFILE_MARK_VERIFIED_FAILED", {
+        requestId: req.requestId,
+        userId: seller.id,
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
     verifiedUrl.searchParams.set("success", "1");
     return res.redirect(302, verifiedUrl.toString());
   });
@@ -720,13 +739,13 @@ export function registerAuthRoutes(app: Express): void {
       return res.status(200).json(ok({ message: genericMessage }));
     }
 
-    // Enforce one forgot-password request per account every 3 days
+    // Enforce one forgot-password request per account every 2 minutes (short window for testing)
     const forgotLimit = checkRateLimit(
       "forgot-password",
       seller ? String(seller.id) : email,
       {
         maxRequests: 1,
-        windowMs: 3 * 24 * 60 * 60 * 1000,
+        windowMs: 2 * 60 * 1000,
       },
     );
 
@@ -785,13 +804,13 @@ export function registerAuthRoutes(app: Express): void {
     try {
       const seller = await requireRole(req.session.userId, "seller");
 
-      // Prevent frequent resends: allow once every 3 days per seller
+      // Prevent frequent resends: allow once every 2 minutes per seller
       const resendLimit = checkRateLimit(
         "resend-verification",
         String(seller.id),
         {
           maxRequests: 1,
-          windowMs: 3 * 24 * 60 * 60 * 1000,
+          windowMs: 2 * 60 * 1000,
         },
       );
 
