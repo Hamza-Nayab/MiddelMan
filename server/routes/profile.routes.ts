@@ -387,7 +387,11 @@ export function registerProfileRoutes(app: Express): void {
     try {
       await db
         .update(users)
-        .set({ verificationToken, verificationTokenExpires, updatedAt: new Date() })
+        .set({
+          verificationToken,
+          verificationTokenExpires,
+          updatedAt: new Date(),
+        })
         .where(eq(users.id, userId));
 
       // Record when the seller requested verification for auditing, but keep status unchanged
@@ -401,7 +405,10 @@ export function registerProfileRoutes(app: Express): void {
         .where(eq(profiles.userId, userId))
         .returning(profileColumns);
 
-      await sendVerificationEmail({ to: userRow.email, token: verificationToken });
+      await sendVerificationEmail({
+        to: userRow.email,
+        token: verificationToken,
+      });
 
       return res.status(200).json(ok({ profile: updatedProfile }));
     } catch (err) {
@@ -411,7 +418,9 @@ export function registerProfileRoutes(app: Express): void {
         error: err instanceof Error ? err.message : "Unknown",
       });
 
-      return res.status(500).json(error("EMAIL_SEND_FAILED", "Failed to send verification email"));
+      return res
+        .status(500)
+        .json(error("EMAIL_SEND_FAILED", "Failed to send verification email"));
     }
   });
 

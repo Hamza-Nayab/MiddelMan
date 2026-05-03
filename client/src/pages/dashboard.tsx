@@ -1080,9 +1080,7 @@ export default function Dashboard() {
                       <Button
                         type="button"
                         className="w-full"
-                        disabled={
-                          requestVerificationMutation.isPending
-                        }
+                        disabled={requestVerificationMutation.isPending}
                         onClick={() => {
                           // Request verification sends an email that verifies both email and profile
                           requestVerificationMutation.mutate();
