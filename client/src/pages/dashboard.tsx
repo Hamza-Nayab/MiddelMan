@@ -1231,30 +1231,54 @@ export default function Dashboard() {
                   previewAppearance={previewAppearance}
                   hasAppearanceChanges={hasAppearanceChanges}
                   updateAppearanceMutation={updateAppearanceMutation}
+                  previewSlot={
+                    <ProfilePreviewPhone
+                      displayName={watchedDisplayName || profile.displayName}
+                      username={user.username || ""}
+                      bio={watchedBio || profile.bio}
+                      avatarValue={watchedAvatar || profile.avatarUrl}
+                      userId={user.id}
+                      links={orderedLinks.filter((link) => link.isActive)}
+                      avgRating={reviewStats.avgRating}
+                      totalReviews={reviewStats.totalReviews}
+                      phoneNumber={watchedPhoneNumber || profile.phoneNumber}
+                      whatsappNumber={
+                        watchedWhatsAppNumber || profile.whatsappNumber
+                      }
+                      countryCode={watchedCountryCode || profile.countryCode}
+                      contactEmail={watchedContactEmail || profile.contactEmail}
+                      theme={pendingTheme}
+                      backgroundPreset={pendingBackgroundPreset}
+                      gradientPreset={pendingGradientPreset}
+                      accentColor={pendingAccentColor}
+                    />
+                  }
                 />
               </TabsContent>
             </Tabs>
           </div>
 
           {/* Preview Phone */}
-          <ProfilePreviewPhone
-            displayName={watchedDisplayName || profile.displayName}
-            username={user.username || ""}
-            bio={watchedBio || profile.bio}
-            avatarValue={watchedAvatar || profile.avatarUrl}
-            userId={user.id}
-            links={orderedLinks.filter((link) => link.isActive)}
-            avgRating={reviewStats.avgRating}
-            totalReviews={reviewStats.totalReviews}
-            phoneNumber={watchedPhoneNumber || profile.phoneNumber}
-            whatsappNumber={watchedWhatsAppNumber || profile.whatsappNumber}
-            countryCode={watchedCountryCode || profile.countryCode}
-            contactEmail={watchedContactEmail || profile.contactEmail}
-            theme={pendingTheme}
-            backgroundPreset={pendingBackgroundPreset}
-            gradientPreset={pendingGradientPreset}
-            accentColor={pendingAccentColor}
-          />
+          {activeTab !== "appearance" && (
+            <ProfilePreviewPhone
+              displayName={watchedDisplayName || profile.displayName}
+              username={user.username || ""}
+              bio={watchedBio || profile.bio}
+              avatarValue={watchedAvatar || profile.avatarUrl}
+              userId={user.id}
+              links={orderedLinks.filter((link) => link.isActive)}
+              avgRating={reviewStats.avgRating}
+              totalReviews={reviewStats.totalReviews}
+              phoneNumber={watchedPhoneNumber || profile.phoneNumber}
+              whatsappNumber={watchedWhatsAppNumber || profile.whatsappNumber}
+              countryCode={watchedCountryCode || profile.countryCode}
+              contactEmail={watchedContactEmail || profile.contactEmail}
+              theme={pendingTheme}
+              backgroundPreset={pendingBackgroundPreset}
+              gradientPreset={pendingGradientPreset}
+              accentColor={pendingAccentColor}
+            />
+          )}
         </div>
       </div>
     </Layout>

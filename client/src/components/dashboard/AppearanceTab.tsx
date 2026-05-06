@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, type ReactNode } from "react";
 import {
   Check,
   ExternalLink,
@@ -72,6 +72,7 @@ type AppearanceTabProps = {
   previewAppearance: any;
   hasAppearanceChanges: boolean;
   updateAppearanceMutation: any;
+  previewSlot?: ReactNode;
 };
 
 const DESIGN_PRESETS = [
@@ -147,6 +148,42 @@ const BACKGROUND_OPTIONS = [
   },
 ];
 
+const ACCENT_SWATCHES = [
+  "#38b6ff",
+  "#253c97",
+  "#0ea5e9",
+  "#10b981",
+  "#f97316",
+  "#8b5cf6",
+  "#ef4444",
+  "#111827",
+];
+
+const studioCardClass =
+  "rounded-[24px] border border-slate-200/70 bg-white/82 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur-xl";
+
+const liftClass =
+  "transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]";
+
+const DESIGN_STEPS = [
+  {
+    title: "Preset",
+    description: "Start with a curated direction.",
+  },
+  {
+    title: "Surface",
+    description: "Set theme and background mood.",
+  },
+  {
+    title: "Accent",
+    description: "Choose one brand color.",
+  },
+  {
+    title: "Preview",
+    description: "Review and publish.",
+  },
+];
+
 export const AppearanceTab = memo(function AppearanceTab({
   pendingTheme,
   setPendingTheme,
@@ -163,13 +200,19 @@ export const AppearanceTab = memo(function AppearanceTab({
   previewAppearance,
   hasAppearanceChanges,
   updateAppearanceMutation,
+  previewSlot,
 }: AppearanceTabProps) {
+  const [activeStep, setActiveStep] = useState(0);
+  const isFirstStep = activeStep === 0;
+  const isLastStep = activeStep === DESIGN_STEPS.length - 1;
+
   const applyPreset = (preset: (typeof DESIGN_PRESETS)[number]) => {
     setPendingTheme(preset.theme);
     setPendingBackgroundPreset(preset.backgroundPreset);
     setPendingGradientPreset(preset.gradientPreset);
     setPendingAccentColor(preset.accentColor);
     setAccentColorError(null);
+    setActiveStep(1);
   };
 
   const resetDesign = () => {
@@ -180,408 +223,560 @@ export const AppearanceTab = memo(function AppearanceTab({
     setAccentColorError(null);
   };
 
+  const goToPreviousStep = () => {
+    setActiveStep((step) => Math.max(0, step - 1));
+  };
+
+  const goToNextStep = () => {
+    setActiveStep((step) => Math.min(DESIGN_STEPS.length - 1, step + 1));
+  };
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6">
-        <Card className="overflow-hidden border-none shadow-lg">
-          <CardContent className="p-0">
-            <div className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(56,182,255,0.28),_transparent_38%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] px-4 py-6 text-white sm:px-6 sm:py-7">
-              <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:26px_26px]" />
-              <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-2xl">
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-white/85">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Design Studio
-                  </div>
-                  <h3 className="text-2xl font-semibold tracking-tight">
-                    Shape the storefront before buyers ever message you.
-                  </h3>
-                  <p className="mt-2 max-w-xl text-sm text-white/75">
-                    Pick a mood, tune the background, and set one accent color.
-                    Everything below feeds the same public profile renderer.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 gap-3 text-left min-[560px]:grid-cols-2 xl:grid-cols-3 xl:min-w-[22rem]">
-                  <div className="min-w-0 rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm sm:px-4">
-                    <p className="truncate text-[10px] uppercase tracking-[0.14em] text-white/55 sm:text-[11px] sm:tracking-[0.18em]">
-                      Theme
-                    </p>
-                    <p className="mt-1 truncate text-sm font-medium capitalize sm:text-base">
-                      {pendingTheme}
-                    </p>
-                  </div>
-                  <div className="min-w-0 rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm sm:px-4">
-                    <p className="truncate text-[10px] uppercase tracking-[0.14em] text-white/55 sm:text-[11px] sm:tracking-[0.18em]">
-                      Background
-                    </p>
-                    <p className="mt-1 truncate text-sm font-medium capitalize sm:text-base">
-                      {pendingBackgroundPreset ?? "None"}
-                    </p>
-                  </div>
-                  <div className="min-w-0 rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm sm:px-4">
-                    <p className="truncate text-[10px] uppercase tracking-[0.14em] text-white/55 sm:text-[11px] sm:tracking-[0.18em]">
-                      Accent
-                    </p>
-                    <div className="mt-1 flex min-w-0 items-center gap-2 text-sm font-medium sm:text-base">
-                      <span
-                        className="h-3.5 w-3.5 shrink-0 rounded-full border border-white/30"
-                        style={{
-                          backgroundColor: pendingAccentColor ?? "transparent",
-                        }}
-                      />
-                      <span className="truncate">
-                        {pendingAccentColor ?? "Default"}
-                      </span>
+    <div className="-mx-4 rounded-[32px] bg-[#F5F5F7] px-4 py-6 sm:-mx-6 sm:px-6 lg:py-10">
+      <div className="mx-auto max-w-6xl space-y-10">
+          <Card className="overflow-hidden rounded-[28px] border border-white/80 bg-white/70 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardContent className="p-0">
+              <div className="relative overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#f7f7f9_48%,#edf3f7_100%)] px-6 py-10 text-slate-950 sm:px-10 sm:py-12">
+                <div className="absolute inset-x-8 bottom-0 h-px bg-linear-to-r from-transparent via-slate-300/70 to-transparent" />
+                <div className="relative space-y-10">
+                  <div className="max-w-3xl">
+                    <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-950/5 bg-white/65 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 shadow-sm backdrop-blur-md">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Design Studio
                     </div>
+                    <h3 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-5xl">
+                      Design your profile in one calm, spacious flow.
+                    </h3>
+                    <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
+                      Move step by step from a curated style to a polished
+                      public profile preview.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
+                    {[
+                      ["Theme", pendingTheme],
+                      ["Background", pendingBackgroundPreset ?? "None"],
+                      ["Accent", pendingAccentColor ?? "Default"],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="min-w-0 rounded-3xl border border-white/80 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-xl"
+                      >
+                        <p className="truncate text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                          {label}
+                        </p>
+                        <div className="mt-1 flex min-w-0 items-center gap-2 text-sm font-semibold capitalize text-slate-950">
+                          {label === "Accent" && (
+                            <span
+                              className="h-3.5 w-3.5 shrink-0 rounded-full border border-slate-200"
+                              style={{
+                                backgroundColor:
+                                  pendingAccentColor ?? "transparent",
+                              }}
+                            />
+                          )}
+                          <span className="truncate">{value}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4" />
-              Quick Presets
-            </CardTitle>
-            <CardDescription>
-              Start with a curated look, then fine-tune the details below.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            {DESIGN_PRESETS.map((preset) => (
-              <button
-                key={preset.key}
-                type="button"
-                onClick={() => applyPreset(preset)}
-                className="group overflow-hidden rounded-2xl border text-left transition hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <div
-                  className={cn(
-                    "h-24 border-b",
-                    preset.backgroundPreset === null &&
-                      (preset.theme === "dark" ? "bg-slate-950" : "bg-white"),
-                  )}
-                  style={
-                    preset.backgroundPreset === "gradient"
-                      ? {
-                          background:
-                            PROFILE_GRADIENT_OPTIONS.find(
-                              (option) => option.key === preset.gradientPreset,
-                            )?.bg,
-                        }
-                      : undefined
-                  }
-                >
-                  {preset.backgroundPreset === "aurora" && (
-                    <div className="relative h-full bg-slate-950">
-                      <Aurora
-                        colorStops={["#5227FF", "#7cff67", "#5227FF"]}
-                        amplitude={1}
-                        blend={0.6}
-                        className="absolute inset-0"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2 p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium">{preset.name}</p>
-                    <span
-                      className="h-3.5 w-3.5 rounded-full border"
-                      style={{ backgroundColor: preset.accentColor }}
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {preset.description}
+          <Card className={studioCardClass}>
+            <CardContent className="p-4 sm:p-5">
+              <div className="grid gap-3 sm:grid-cols-4">
+                {DESIGN_STEPS.map((step, index) => {
+                  const isActive = activeStep === index;
+                  const isComplete = activeStep > index;
+
+                  return (
+                    <button
+                      key={step.title}
+                      type="button"
+                      onClick={() => setActiveStep(index)}
+                      className={cn(
+                        "rounded-[22px] border p-4 text-left transition-all duration-200",
+                        isActive
+                          ? "border-slate-950/45 bg-slate-950 text-white shadow-[0_16px_38px_rgba(15,23,42,0.16)]"
+                          : "border-slate-200/70 bg-white/76 text-slate-950 hover:-translate-y-0.5 hover:shadow-md",
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={cn(
+                            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold",
+                            isActive
+                              ? "bg-white text-slate-950"
+                              : isComplete
+                                ? "bg-slate-950 text-white"
+                                : "bg-slate-100 text-slate-500",
+                          )}
+                        >
+                          {isComplete ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                        </span>
+                        <div>
+                          <p
+                            className={cn(
+                              "text-sm font-semibold",
+                              isActive ? "text-white" : "text-slate-950",
+                            )}
+                          >
+                            {step.title}
+                          </p>
+                          <p
+                            className={cn(
+                              "mt-1 text-xs leading-4",
+                              isActive ? "text-white/64" : "text-slate-500",
+                            )}
+                          >
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {activeStep === 3 && previewSlot && (
+            <Card className="overflow-hidden rounded-[32px] border border-slate-200/70 bg-white/76 shadow-[0_24px_80px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+              <CardContent className="p-0">
+                <div className="border-b border-slate-200/70 px-6 py-6 sm:px-10">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Live Canvas
                   </p>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                    Preview the exact buyer-facing profile.
+                  </h3>
                 </div>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
+                <div className="flex justify-center bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.95),_rgba(245,245,247,0.72)_58%,_rgba(237,241,245,0.88)_100%)] px-6 py-10 sm:py-12">
+                  {previewSlot}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Base Theme</CardTitle>
-              <CardDescription>
-                Choose the underlying brightness and tone.
+          {activeStep === 3 && (
+          <Card className={studioCardClass}>
+            <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+              <CardTitle className="text-xl font-semibold text-slate-950">
+                Current Direction
+              </CardTitle>
+              <CardDescription className="text-slate-500">
+                Final check before publishing.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              {PROFILE_THEME_OPTIONS.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => setPendingTheme(option.key)}
-                  className={cn(
-                    "group relative overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md",
-                    pendingTheme === option.key
-                      ? "border-primary ring-2 ring-primary/15"
-                      : "border-border",
-                  )}
-                >
+            <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
+              <div
+                className={cn(
+                  "rounded-[24px] border p-5 shadow-sm",
+                  previewAppearance.surfaceClass,
+                )}
+                style={previewAppearance.accentCardStyle}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p
+                      className={cn(
+                        "text-sm font-semibold",
+                        previewAppearance.primaryTextClass,
+                      )}
+                    >
+                      Seller card
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        previewAppearance.mutedTextClass,
+                      )}
+                    >
+                      Synced to the public profile.
+                    </p>
+                  </div>
                   <div
                     className={cn(
-                      "mb-4 rounded-xl border p-3",
-                      option.key === "dark"
-                        ? "border-slate-800 bg-slate-950"
-                        : "border-slate-200 bg-slate-50",
+                      "flex h-10 w-10 items-center justify-center rounded-full border",
+                      previewAppearance.linkIconClass,
+                    )}
+                    style={previewAppearance.accentIconStyle}
+                  >
+                    <ExternalLink
+                      className={cn("h-4 w-4", previewAppearance.iconColorClass)}
+                      style={previewAppearance.accentTextStyle}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-3xl border border-slate-200/70 bg-slate-50/80 p-5">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                    Status
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-slate-950">
+                    {hasAppearanceChanges ? "Unsaved changes" : "Synced"}
+                  </p>
+                </div>
+                <div className="rounded-3xl border border-slate-200/70 bg-slate-50/80 p-5">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                    Contrast
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-slate-950">
+                    {accentWarnings.length > 0 ? "Needs review" : "Looks solid"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  type="button"
+                  className="h-11 flex-1 rounded-full bg-slate-950 text-white shadow-[0_10px_30px_rgba(15,23,42,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-[0_16px_38px_rgba(15,23,42,0.22)] disabled:translate-y-0 disabled:shadow-none"
+                  onClick={() =>
+                    updateAppearanceMutation.mutate({
+                      theme: pendingTheme,
+                      backgroundPreset: pendingBackgroundPreset,
+                      gradientPreset:
+                        pendingBackgroundPreset === "gradient"
+                          ? (pendingGradientPreset ?? "default")
+                          : null,
+                      accentColor: pendingAccentColor,
+                    })
+                  }
+                  disabled={
+                    updateAppearanceMutation.isPending ||
+                    !hasAppearanceChanges ||
+                    !accentValidation.valid
+                  }
+                >
+                  {updateAppearanceMutation.isPending
+                    ? "Saving..."
+                    : "Publish Design"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 flex-1 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                  onClick={resetDesign}
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset To Neutral
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          )}
+
+          {activeStep === 0 && (
+          <Card className={studioCardClass}>
+            <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold text-slate-950">
+                <Wand2 className="h-4 w-4" />
+                Quick Presets
+              </CardTitle>
+              <CardDescription className="text-slate-500">
+                Curated starting points, tuned for buyer trust.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="scrollbar-minimal flex gap-4 overflow-x-auto px-6 pb-6 pt-2 sm:px-8 sm:pb-8">
+              {DESIGN_PRESETS.map((preset) => (
+                <button
+                  key={preset.key}
+                  type="button"
+                  onClick={() => applyPreset(preset)}
+                  className={cn(
+                    "group min-w-[184px] overflow-hidden rounded-[22px] border border-slate-200/70 bg-white text-left shadow-sm",
+                    liftClass,
+                  )}
+                >
+                  <PreviewSwatch
+                    backgroundPreset={preset.backgroundPreset}
+                    gradientPreset={preset.gradientPreset}
+                    theme={preset.theme}
+                  />
+                  <div className="space-y-2 p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-slate-950">
+                        {preset.name}
+                      </p>
+                      <span
+                        className="h-3.5 w-3.5 rounded-full border border-slate-200"
+                        style={{ backgroundColor: preset.accentColor }}
+                      />
+                    </div>
+                    <p className="text-xs leading-5 text-slate-500">
+                      {preset.description}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+          )}
+
+          {activeStep === 1 && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className={studioCardClass}>
+              <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+                <CardTitle className="text-xl font-semibold text-slate-950">
+                  Base Theme
+                </CardTitle>
+                <CardDescription className="text-slate-500">
+                  Overall brightness and surface tone.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3 px-6 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8">
+                {PROFILE_THEME_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => setPendingTheme(option.key)}
+                    className={cn(
+                      "group relative overflow-hidden rounded-[22px] border bg-white p-4 text-left",
+                      liftClass,
+                      pendingTheme === option.key
+                        ? "border-slate-950/50 ring-4 ring-slate-950/5"
+                        : "border-slate-200/80",
                     )}
                   >
                     <div
                       className={cn(
-                        "mb-3 h-10 rounded-lg",
-                        option.key === "dark" ? "bg-slate-900" : "bg-white",
+                        "mb-4 rounded-2xl border p-3",
+                        option.key === "dark"
+                          ? "border-slate-800 bg-slate-950"
+                          : "border-slate-200 bg-slate-50",
                       )}
-                    />
-                    <div className="space-y-2">
+                    >
                       <div
                         className={cn(
-                          "h-3 w-3/4 rounded-full",
-                          option.key === "dark"
-                            ? "bg-slate-700"
-                            : "bg-slate-300",
+                          "mb-3 h-10 rounded-xl",
+                          option.key === "dark" ? "bg-slate-900" : "bg-white",
                         )}
                       />
-                      <div
-                        className={cn(
-                          "h-3 w-1/2 rounded-full",
-                          option.key === "dark"
-                            ? "bg-slate-800"
-                            : "bg-slate-200",
-                        )}
-                      />
+                      <div className="space-y-2">
+                        <div
+                          className={cn(
+                            "h-3 w-3/4 rounded-full",
+                            option.key === "dark"
+                              ? "bg-slate-700"
+                              : "bg-slate-300",
+                          )}
+                        />
+                        <div
+                          className={cn(
+                            "h-3 w-1/2 rounded-full",
+                            option.key === "dark"
+                              ? "bg-slate-800"
+                              : "bg-slate-200",
+                          )}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{option.label}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {option.key === "dark"
-                          ? "Premium and cinematic"
-                          : "Bright and trust-first"}
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-slate-950">
+                          {option.label}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {option.key === "dark"
+                            ? "Premium and cinematic"
+                            : "Bright and trust-first"}
+                        </p>
+                      </div>
+                      {pendingTheme === option.key && (
+                        <Check className="h-4 w-4 text-slate-950" />
+                      )}
                     </div>
-                    {pendingTheme === option.key && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Background Mood</CardTitle>
-              <CardDescription>
-                Add atmosphere without losing readability.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              {BACKGROUND_OPTIONS.map((option) => (
-                <button
-                  key={option.label}
-                  type="button"
-                  onClick={() => {
-                    setPendingBackgroundPreset(option.key);
-                    if (option.key === "gradient" && !pendingGradientPreset) {
-                      setPendingGradientPreset("default");
-                    }
-                    if (option.key !== "gradient") {
-                      setPendingGradientPreset(null);
-                    }
-                  }}
-                  className={cn(
-                    "overflow-hidden rounded-2xl border text-left transition hover:-translate-y-0.5 hover:shadow-md",
-                    pendingBackgroundPreset === option.key
-                      ? "border-primary ring-2 ring-primary/15"
-                      : "border-border",
-                  )}
-                >
-                  <div className="relative h-24 overflow-hidden border-b bg-slate-100">
-                    {option.key === null && (
-                      <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)]" />
-                    )}
-                    {option.key === "gradient" && (
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          background:
-                            PROFILE_GRADIENT_OPTIONS.find(
-                              (item) =>
-                                item.key === (pendingGradientPreset ?? "default"),
-                            )?.bg,
-                        }}
-                      />
-                    )}
-                    {option.key === "antigravity" && (
-                      <Antigravity
-                        count={60}
-                        color="#FF9FFC"
-                        particleSize={1.4}
-                        className="absolute inset-0"
-                      />
-                    )}
-                    {option.key === "aurora" && (
-                      <Aurora
-                        colorStops={["#5227FF", "#7cff67", "#5227FF"]}
-                        amplitude={1}
-                        blend={0.6}
-                        className="absolute inset-0"
-                      />
-                    )}
-                    {option.key === "iridescence" && (
-                      <Iridescence
-                        speed={1}
-                        amplitude={0.1}
-                        mouseReact={false}
-                        className="absolute inset-0"
-                      />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{option.label}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {option.blurb}
-                      </p>
-                    </div>
-                    {pendingBackgroundPreset === option.key && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {pendingBackgroundPreset === "gradient" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Gradient Variations</CardTitle>
-              <CardDescription>
-                Pick a palette that matches your store personality.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-              {PROFILE_GRADIENT_OPTIONS.map(({ key, label, bg }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setPendingGradientPreset(key)}
-                  className={cn(
-                    "overflow-hidden rounded-2xl border text-left transition hover:-translate-y-0.5 hover:shadow-md",
-                    pendingGradientPreset === key
-                      ? "border-primary ring-2 ring-primary/15"
-                      : "border-border",
-                  )}
-                >
-                  <div className="h-24 border-b" style={{ background: bg }} />
-                  <div className="flex items-center justify-between p-4">
-                    <span className="font-medium">{label}</span>
-                    {pendingGradientPreset === key && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Accent Color
-            </CardTitle>
-            <CardDescription>
-              Use one brand color for buttons, borders, and key UI moments.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={pendingAccentColor || "#ffffff"}
-                  onChange={(e) => {
-                    setPendingAccentColor(e.target.value);
-                    setAccentColorError(null);
-                  }}
-                  disabled={pendingAccentColor === null}
-                  className="h-12 w-16 cursor-pointer rounded-xl border border-border disabled:cursor-not-allowed disabled:opacity-50"
-                />
-                <div className="space-y-1">
-                  <Input
-                    type="text"
-                    placeholder="#38b6ff"
-                    value={pendingAccentColor ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value.trim();
-                      setPendingAccentColor(value || null);
-                      if (value) {
-                        const validation = validateHexColor(value);
-                        setAccentColorError(validation.message ?? null);
-                      } else {
-                        setAccentColorError(null);
+            <Card className={studioCardClass}>
+              <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+                <CardTitle className="text-xl font-semibold text-slate-950">
+                  Background Mood
+                </CardTitle>
+                <CardDescription className="text-slate-500">
+                  Subtle atmosphere with readable content.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3 px-6 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8">
+                {BACKGROUND_OPTIONS.map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => {
+                      setPendingBackgroundPreset(option.key);
+                      if (option.key === "gradient" && !pendingGradientPreset) {
+                        setPendingGradientPreset("default");
+                      }
+                      if (option.key !== "gradient") {
+                        setPendingGradientPreset(null);
                       }
                     }}
                     className={cn(
-                      "font-mono w-36",
-                      accentColorError && "border-red-500",
+                      "overflow-hidden rounded-[22px] border bg-white text-left",
+                      liftClass,
+                      pendingBackgroundPreset === option.key
+                        ? "border-slate-950/50 ring-4 ring-slate-950/5"
+                        : "border-slate-200/80",
                     )}
+                  >
+                    <PreviewSwatch
+                      backgroundPreset={option.key}
+                      gradientPreset={pendingGradientPreset ?? "default"}
+                      theme="light"
+                    />
+                    <div className="flex items-center justify-between p-4">
+                      <div>
+                        <p className="font-semibold text-slate-950">
+                          {option.label}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {option.blurb}
+                        </p>
+                      </div>
+                      {pendingBackgroundPreset === option.key && (
+                        <Check className="h-4 w-4 text-slate-950" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+          )}
+
+          {activeStep === 1 && pendingBackgroundPreset === "gradient" && (
+            <Card className={studioCardClass}>
+              <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+                <CardTitle className="text-xl font-semibold text-slate-950">
+                  Gradient Variations
+                </CardTitle>
+                <CardDescription className="text-slate-500">
+                  Choose a restrained palette for your profile.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 px-6 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8 lg:grid-cols-3 2xl:grid-cols-4">
+                {PROFILE_GRADIENT_OPTIONS.map(({ key, label, bg }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setPendingGradientPreset(key)}
+                    className={cn(
+                      "overflow-hidden rounded-[22px] border bg-white text-left",
+                      liftClass,
+                      pendingGradientPreset === key
+                        ? "border-slate-950/50 ring-4 ring-slate-950/5"
+                        : "border-slate-200/80",
+                    )}
+                  >
+                    <div
+                      className="h-24 border-b border-slate-200/70"
+                      style={{ background: bg }}
+                    />
+                    <div className="flex items-center justify-between p-4">
+                      <span className="font-semibold text-slate-950">
+                        {label}
+                      </span>
+                      {pendingGradientPreset === key && (
+                        <Check className="h-4 w-4 text-slate-950" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {activeStep === 2 && (
+          <Card className={studioCardClass}>
+            <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold text-slate-950">
+                <Palette className="h-4 w-4" />
+                Accent Color
+              </CardTitle>
+              <CardDescription className="text-slate-500">
+                One quiet brand color for key actions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={pendingAccentColor || "#ffffff"}
+                    onChange={(event) => {
+                      setPendingAccentColor(event.target.value);
+                      setAccentColorError(null);
+                    }}
+                    disabled={pendingAccentColor === null}
+                    className="h-12 w-16 cursor-pointer rounded-2xl border border-slate-200 bg-slate-100 p-1 disabled:cursor-not-allowed disabled:opacity-50"
                   />
-                  {accentColorError && (
-                    <p className="text-xs text-red-500">{accentColorError}</p>
-                  )}
-                  {!accentColorError &&
-                    accentWarnings.map((warning) => (
-                      <p key={warning} className="text-xs text-amber-600">
-                        {warning}
+                  <div className="space-y-1">
+                    <Input
+                      type="text"
+                      placeholder="#38b6ff"
+                      value={pendingAccentColor ?? ""}
+                      onChange={(event) => {
+                        const value = event.target.value.trim();
+                        setPendingAccentColor(value || null);
+                        if (value) {
+                          const validation = validateHexColor(value);
+                          setAccentColorError(validation.message ?? null);
+                        } else {
+                          setAccentColorError(null);
+                        }
+                      }}
+                      className={cn(
+                        "w-36 rounded-2xl border-0 bg-slate-100/90 font-mono shadow-inner focus-visible:ring-slate-300",
+                        accentColorError && "ring-1 ring-red-500",
+                      )}
+                    />
+                    {accentColorError && (
+                      <p className="text-xs text-red-500">
+                        {accentColorError}
                       </p>
-                    ))}
+                    )}
+                    {!accentColorError &&
+                      accentWarnings.map((warning) => (
+                        <p key={warning} className="text-xs text-amber-600">
+                          {warning}
+                        </p>
+                      ))}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => setPendingAccentColor("#38b6ff")}
+                    className="rounded-full border-slate-200 bg-white px-5 text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                  >
+                    Brand Blue
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => {
+                      setPendingAccentColor(null);
+                      setAccentColorError(null);
+                    }}
+                    className="rounded-full px-5 text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-950"
+                  >
+                    Use Default
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => setPendingAccentColor("#38b6ff")}
-                >
-                  Brand Blue
-                </Button>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => {
-                    setPendingAccentColor(null);
-                    setAccentColorError(null);
-                  }}
-                >
-                  Use Default
-                </Button>
-              </div>
-            </div>
 
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8">
-              {[
-                "#38b6ff",
-                "#253c97",
-                "#0ea5e9",
-                "#10b981",
-                "#f97316",
-                "#8b5cf6",
-                "#ef4444",
-                "#111827",
-              ].map(
-                (swatch) => (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8">
+                {ACCENT_SWATCHES.map((swatch) => (
                   <button
                     key={swatch}
                     type="button"
@@ -590,161 +785,123 @@ export const AppearanceTab = memo(function AppearanceTab({
                       setAccentColorError(null);
                     }}
                     className={cn(
-                      "rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md",
+                      "rounded-[20px] border bg-white p-3 text-left",
+                      liftClass,
                       pendingAccentColor === swatch
-                        ? "border-primary ring-2 ring-primary/15"
-                        : "border-border",
+                        ? "border-slate-950/50 ring-4 ring-slate-950/5"
+                        : "border-slate-200/80",
                     )}
                   >
                     <div
-                      className="mb-3 h-10 rounded-xl border border-black/5"
+                      className="mb-3 h-10 rounded-2xl border border-black/5"
                       style={{ backgroundColor: swatch }}
                     />
-                    <p className="font-mono text-xs">{swatch}</p>
+                    <p className="font-mono text-xs text-slate-500">
+                      {swatch}
+                    </p>
                   </button>
-                ),
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          )}
 
-      <div className="space-y-6">
-        <Card className="xl:sticky xl:top-24">
-          <CardHeader>
-            <CardTitle>Current Direction</CardTitle>
-            <CardDescription>
-              A quick snapshot before you publish the new look.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div
-              className={cn(
-                "rounded-3xl border p-5 shadow-sm",
-                previewAppearance.surfaceClass,
-              )}
-              style={previewAppearance.accentCardStyle}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={cn(
-                      "text-sm font-semibold",
-                      previewAppearance.primaryTextClass,
-                    )}
-                  >
-                    Seller card preview
-                  </p>
-                  <p
-                    className={cn(
-                      "text-xs",
-                      previewAppearance.mutedTextClass,
-                    )}
-                  >
-                    Shared with the public profile and phone preview.
-                  </p>
-                </div>
-                <div
-                  className={cn(
-                    "h-10 w-10 rounded-full border flex items-center justify-center",
-                    previewAppearance.linkIconClass,
-                  )}
-                  style={previewAppearance.accentIconStyle}
-                >
-                  <ExternalLink
-                    className={cn("h-4 w-4", previewAppearance.iconColorClass)}
-                    style={previewAppearance.accentTextStyle}
-                  />
-                </div>
-              </div>
-              <div className="mt-4 space-y-3">
-                <div
-                  className={cn(
-                    "rounded-2xl border p-3",
-                    previewAppearance.surfaceMutedClass,
-                  )}
-                >
-                  <p
-                    className={cn(
-                      "text-sm font-medium",
-                      previewAppearance.primaryTextClass,
-                    )}
-                  >
-                    Theme system is synced
-                  </p>
-                  <p className={cn("text-xs", previewAppearance.mutedTextClass)}>
-                    Cards, buttons, and reviews now derive from one appearance
-                    source.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={cn("w-full", previewAppearance.buttonClass)}
-                  style={previewAppearance.accentButtonStyle}
-                >
-                  Preview button
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border bg-muted/30 p-4">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Status
-                </p>
-                <p className="mt-2 text-sm font-medium">
-                  {hasAppearanceChanges ? "Unsaved changes" : "Synced"}
-                </p>
-              </div>
-              <div className="rounded-2xl border bg-muted/30 p-4">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Contrast
-                </p>
-                <p className="mt-2 text-sm font-medium">
-                  {accentWarnings.length > 0 ? "Needs review" : "Looks solid"}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Button
-                type="button"
-                className="w-full"
-                onClick={() =>
-                  updateAppearanceMutation.mutate({
-                    theme: pendingTheme,
-                    backgroundPreset: pendingBackgroundPreset,
-                    gradientPreset:
-                      pendingBackgroundPreset === "gradient"
-                        ? (pendingGradientPreset ?? "default")
-                        : null,
-                    accentColor: pendingAccentColor,
-                  })
-                }
-                disabled={
-                  updateAppearanceMutation.isPending ||
-                  !hasAppearanceChanges ||
-                  !accentValidation.valid
-                }
-              >
-                {updateAppearanceMutation.isPending
-                  ? "Saving..."
-                  : "Publish Design"}
-              </Button>
+          <Card className="rounded-[24px] border border-slate-200/70 bg-white/70 shadow-[0_18px_60px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
-                onClick={resetDesign}
+                onClick={goToPreviousStep}
+                disabled={isFirstStep}
+                className="h-11 rounded-full border-slate-200 bg-white px-6 text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md disabled:translate-y-0 disabled:shadow-none"
               >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset To Neutral
+                Back
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="text-center text-sm text-slate-500">
+                Step {activeStep + 1} of {DESIGN_STEPS.length}
+              </div>
+              <Button
+                type="button"
+                onClick={goToNextStep}
+                disabled={isLastStep}
+                className="h-11 rounded-full bg-slate-950 px-6 text-white shadow-[0_10px_30px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-[0_16px_38px_rgba(15,23,42,0.2)] disabled:translate-y-0 disabled:shadow-none"
+              >
+                {activeStep === 2 ? "Show Preview" : "Continue"}
+              </Button>
+            </CardContent>
+          </Card>
       </div>
     </div>
   );
 });
+
+function PreviewSwatch({
+  backgroundPreset,
+  gradientPreset,
+  theme,
+}: {
+  backgroundPreset:
+    | "gradient"
+    | "antigravity"
+    | "aurora"
+    | "iridescence"
+    | null;
+  gradientPreset:
+    | "default"
+    | "ocean"
+    | "sunset"
+    | "forest"
+    | "berry"
+    | "royal"
+    | "ember"
+    | "mono"
+    | null;
+  theme: "light" | "dark";
+}) {
+  return (
+    <div
+      className={cn(
+        "relative h-24 overflow-hidden border-b border-slate-200/70",
+        backgroundPreset === null &&
+          (theme === "dark" ? "bg-slate-950" : "bg-slate-50"),
+      )}
+      style={
+        backgroundPreset === "gradient"
+          ? {
+              background: PROFILE_GRADIENT_OPTIONS.find(
+                (option) => option.key === (gradientPreset ?? "default"),
+              )?.bg,
+            }
+          : undefined
+      }
+    >
+      {backgroundPreset === null && (
+        <div className="absolute inset-4 rounded-2xl border border-slate-200/70 bg-white/70" />
+      )}
+      {backgroundPreset === "antigravity" && (
+        <Antigravity
+          count={60}
+          color="#FF9FFC"
+          particleSize={1.4}
+          className="absolute inset-0"
+        />
+      )}
+      {backgroundPreset === "aurora" && (
+        <Aurora
+          colorStops={["#5227FF", "#7cff67", "#5227FF"]}
+          amplitude={1}
+          blend={0.6}
+          className="absolute inset-0"
+        />
+      )}
+      {backgroundPreset === "iridescence" && (
+        <Iridescence
+          speed={1}
+          amplitude={0.1}
+          mouseReact={false}
+          className="absolute inset-0"
+        />
+      )}
+    </div>
+  );
+}

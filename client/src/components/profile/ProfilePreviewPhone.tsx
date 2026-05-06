@@ -104,24 +104,26 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   return (
     <div className="w-full max-w-[22rem] shrink-0 mx-auto xl:mx-0">
       <div className="xl:sticky xl:top-24">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-medium text-sm text-muted-foreground">
+        <div className="mb-4 flex items-center justify-between rounded-full border border-slate-200/70 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
             Live Preview
           </h3>
           <Link
             href={profileHref}
             target="_blank"
             className={cn(
-              "text-xs font-medium text-primary hover:underline",
+              "rounded-full px-2 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950",
               !username && "pointer-events-none opacity-50",
             )}
           >
-            Open public profile
+            Open
           </Link>
         </div>
 
-        <div className="border-[11px] border-slate-900 rounded-[2.64rem] h-[41.25rem] overflow-hidden bg-white shadow-2xl relative">
-          <div className="absolute top-0 inset-x-0 h-5.5 bg-slate-900 rounded-b-lg w-32 mx-auto z-20" />
+        <div className="relative rounded-[2.85rem] bg-linear-to-br from-slate-900 via-slate-800 to-black p-[7px] shadow-[0_28px_90px_rgba(15,23,42,0.22)]">
+          <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[3.4rem] bg-white/50 blur-2xl" />
+          <div className="relative h-[41.25rem] overflow-hidden rounded-[2.45rem] bg-white">
+          <div className="absolute top-0 inset-x-0 z-20 mx-auto h-5 w-28 rounded-b-2xl bg-black/90" />
 
           {appearance.usesDynamicBackground ? (
             <div
@@ -153,36 +155,36 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
 
           <div
             className={cn(
-              "h-full w-full overflow-y-auto flex flex-col relative z-10",
+              "scrollbar-stage relative z-10 flex h-full w-full flex-col overflow-y-auto",
               appearance.pageTextClass,
             )}
           >
             <div
               className={cn(
-                "px-4 pt-12 pb-6 flex flex-col items-center text-center shrink-0",
+                "flex shrink-0 flex-col items-center px-5 pb-7 pt-14 text-center",
                 appearance.usesDynamicBackground ? "bg-transparent" : appearance.pageBgClass,
               )}
             >
               <div
                 className={cn(
-                  "flex items-center gap-1.5 text-xs font-semibold mb-6",
+                  "mb-7 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]",
                   appearance.primaryTextClass,
                 )}
               >
-                <ShieldCheck className="w-3.5 h-3.5" fill="currentColor" />
+                <ShieldCheck className="h-3.5 w-3.5" />
                 MiddelMen
               </div>
 
               <div
                 className={cn(
-                  "h-20 w-20 rounded-full flex items-center justify-center shadow-lg mb-4 overflow-hidden border-4",
+                  "mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border shadow-[0_12px_34px_rgba(15,23,42,0.14)]",
                   appearance.usesDynamicBackground
                     ? appearance.usesBrightBackground
-                      ? "bg-slate-100 border-slate-300"
-                      : "bg-white/20 border-white/30"
+                      ? "bg-slate-100 border-white/80"
+                      : "bg-white/20 border-white/35"
                     : appearance.theme === "dark"
                       ? "bg-slate-700 border-slate-800"
-                      : "bg-slate-200 border-white/70",
+                      : "bg-slate-100 border-white",
                 )}
               >
                 <img
@@ -192,23 +194,23 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                 />
               </div>
 
-              <div className={cn("text-lg font-bold mb-1", appearance.primaryTextClass)}>
+              <div className={cn("mb-1 text-lg font-semibold tracking-tight", appearance.primaryTextClass)}>
                 {displayName}
               </div>
 
-              <div className={cn("text-xs mb-2", appearance.mutedTextClass)}>
+              <div className={cn("mb-3 text-xs", appearance.mutedTextClass)}>
                 @{username || "username"}
               </div>
 
               {bio ? (
-                <p className={cn("text-xs mb-4 line-clamp-2", appearance.mutedTextClass)}>
+                <p className={cn("mb-5 max-w-[17rem] text-xs leading-5 line-clamp-2", appearance.mutedTextClass)}>
                   {bio}
                 </p>
               ) : null}
 
               <div
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shadow-sm",
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md",
                   appearance.surfaceClass,
                 )}
                 style={appearance.accentButtonStyle}
@@ -220,12 +222,12 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 mt-3">
+              <div className="mt-4 flex items-center gap-2">
                 {phoneE164 && (
                   <a
                     href={`tel:${phoneE164}`}
                     className={cn(
-                      "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
+                      "flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-0.5",
                       appearance.contactButtonClass,
                     )}
                     style={appearance.accentIconStyle}
@@ -244,7 +246,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(
-                      "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
+                      "flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-0.5",
                       appearance.contactButtonClass,
                     )}
                     style={appearance.accentIconStyle}
@@ -261,7 +263,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                   <a
                     href={`mailto:${contactEmail}`}
                     className={cn(
-                      "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
+                      "flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 hover:-translate-y-0.5",
                       appearance.contactButtonClass,
                     )}
                     style={appearance.accentIconStyle}
@@ -278,7 +280,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
 
             <div
               className={cn(
-                "px-4 pb-6 space-y-4",
+                "space-y-4 px-5 pb-7",
                 appearance.usesDynamicBackground ? "bg-transparent" : appearance.pageBgClass,
               )}
             >
@@ -309,7 +311,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                       <div
                         key={link.id}
                         className={cn(
-                          "flex items-center justify-between rounded-2xl border transition-colors p-4 group cursor-pointer shadow-sm hover:shadow-md",
+                          "group flex cursor-pointer items-center justify-between rounded-[20px] border p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
                           appearance.surfaceClass,
                           appearance.usesDynamicBackground
                             ? appearance.usesBrightBackground
@@ -324,7 +326,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              "h-9 w-9 rounded-full border flex items-center justify-center",
+                              "flex h-9 w-9 items-center justify-center rounded-full border",
                               appearance.linkIconClass,
                             )}
                             style={appearance.accentIconStyle}
@@ -357,7 +359,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
               )}
 
               <div className={cn("border-t pt-4", appearance.dividerClass)}>
-                <div className={cn("text-sm font-semibold mb-3", appearance.primaryTextClass)}>
+                <div className={cn("mb-3 text-sm font-semibold", appearance.primaryTextClass)}>
                   Recent Reviews
                 </div>
                 <div className="space-y-3">
@@ -365,7 +367,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <div
                       key={review.id}
                       className={cn(
-                        "rounded-xl border p-3 shadow-sm",
+                        "rounded-[18px] border p-3 shadow-sm",
                         appearance.surfaceClass,
                       )}
                       style={appearance.accentCardStyle}
@@ -396,6 +398,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 });
