@@ -35,6 +35,7 @@ type ProfilePreviewPhoneProps = {
   backgroundPreset?: ProfileBackgroundPreset;
   gradientPreset?: ProfileGradientPreset;
   accentColor?: string | null;
+  compact?: boolean;
 };
 
 const MOCK_REVIEWS = [
@@ -75,6 +76,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   backgroundPreset,
   gradientPreset,
   accentColor,
+  compact = false,
 }: ProfilePreviewPhoneProps) {
   const activeLinks = useMemo(
     () => links.filter((link) => link.isActive),
@@ -102,7 +104,12 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   });
 
   return (
-    <div className="w-full max-w-[22rem] shrink-0 mx-auto xl:mx-0">
+    <div
+      className={cn(
+        "w-full shrink-0 mx-auto xl:mx-0",
+        compact ? "max-w-[19rem]" : "max-w-[22rem]",
+      )}
+    >
       <div className="xl:sticky xl:top-24">
         <div className="mb-4 flex items-center justify-between rounded-full border border-slate-200/70 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl">
           <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -120,9 +127,23 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
           </Link>
         </div>
 
-        <div className="relative rounded-[2.85rem] bg-linear-to-br from-slate-900 via-slate-800 to-black p-[7px] shadow-[0_28px_90px_rgba(15,23,42,0.22)]">
+        <div
+          className={cn(
+            "relative bg-linear-to-br from-slate-900 via-slate-800 to-black shadow-[0_28px_90px_rgba(15,23,42,0.22)]",
+            compact
+              ? "rounded-[2.35rem] p-[6px]"
+              : "rounded-[2.85rem] p-[7px]",
+          )}
+        >
           <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[3.4rem] bg-white/50 blur-2xl" />
-          <div className="relative h-[41.25rem] overflow-hidden rounded-[2.45rem] bg-white">
+          <div
+            className={cn(
+              "relative overflow-hidden bg-white",
+              compact
+                ? "h-[34rem] rounded-[2rem]"
+                : "h-[41.25rem] rounded-[2.45rem]",
+            )}
+          >
           <div className="absolute top-0 inset-x-0 z-20 mx-auto h-5 w-28 rounded-b-2xl bg-black/90" />
 
           {appearance.usesDynamicBackground ? (

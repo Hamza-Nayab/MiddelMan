@@ -1251,6 +1251,7 @@ export default function Dashboard() {
                       backgroundPreset={pendingBackgroundPreset}
                       gradientPreset={pendingGradientPreset}
                       accentColor={pendingAccentColor}
+                      compact
                     />
                   }
                 />

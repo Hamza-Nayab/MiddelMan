@@ -160,7 +160,7 @@ const ACCENT_SWATCHES = [
 ];
 
 const studioCardClass =
-  "rounded-[24px] border border-slate-200/70 bg-white/82 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur-xl";
+  "rounded-2xl border border-slate-200/70 bg-white/82 shadow-[0_14px_42px_rgba(15,23,42,0.05)] backdrop-blur-xl";
 
 const liftClass =
   "transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]";
@@ -232,63 +232,66 @@ export const AppearanceTab = memo(function AppearanceTab({
   };
 
   return (
-    <div className="-mx-4 rounded-[32px] bg-[#F5F5F7] px-4 py-6 sm:-mx-6 sm:px-6 lg:py-10">
-      <div className="mx-auto max-w-6xl space-y-10">
-          <Card className="overflow-hidden rounded-[28px] border border-white/80 bg-white/70 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <CardContent className="p-0">
-              <div className="relative overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#f7f7f9_48%,#edf3f7_100%)] px-6 py-10 text-slate-950 sm:px-10 sm:py-12">
-                <div className="absolute inset-x-8 bottom-0 h-px bg-linear-to-r from-transparent via-slate-300/70 to-transparent" />
-                <div className="relative space-y-10">
-                  <div className="max-w-3xl">
-                    <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-950/5 bg-white/65 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 shadow-sm backdrop-blur-md">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Design Studio
-                    </div>
-                    <h3 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-5xl">
-                      Design your profile in one calm, spacious flow.
-                    </h3>
-                    <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                      Move step by step from a curated style to a polished
-                      public profile preview.
-                    </p>
-                  </div>
+    <div className="-mx-4 rounded-2xl bg-[#F5F5F7] px-3 py-4 sm:-mx-6 sm:px-5 lg:py-5">
+      <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[20rem_minmax(0,1fr)]">
+        {previewSlot && (
+          <aside className="order-2 xl:order-1">
+            <div className="xl:sticky xl:top-20">{previewSlot}</div>
+          </aside>
+        )}
 
-                  <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
-                    {[
-                      ["Theme", pendingTheme],
-                      ["Background", pendingBackgroundPreset ?? "None"],
-                      ["Accent", pendingAccentColor ?? "Default"],
-                    ].map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="min-w-0 rounded-3xl border border-white/80 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-xl"
-                      >
-                        <p className="truncate text-[10px] uppercase tracking-[0.16em] text-slate-400">
-                          {label}
-                        </p>
-                        <div className="mt-1 flex min-w-0 items-center gap-2 text-sm font-semibold capitalize text-slate-950">
-                          {label === "Accent" && (
-                            <span
-                              className="h-3.5 w-3.5 shrink-0 rounded-full border border-slate-200"
-                              style={{
-                                backgroundColor:
-                                  pendingAccentColor ?? "transparent",
-                              }}
-                            />
-                          )}
-                          <span className="truncate">{value}</span>
-                        </div>
-                      </div>
-                    ))}
+        <div className="order-1 min-w-0 space-y-4 xl:order-2">
+          <Card className="rounded-2xl border border-white/80 bg-white/80 shadow-[0_14px_42px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-950/5 bg-white/75 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 shadow-sm backdrop-blur-md">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Design Studio
                   </div>
+                  <h3 className="text-2xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-3xl">
+                    Design your seller profile
+                  </h3>
+                  <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
+                    Preview stays beside every step while you tune the profile.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-left lg:min-w-[24rem]">
+                  {[
+                    ["Theme", pendingTheme],
+                    ["Background", pendingBackgroundPreset ?? "None"],
+                    ["Accent", pendingAccentColor ?? "Default"],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="min-w-0 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2 shadow-sm backdrop-blur-xl"
+                    >
+                      <p className="truncate text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                        {label}
+                      </p>
+                      <div className="mt-1 flex min-w-0 items-center gap-2 text-sm font-semibold capitalize text-slate-950">
+                        {label === "Accent" && (
+                          <span
+                            className="h-3.5 w-3.5 shrink-0 rounded-full border border-slate-200"
+                            style={{
+                              backgroundColor:
+                                pendingAccentColor ?? "transparent",
+                            }}
+                          />
+                        )}
+                        <span className="truncate">{value}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className={studioCardClass}>
-            <CardContent className="p-4 sm:p-5">
-              <div className="grid gap-3 sm:grid-cols-4">
+            <CardContent className="p-2 sm:p-3">
+              <div className="grid gap-2 sm:grid-cols-4">
                 {DESIGN_STEPS.map((step, index) => {
                   const isActive = activeStep === index;
                   const isComplete = activeStep > index;
@@ -299,7 +302,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                       type="button"
                       onClick={() => setActiveStep(index)}
                       className={cn(
-                        "rounded-[22px] border p-4 text-left transition-all duration-200",
+                        "rounded-xl border p-3 text-left transition-all duration-200",
                         isActive
                           ? "border-slate-950/45 bg-slate-950 text-white shadow-[0_16px_38px_rgba(15,23,42,0.16)]"
                           : "border-slate-200/70 bg-white/76 text-slate-950 hover:-translate-y-0.5 hover:shadow-md",
@@ -329,7 +332,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                           </p>
                           <p
                             className={cn(
-                              "mt-1 text-xs leading-4",
+                              "mt-0.5 hidden text-xs leading-4 md:block",
                               isActive ? "text-white/64" : "text-slate-500",
                             )}
                           >
@@ -344,27 +347,9 @@ export const AppearanceTab = memo(function AppearanceTab({
             </CardContent>
           </Card>
 
-          {activeStep === 3 && previewSlot && (
-            <Card className="overflow-hidden rounded-[32px] border border-slate-200/70 bg-white/76 shadow-[0_24px_80px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-              <CardContent className="p-0">
-                <div className="border-b border-slate-200/70 px-6 py-6 sm:px-10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Live Canvas
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    Preview the exact buyer-facing profile.
-                  </h3>
-                </div>
-                <div className="flex justify-center bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.95),_rgba(245,245,247,0.72)_58%,_rgba(237,241,245,0.88)_100%)] px-6 py-10 sm:py-12">
-                  {previewSlot}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {activeStep === 3 && (
           <Card className={studioCardClass}>
-            <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+            <CardHeader className="px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
               <CardTitle className="text-xl font-semibold text-slate-950">
                 Current Direction
               </CardTitle>
@@ -372,10 +357,10 @@ export const AppearanceTab = memo(function AppearanceTab({
                 Final check before publishing.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
+            <CardContent className="space-y-4 px-4 pb-4 sm:px-5 sm:pb-5">
               <div
                 className={cn(
-                  "rounded-[24px] border p-5 shadow-sm",
+                  "rounded-xl border p-4 shadow-sm",
                   previewAppearance.surfaceClass,
                 )}
                 style={previewAppearance.accentCardStyle}
@@ -401,7 +386,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                   </div>
                   <div
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-full border",
+                      "flex h-9 w-9 items-center justify-center rounded-full border",
                       previewAppearance.linkIconClass,
                     )}
                     style={previewAppearance.accentIconStyle}
@@ -474,7 +459,7 @@ export const AppearanceTab = memo(function AppearanceTab({
 
           {activeStep === 0 && (
           <Card className={studioCardClass}>
-            <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+            <CardHeader className="px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
               <CardTitle className="flex items-center gap-2 text-xl font-semibold text-slate-950">
                 <Wand2 className="h-4 w-4" />
                 Quick Presets
@@ -483,14 +468,14 @@ export const AppearanceTab = memo(function AppearanceTab({
                 Curated starting points, tuned for buyer trust.
               </CardDescription>
             </CardHeader>
-            <CardContent className="scrollbar-minimal flex gap-4 overflow-x-auto px-6 pb-6 pt-2 sm:px-8 sm:pb-8">
+            <CardContent className="scrollbar-minimal flex gap-3 overflow-x-auto px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
               {DESIGN_PRESETS.map((preset) => (
                 <button
                   key={preset.key}
                   type="button"
                   onClick={() => applyPreset(preset)}
                   className={cn(
-                    "group min-w-[184px] overflow-hidden rounded-[22px] border border-slate-200/70 bg-white text-left shadow-sm",
+                    "group min-w-[168px] overflow-hidden rounded-xl border border-slate-200/70 bg-white text-left shadow-sm",
                     liftClass,
                   )}
                 >
@@ -520,9 +505,9 @@ export const AppearanceTab = memo(function AppearanceTab({
           )}
 
           {activeStep === 1 && (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Card className={studioCardClass}>
-              <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+              <CardHeader className="px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
                 <CardTitle className="text-xl font-semibold text-slate-950">
                   Base Theme
                 </CardTitle>
@@ -530,14 +515,14 @@ export const AppearanceTab = memo(function AppearanceTab({
                   Overall brightness and surface tone.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-3 px-6 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8">
+              <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 sm:px-5 sm:pb-5">
                 {PROFILE_THEME_OPTIONS.map((option) => (
                   <button
                     key={option.key}
                     type="button"
                     onClick={() => setPendingTheme(option.key)}
                     className={cn(
-                      "group relative overflow-hidden rounded-[22px] border bg-white p-4 text-left",
+                      "group relative overflow-hidden rounded-xl border bg-white p-3 text-left",
                       liftClass,
                       pendingTheme === option.key
                         ? "border-slate-950/50 ring-4 ring-slate-950/5"
@@ -554,7 +539,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                     >
                       <div
                         className={cn(
-                          "mb-3 h-10 rounded-xl",
+                          "mb-3 h-8 rounded-lg",
                           option.key === "dark" ? "bg-slate-900" : "bg-white",
                         )}
                       />
@@ -598,7 +583,7 @@ export const AppearanceTab = memo(function AppearanceTab({
             </Card>
 
             <Card className={studioCardClass}>
-              <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+              <CardHeader className="px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
                 <CardTitle className="text-xl font-semibold text-slate-950">
                   Background Mood
                 </CardTitle>
@@ -606,7 +591,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                   Subtle atmosphere with readable content.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-3 px-6 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8">
+              <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 sm:px-5 sm:pb-5">
                 {BACKGROUND_OPTIONS.map((option) => (
                   <button
                     key={option.label}
@@ -621,7 +606,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                       }
                     }}
                     className={cn(
-                      "overflow-hidden rounded-[22px] border bg-white text-left",
+                      "overflow-hidden rounded-xl border bg-white text-left",
                       liftClass,
                       pendingBackgroundPreset === option.key
                         ? "border-slate-950/50 ring-4 ring-slate-950/5"
@@ -655,7 +640,7 @@ export const AppearanceTab = memo(function AppearanceTab({
 
           {activeStep === 1 && pendingBackgroundPreset === "gradient" && (
             <Card className={studioCardClass}>
-              <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+              <CardHeader className="px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
                 <CardTitle className="text-xl font-semibold text-slate-950">
                   Gradient Variations
                 </CardTitle>
@@ -663,14 +648,14 @@ export const AppearanceTab = memo(function AppearanceTab({
                   Choose a restrained palette for your profile.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-4 px-6 pb-6 sm:grid-cols-2 sm:px-8 sm:pb-8 lg:grid-cols-3 2xl:grid-cols-4">
+              <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 sm:px-5 sm:pb-5 lg:grid-cols-3 2xl:grid-cols-4">
                 {PROFILE_GRADIENT_OPTIONS.map(({ key, label, bg }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setPendingGradientPreset(key)}
                     className={cn(
-                      "overflow-hidden rounded-[22px] border bg-white text-left",
+                      "overflow-hidden rounded-xl border bg-white text-left",
                       liftClass,
                       pendingGradientPreset === key
                         ? "border-slate-950/50 ring-4 ring-slate-950/5"
@@ -678,7 +663,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                     )}
                   >
                     <div
-                      className="h-24 border-b border-slate-200/70"
+                      className="h-16 border-b border-slate-200/70"
                       style={{ background: bg }}
                     />
                     <div className="flex items-center justify-between p-4">
@@ -697,7 +682,7 @@ export const AppearanceTab = memo(function AppearanceTab({
 
           {activeStep === 2 && (
           <Card className={studioCardClass}>
-            <CardHeader className="px-6 pb-3 pt-6 sm:px-8 sm:pt-8">
+            <CardHeader className="px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
               <CardTitle className="flex items-center gap-2 text-xl font-semibold text-slate-950">
                 <Palette className="h-4 w-4" />
                 Accent Color
@@ -706,7 +691,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                 One quiet brand color for key actions.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
+            <CardContent className="space-y-4 px-4 pb-4 sm:px-5 sm:pb-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex items-center gap-3">
                   <input
@@ -793,7 +778,7 @@ export const AppearanceTab = memo(function AppearanceTab({
                     )}
                   >
                     <div
-                      className="mb-3 h-10 rounded-2xl border border-black/5"
+                      className="mb-2 h-8 rounded-xl border border-black/5"
                       style={{ backgroundColor: swatch }}
                     />
                     <p className="font-mono text-xs text-slate-500">
@@ -806,8 +791,8 @@ export const AppearanceTab = memo(function AppearanceTab({
           </Card>
           )}
 
-          <Card className="rounded-[24px] border border-slate-200/70 bg-white/70 shadow-[0_18px_60px_rgba(15,23,42,0.05)] backdrop-blur-xl">
-            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white/70 shadow-[0_14px_42px_rgba(15,23,42,0.04)] backdrop-blur-xl">
+            <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
               <Button
                 type="button"
                 variant="outline"
@@ -830,6 +815,7 @@ export const AppearanceTab = memo(function AppearanceTab({
               </Button>
             </CardContent>
           </Card>
+        </div>
       </div>
     </div>
   );
@@ -861,7 +847,7 @@ function PreviewSwatch({
   return (
     <div
       className={cn(
-        "relative h-24 overflow-hidden border-b border-slate-200/70",
+        "relative h-16 overflow-hidden border-b border-slate-200/70",
         backgroundPreset === null &&
           (theme === "dark" ? "bg-slate-950" : "bg-slate-50"),
       )}
