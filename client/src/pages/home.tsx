@@ -150,7 +150,9 @@ export default function Home() {
                       "linear-gradient(135deg, #253c97 0%, #38b6ff 100%)",
                   }}
                 >
-                  Build Trust Before They Pay.
+                  Build Trust
+                  <br />
+                  Then Pay.
                 </h1>
                 <p className="text-lg md:text-xl text-gray-700 max-w-lg leading-relaxed">
                   Create a public{" "}
@@ -329,7 +331,7 @@ export default function Home() {
               >
                 <img
                   src="/illustrations/Hero.svg"
-                  alt="Build Trust Before They Pay"
+                  alt="Build Trust Then Pay"
                   className="w-1/2 h-full object-contain hero-svg-animation"
                   style={{
                     filter: "drop-shadow(0 4px 12px rgba(37,60,151,0.08))",

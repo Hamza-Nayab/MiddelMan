@@ -146,7 +146,11 @@ export const ReviewsTab = memo(function ReviewsTab({
                     }}
                   >
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 text-xs">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                      >
                         <MessageSquare className="w-3 h-3 mr-2" />
                         {review.sellerResponse ? "Edit Response" : "Respond"}
                       </Button>
@@ -195,7 +199,8 @@ export const ReviewsTab = memo(function ReviewsTab({
                           <Button
                             type="button"
                             disabled={
-                              isSavingResponse || responseDraft.trim().length === 0
+                              isSavingResponse ||
+                              responseDraft.trim().length === 0
                             }
                             onClick={() => {
                               onSaveResponse(
@@ -205,7 +210,9 @@ export const ReviewsTab = memo(function ReviewsTab({
                               setResponseDialogOpen(null);
                             }}
                           >
-                            {isSavingResponse ? "Saving..." : "Publish Response"}
+                            {isSavingResponse
+                              ? "Saving..."
+                              : "Publish Response"}
                           </Button>
                         </DialogFooter>
                       </div>
@@ -285,7 +292,7 @@ export const ReviewsTab = memo(function ReviewsTab({
                             name="message"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Message (Optional)</FormLabel>
+                                <FormLabel>Message</FormLabel>
                                 <FormControl>
                                   <Textarea
                                     placeholder="Provide more details about your dispute..."
@@ -368,7 +375,8 @@ export const ReviewsTab = memo(function ReviewsTab({
                               type="submit"
                               disabled={
                                 createDisputeMutation.isPending ||
-                                uploadEvidenceMutation.isPending
+                                uploadEvidenceMutation.isPending ||
+                                !disputeForm.formState.isValid
                               }
                             >
                               {createDisputeMutation.isPending ||

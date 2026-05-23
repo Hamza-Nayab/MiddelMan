@@ -75,7 +75,18 @@ export const UserTable = memo(function UserTable({
                   <span className="font-semibold truncate">
                     {user.username || "(no username)"}
                   </span>
-                  <Badge variant={getRoleBadgeColor(user.role)}>{user.role}</Badge>
+                  <Badge
+                    variant={getRoleBadgeColor(user.role)}
+                    className={
+                      user.role === "seller"
+                        ? "!bg-emerald-500 !text-white !border-transparent"
+                        : user.role === "user" || user.role === "buyer"
+                        ? "text-white"
+                        : undefined
+                    }
+                  >
+                    {user.role}
+                  </Badge>
                   {user.isMasterAdmin && <Badge variant="destructive">Master Admin</Badge>}
                   {user.isDisabled && (
                     <Badge variant="outline">

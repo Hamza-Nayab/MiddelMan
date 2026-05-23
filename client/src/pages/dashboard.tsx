@@ -148,7 +148,10 @@ const ProfileFormSchema = z
 
 const DisputeFormSchema = z.object({
   reason: z.string().min(1, "Please select a reason"),
-  message: z.string().max(1000).optional(),
+  message: z
+    .string()
+    .min(1, "Please provide more details about your dispute")
+    .max(1000),
 });
 
 const formatDayLabel = (day: string) =>
@@ -807,6 +810,7 @@ export default function Dashboard() {
 
   const disputeForm = useForm<z.infer<typeof DisputeFormSchema>>({
     resolver: zodResolver(DisputeFormSchema),
+    mode: "onChange",
     defaultValues: {
       reason: "",
       message: "",
