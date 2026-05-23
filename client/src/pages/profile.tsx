@@ -704,56 +704,6 @@ export default function ProfilePage() {
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold">Trust Snapshot</p>
-                    <p className={cn("mt-1 text-sm leading-6", appearance.mutedTextClass)}>
-                      Buyers can quickly see this seller&apos;s rating, review count, and verification progress before reaching out.
-                    </p>
-                  </div>
-                  <div
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
-                      appearance.surfaceClass,
-                    )}
-                    style={appearance.accentButtonStyle}
-                  >
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    {averageRating}
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-1">
-                  <div className={cn("rounded-2xl border p-4", appearance.surfaceClass)}>
-                    <p className={cn("text-xs uppercase tracking-[0.18em]", appearance.mutedTextClass)}>
-                      Verification
-                    </p>
-                    <p className="mt-2 font-semibold">
-                      {profile.isVerified
-                        ? "Approved"
-                        : profile.verificationStatus.replace("_", " ")}
-                    </p>
-                  </div>
-                  <div className={cn("rounded-2xl border p-4", appearance.surfaceClass)}>
-                    <p className={cn("text-xs uppercase tracking-[0.18em]", appearance.mutedTextClass)}>
-                      Buyer Confidence
-                    </p>
-                    <p className="mt-2 font-semibold">
-                      {reviewStats.totalReviews > 0
-                        ? "Live social proof"
-                        : "Building first reviews"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className={cn(
-                  "rounded-[1.75rem] border p-5",
-                  appearance.surfaceMutedClass,
-                )}
-                style={appearance.accentCardStyle}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
                     <p className="text-sm font-semibold">Actions</p>
                     <p className={cn("mt-1 text-sm", appearance.mutedTextClass)}>
                       Share this profile, contact the seller, or raise a concern.
@@ -996,8 +946,8 @@ export default function ProfilePage() {
                   </Dialog>
                 ) : null}
               </div>
-              </div>
             </div>
+          </div>
           </div>
         </motion.section>
 
@@ -1253,21 +1203,6 @@ export default function ProfilePage() {
               </div>
             </motion.section>
 
-            <motion.section
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08 }}
-              className={cn("rounded-[1.75rem] border p-5", appearance.surfaceClass)}
-              style={appearance.accentCardStyle}
-            >
-              <p className={cn("text-xs uppercase tracking-[0.22em]", appearance.mutedTextClass)}>
-                Why It Matters
-              </p>
-              <h2 className="mt-2 text-xl font-semibold">Trust-first storefront</h2>
-              <p className={cn("mt-2 text-sm leading-6", appearance.mutedTextClass)}>
-                This profile combines identity, reviews, and direct buying links in one place so buyers can verify before they message or pay.
-              </p>
-            </motion.section>
           </div>
         </div>
 
