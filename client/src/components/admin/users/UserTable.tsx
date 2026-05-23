@@ -81,13 +81,15 @@ export const UserTable = memo(function UserTable({
                       user.role === "seller"
                         ? "!bg-emerald-500 !text-white !border-transparent"
                         : user.role === "user" || user.role === "buyer"
-                        ? "text-white"
-                        : undefined
+                          ? "text-white"
+                          : undefined
                     }
                   >
                     {user.role}
                   </Badge>
-                  {user.isMasterAdmin && <Badge variant="destructive">Master Admin</Badge>}
+                  {user.isMasterAdmin && (
+                    <Badge variant="destructive">Master Admin</Badge>
+                  )}
                   {user.isDisabled && (
                     <Badge variant="outline">
                       <AlertCircle className="w-3 h-3 mr-1" />
