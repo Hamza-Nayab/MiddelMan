@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { platformOptions } from "@/lib/graphics";
 import { type Link as LinkType } from "@/lib/api";
-import { Plus, GripVertical, Trash2 } from "lucide-react";
+import { Plus, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 type LinksTabProps = {
   isAddLinkOpen: boolean;
@@ -84,6 +84,48 @@ export const LinksTab = memo(function LinksTab({
   isSavingChanges,
   onSaveChanges,
 }: LinksTabProps) {
+  const handleMoveUp = (id: number) => {
+    const index = orderedLinks.findIndex((link) => link.id === id);
+    if (index > 0) {
+      moveLink(id, orderedLinks[index - 1].id);
+    }
+  };
+
+  const handleMoveDown = (id: number) => {
+    const index = orderedLinks.findIndex((link) => link.id === id);
+    if (index < orderedLinks.length - 1) {
+      moveLink(id, orderedLinks[index + 1].id);
+    }
+  };
+
+  const handleTouchStart = (event: React.TouchEvent, linkId: number) => {
+    setDraggedLinkId(linkId);
+    dragStartOrderRef.current = orderedLinks.map((item) => item.id);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent, linkId: number) => {
+    if (draggedLinkId === null) return;
+    
+    const touch = event.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+    
+    const cardElement = element.closest("[data-link-id]");
+    if (!cardElement) return;
+    
+    const targetId = Number(cardElement.getAttribute("data-link-id"));
+    if (Number.isNaN(targetId) || targetId === draggedLinkId) return;
+    
+    moveLink(draggedLinkId, targetId);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent, linkId: number) => {
+    if (draggedLinkId !== null) {
+      handleLinkDrop(linkId, draggedLinkId);
+      setDraggedLinkId(null);
+    }
+  };
+
   return (
     <>
       <Dialog open={isAddLinkOpen} onOpenChange={setIsAddLinkOpen}>
@@ -218,10 +260,14 @@ export const LinksTab = memo(function LinksTab({
             </p>
           </div>
         ) : (
-          orderedLinks?.map((link) => (
+          orderedLinks?.map((link, index) => (
             <Card
               key={link.id}
-              className="group hover:shadow-md transition-shadow"
+              data-link-id={link.id}
+              className={cn(
+                "group hover:shadow-md transition-shadow",
+                draggedLinkId === link.id && "opacity-50 border-primary border-2",
+              )}
               draggable
               onDragStart={(event) => {
                 setDraggedLinkId(link.id);
@@ -250,23 +296,51 @@ export const LinksTab = memo(function LinksTab({
                 );
               }}
             >
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="cursor-move text-muted-foreground/50 hover:text-muted-foreground">
-                  <GripVertical className="w-5 h-5" />
+              <CardContent className="p-3 sm:p-4 flex items-center gap-2 sm:gap-4">
+                {/* Reordering Controls */}
+                <div className="flex items-center shrink-0 select-none">
+                  {/* Desktop Grip Handle (PC screen only) */}
+                  <div className="hidden md:block cursor-move text-muted-foreground/45 hover:text-muted-foreground p-1.5 rounded-md hover:bg-muted">
+                    <GripVertical className="w-5 h-5" />
+                  </div>
+                  
+                  {/* Mobile Up/Down Arrows (Phone screen only) */}
+                  <div className="flex flex-col gap-0.5 md:hidden">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:bg-muted disabled:opacity-20 shrink-0"
+                      disabled={index === 0}
+                      onClick={() => handleMoveUp(link.id)}
+                      aria-label="Move Link Up"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:bg-muted disabled:opacity-20 shrink-0"
+                      disabled={index === orderedLinks.length - 1}
+                      onClick={() => handleMoveDown(link.id)}
+                      aria-label="Move Link Down"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
                   {(() => {
                     const Icon = getPlatformIcon(link.icon);
-                    return <Icon className="h-6 w-6" />;
+                    return <Icon className="h-5 w-5 sm:h-6 sm:w-6" />;
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{link.title}</h3>
-                  <p className="text-sm text-muted-foreground truncate">
+                  <h3 className="font-semibold text-sm sm:text-base truncate">{link.title}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
                     {link.url}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   <Switch
                     checked={link.isActive}
                     onCheckedChange={(checked) =>
@@ -276,7 +350,7 @@ export const LinksTab = memo(function LinksTab({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-destructive hover:bg-destructive/10"
+                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
                     onClick={() => deleteLinkMutation.mutate(link.id)}
                   >
                     <Trash2 className="w-4 h-4" />

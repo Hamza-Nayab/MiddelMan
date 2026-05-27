@@ -996,7 +996,7 @@ export default function Dashboard() {
         <div className="flex flex-col xl:flex-row gap-8 items-start">
           {/* Main Content Area */}
           <div className="flex-1 space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold font-heading">Dashboard</h1>
                 <p className="text-muted-foreground">
@@ -1005,7 +1005,7 @@ export default function Dashboard() {
               </div>
               <Link
                 href={user.username ? `/${user.username}` : "/"}
-                className={cn(buttonVariants({ variant: "outline" }), "gap-2")}
+                className={cn(buttonVariants({ variant: "outline" }), "gap-2 w-fit")}
               >
                 View Profile <ExternalLink className="w-4 h-4" />
               </Link>
@@ -1025,7 +1025,7 @@ export default function Dashboard() {
                           link.
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <div className="text-2xl font-bold">
                           {onboardingProgress}%
                         </div>
@@ -1265,24 +1265,26 @@ export default function Dashboard() {
 
           {/* Preview Phone */}
           {activeTab !== "appearance" && (
-            <ProfilePreviewPhone
-              displayName={watchedDisplayName || profile.displayName}
-              username={user.username || ""}
-              bio={watchedBio || profile.bio}
-              avatarValue={watchedAvatar || profile.avatarUrl}
-              userId={user.id}
-              links={orderedLinks.filter((link) => link.isActive)}
-              avgRating={reviewStats.avgRating}
-              totalReviews={reviewStats.totalReviews}
-              phoneNumber={watchedPhoneNumber || profile.phoneNumber}
-              whatsappNumber={watchedWhatsAppNumber || profile.whatsappNumber}
-              countryCode={watchedCountryCode || profile.countryCode}
-              contactEmail={watchedContactEmail || profile.contactEmail}
-              theme={pendingTheme}
-              backgroundPreset={pendingBackgroundPreset}
-              gradientPreset={pendingGradientPreset}
-              accentColor={pendingAccentColor}
-            />
+            <div className="w-full xl:w-auto mt-8 xl:mt-0 flex justify-center">
+              <ProfilePreviewPhone
+                displayName={watchedDisplayName || profile.displayName}
+                username={user.username || ""}
+                bio={watchedBio || profile.bio}
+                avatarValue={watchedAvatar || profile.avatarUrl}
+                userId={user.id}
+                links={orderedLinks.filter((link) => link.isActive)}
+                avgRating={reviewStats.avgRating}
+                totalReviews={reviewStats.totalReviews}
+                phoneNumber={watchedPhoneNumber || profile.phoneNumber}
+                whatsappNumber={watchedWhatsAppNumber || profile.whatsappNumber}
+                countryCode={watchedCountryCode || profile.countryCode}
+                contactEmail={watchedContactEmail || profile.contactEmail}
+                theme={pendingTheme}
+                backgroundPreset={pendingBackgroundPreset}
+                gradientPreset={pendingGradientPreset}
+                accentColor={pendingAccentColor}
+              />
+            </div>
           )}
         </div>
       </div>

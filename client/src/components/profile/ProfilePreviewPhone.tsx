@@ -107,7 +107,9 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
     <div
       className={cn(
         "w-full shrink-0 mx-auto xl:mx-0",
-        compact ? "max-w-[19rem]" : "max-w-[22rem]",
+        compact
+          ? "max-w-[250px] min-[360px]:max-w-[280px] min-[400px]:max-w-[290px] sm:max-w-[19rem]"
+          : "max-w-[270px] min-[360px]:max-w-[310px] min-[400px]:max-w-[330px] sm:max-w-[22rem]",
       )}
     >
       <div className="xl:sticky xl:top-24">

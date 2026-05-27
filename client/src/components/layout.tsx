@@ -5,10 +5,17 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Menu, X, Search } from "lucide-react";
 import logoImg from "@/assets/middelman-bg.png";
 import { NotificationBell } from "@/components/notification-bell";
 import { useMeQuery } from "@/hooks/use-me";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export function Layout({
   children,
@@ -35,6 +42,7 @@ export function Layout({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) {
@@ -76,7 +84,8 @@ export function Layout({
             MiddelMen
           </Link>
 
-          <div className="flex items-center gap-4">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-4">
             <form
               onSubmit={handleSearchSubmit}
               className={cn(
@@ -183,6 +192,150 @@ export function Layout({
                 <Button>Get Started</Button>
               </Link>
             )}
+          </div>
+
+          {/* Mobile Navigation Controls */}
+          <div className="flex md:hidden items-center gap-2">
+            {user && <NotificationBell />}
+            
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Toggle Menu" className="h-9 w-9">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[350px] p-6 flex flex-col justify-between bg-background/95 backdrop-blur-md">
+                <div className="flex flex-col gap-6">
+                  <SheetHeader className="text-left border-b pb-4">
+                    <SheetTitle>
+                      <Link
+                        href="/"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="font-heading font-bold text-xl tracking-tight text-primary flex items-center gap-2"
+                      >
+                        <img
+                          src={logoImg}
+                          alt=""
+                          className="h-8 w-8 rounded-[4px] object-cover"
+                        />
+                        MiddelMen
+                      </Link>
+                    </SheetTitle>
+                  </SheetHeader>
+
+                  {/* Mobile Search */}
+                  <form
+                    onSubmit={(e) => {
+                      handleSearchSubmit(e);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="relative"
+                  >
+                    <Input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-10 rounded-full border-border bg-muted/40 pl-10 pr-4 text-sm w-full focus:bg-background transition-all"
+                    />
+                    <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
+                  </form>
+
+                  {/* Navigation Links */}
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href="/about"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
+                        location === "/about" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      About
+                    </Link>
+
+                    {user && (
+                      <>
+                        {user.role === "seller" && (
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
+                              location === "/dashboard" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                            )}
+                          >
+                            Dashboard
+                          </Link>
+                        )}
+                        {user.role === "buyer" && (
+                          <Link
+                            href="/my-reviews"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
+                              location === "/my-reviews" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                            )}
+                          >
+                            My Reviews
+                          </Link>
+                        )}
+                        {user.role === "admin" && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
+                              location === "/admin" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                            )}
+                          >
+                            Admin
+                          </Link>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer section in Drawer */}
+                <div className="pt-6 border-t border-border mt-auto">
+                  {user ? (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-3 px-3">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-foreground">
+                            {profile?.displayName || user.username || "Account"}
+                          </span>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {user.role} Account
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full flex items-center justify-center gap-2 border-danger text-danger hover:bg-danger/10 hover:text-danger active:bg-danger/20 transition-all duration-300"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          logoutMutation.mutate();
+                        }}
+                        disabled={logoutMutation.isPending}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Log Out
+                      </Button>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/auth"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full"
+                    >
+                      <Button className="w-full justify-center text-sm font-medium">Get Started</Button>
+                    </Link>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </nav>

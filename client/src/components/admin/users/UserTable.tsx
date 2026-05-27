@@ -80,7 +80,7 @@ export const UserTable = memo(function UserTable({
                     className={
                       user.role === "seller"
                         ? "!bg-emerald-500 !text-white !border-transparent"
-                        : user.role === "user" || user.role === "buyer"
+                        : user.role === "buyer"
                           ? "text-white"
                           : undefined
                     }
