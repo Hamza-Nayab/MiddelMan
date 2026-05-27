@@ -595,7 +595,9 @@ export default function ProfilePage() {
                         : "border-white/70",
                   )}
                 >
-                  <AvatarImage src={getAvatarUrl(profile.avatarUrl, user?.id)} />
+                  <AvatarImage
+                    src={getAvatarUrl(profile.avatarUrl, user?.id)}
+                  />
                   <AvatarFallback>
                     {user.username?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
@@ -663,7 +665,10 @@ export default function ProfilePage() {
                 {[
                   { label: "Trust Badge", value: trustBadgeLabel },
                   { label: "Joined", value: joinedLabel },
-                  { label: "Total Reviews", value: String(reviewStats.totalReviews) },
+                  {
+                    label: "Total Reviews",
+                    value: String(reviewStats.totalReviews),
+                  },
                   { label: "Average Rating", value: averageRating },
                 ].map((item) => (
                   <div
@@ -705,8 +710,11 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">Actions</p>
-                    <p className={cn("mt-1 text-sm", appearance.mutedTextClass)}>
-                      Share this profile, contact the seller, or raise a concern.
+                    <p
+                      className={cn("mt-1 text-sm", appearance.mutedTextClass)}
+                    >
+                      Share this profile, contact the seller, or raise a
+                      concern.
                     </p>
                   </div>
                   <div
@@ -721,233 +729,264 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-              <TooltipProvider>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {phoneE164 && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          aria-label="Show phone number"
-                          className={cn(
-                            "flex h-11 w-11 items-center justify-center rounded-full border transition",
-                            appearance.contactButtonClass,
-                          )}
-                          style={appearance.accentIconStyle}
-                        >
-                          <Phone
-                            className={cn("w-4 h-4", appearance.iconColorClass)}
-                            style={appearance.accentTextStyle}
-                          />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64">
-                        <div className="text-lg font-semibold tracking-wide">
-                          {phoneE164}
-                        </div>
-                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Copy</span>
+                <TooltipProvider>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {phoneE164 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <button
                             type="button"
-                            onClick={handleCopyPhone}
-                            className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
-                            aria-label="Copy phone number"
+                            aria-label="Show phone number"
+                            className={cn(
+                              "flex h-11 w-11 items-center justify-center rounded-full border transition",
+                              appearance.contactButtonClass,
+                            )}
+                            style={appearance.accentIconStyle}
                           >
-                            <Copy className="h-3.5 w-3.5" />
+                            <Phone
+                              className={cn(
+                                "w-4 h-4",
+                                appearance.iconColorClass,
+                              )}
+                              style={appearance.accentTextStyle}
+                            />
                           </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64">
+                          <div className="text-lg font-semibold tracking-wide">
+                            {phoneE164}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Copy</span>
+                            <button
+                              type="button"
+                              onClick={handleCopyPhone}
+                              className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
+                              aria-label="Copy phone number"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
 
-                  {whatsappUrl && (
-                    <a
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Open WhatsApp"
-                      className={cn(
-                        "flex h-11 min-w-[140px] items-center justify-center gap-2 rounded-full border px-4 transition",
-                        appearance.contactButtonClass,
-                      )}
-                      style={appearance.accentIconStyle}
-                    >
-                      <SiWhatsapp
-                        className={cn("h-4 w-4", appearance.iconColorClass)}
-                        style={appearance.accentTextStyle}
-                      />
-                      <span
-                        className={cn("text-sm font-medium", appearance.iconColorClass)}
-                        style={appearance.accentTextStyle}
+                    {whatsappUrl && (
+                      <a
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Open WhatsApp"
+                        className={cn(
+                          "flex h-11 min-w-[140px] items-center justify-center gap-2 rounded-full border px-4 transition",
+                          appearance.contactButtonClass,
+                        )}
+                        style={appearance.accentIconStyle}
                       >
-                        WhatsApp
-                      </span>
-                    </a>
-                  )}
-
-                  {profile.contactEmail && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          aria-label="Show email"
+                        <SiWhatsapp
+                          className={cn("h-4 w-4", appearance.iconColorClass)}
+                          style={appearance.accentTextStyle}
+                        />
+                        <span
                           className={cn(
-                            "flex h-11 min-w-[140px] items-center justify-center gap-2 rounded-full border px-4 transition",
-                            appearance.contactButtonClass,
+                            "text-sm font-medium",
+                            appearance.iconColorClass,
                           )}
-                          style={appearance.accentIconStyle}
+                          style={appearance.accentTextStyle}
                         >
-                          <Mail
-                            className={cn("h-4 w-4", appearance.iconColorClass)}
-                            style={appearance.accentTextStyle}
-                          />
-                          <span
-                            className={cn("text-sm font-medium", appearance.iconColorClass)}
-                            style={appearance.accentTextStyle}
-                          >
-                            Email
-                          </span>
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64">
-                        <div className="text-lg font-semibold tracking-wide break-all">
-                          {profile.contactEmail}
-                        </div>
-                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Copy</span>
+                          WhatsApp
+                        </span>
+                      </a>
+                    )}
+
+                    {profile.contactEmail && (
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <button
                             type="button"
-                            onClick={handleCopyEmail}
-                            className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
-                            aria-label="Copy email"
+                            aria-label="Show email"
+                            className={cn(
+                              "flex h-11 min-w-[140px] items-center justify-center gap-2 rounded-full border px-4 transition",
+                              appearance.contactButtonClass,
+                            )}
+                            style={appearance.accentIconStyle}
                           >
-                            <Copy className="h-3.5 w-3.5" />
+                            <Mail
+                              className={cn(
+                                "h-4 w-4",
+                                appearance.iconColorClass,
+                              )}
+                              style={appearance.accentTextStyle}
+                            />
+                            <span
+                              className={cn(
+                                "text-sm font-medium",
+                                appearance.iconColorClass,
+                              )}
+                              style={appearance.accentTextStyle}
+                            >
+                              Email
+                            </span>
                           </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                </div>
-              </TooltipProvider>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64">
+                          <div className="text-lg font-semibold tracking-wide break-all">
+                            {profile.contactEmail}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Copy</span>
+                            <button
+                              type="button"
+                              onClick={handleCopyEmail}
+                              className="h-7 w-7 rounded-md border flex items-center justify-center hover:bg-muted"
+                              aria-label="Copy email"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+                </TooltipProvider>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn("rounded-full", appearance.buttonClass)}
-                      style={appearance.accentButtonStyle}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Share Kit
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Share Kit</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="flex flex-col items-center gap-3">
-                        <img
-                          src={qrCodeUrl}
-                          alt="QR code for seller profile"
-                          className="h-40 w-40 rounded-lg border bg-white p-2"
-                        />
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <QrCode className="w-3.5 h-3.5" />
-                          QR code for packaging, stories, or receipts
-                        </p>
-                      </div>
-                      <div className="grid gap-2">
-                        <Button type="button" variant="outline" onClick={() => handleCopyText(profileUrl)}>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Profile Link
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleCopyText(whatsappShareCopy, "WhatsApp text copied")}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy WhatsApp Share Text
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleCopyText(instagramBioCopy, "Instagram bio text copied")}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Instagram Bio Copy
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                {!isOwner && me?.user ? (
+                <div className="mt-4 flex flex-wrap gap-2">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="rounded-full">
-                        <Flag className="w-4 h-4 mr-2" />
-                        Report Seller
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("rounded-full", appearance.buttonClass)}
+                        style={appearance.accentButtonStyle}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Share Kit
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Report Seller</DialogTitle>
+                        <DialogTitle>Share Kit</DialogTitle>
                       </DialogHeader>
-                      <div className="space-y-3">
-                        <Input
-                          value={reportSellerReason}
-                          onChange={(event) =>
-                            setReportSellerReason(event.target.value)
-                          }
-                          placeholder="Reason"
-                        />
-                        <Textarea
-                          value={reportSellerMessage}
-                          onChange={(event) =>
-                            setReportSellerMessage(event.target.value)
-                          }
-                          placeholder="Add details (optional)"
-                        />
-                        <div className="flex justify-end gap-2">
+                      <div className="space-y-4">
+                        <div className="flex flex-col items-center gap-3">
+                          <img
+                            src={qrCodeUrl}
+                            alt="QR code for seller profile"
+                            className="h-40 w-40 rounded-lg border bg-white p-2"
+                          />
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <QrCode className="w-3.5 h-3.5" />
+                            QR code for packaging, stories, or receipts
+                          </p>
+                        </div>
+                        <div className="grid gap-2">
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => {
-                              setReportSellerReason("");
-                              setReportSellerMessage("");
-                            }}
+                            onClick={() => handleCopyText(profileUrl)}
                           >
-                            Clear
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy Profile Link
                           </Button>
                           <Button
                             type="button"
-                            disabled={
-                              reportSellerMutation.isPending ||
-                              !reportSellerReason.trim()
-                            }
+                            variant="outline"
                             onClick={() =>
-                              reportSellerMutation.mutate({
-                                reason: reportSellerReason.trim(),
-                                message: reportSellerMessage.trim() || undefined,
-                              })
+                              handleCopyText(
+                                whatsappShareCopy,
+                                "WhatsApp text copied",
+                              )
                             }
                           >
-                            {reportSellerMutation.isPending
-                              ? "Submitting..."
-                              : "Submit Report"}
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy WhatsApp Share Text
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                              handleCopyText(
+                                instagramBioCopy,
+                                "Instagram bio text copied",
+                              )
+                            }
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy Instagram Bio Copy
                           </Button>
                         </div>
                       </div>
                     </DialogContent>
                   </Dialog>
-                ) : null}
+
+                  {!isOwner && me?.user ? (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full"
+                        >
+                          <Flag className="w-4 h-4 mr-2" />
+                          Report Seller
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Report Seller</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                          <Input
+                            value={reportSellerReason}
+                            onChange={(event) =>
+                              setReportSellerReason(event.target.value)
+                            }
+                            placeholder="Reason"
+                          />
+                          <Textarea
+                            value={reportSellerMessage}
+                            onChange={(event) =>
+                              setReportSellerMessage(event.target.value)
+                            }
+                            placeholder="Add details (optional)"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setReportSellerReason("");
+                                setReportSellerMessage("");
+                              }}
+                            >
+                              Clear
+                            </Button>
+                            <Button
+                              type="button"
+                              disabled={
+                                reportSellerMutation.isPending ||
+                                !reportSellerReason.trim()
+                              }
+                              onClick={() =>
+                                reportSellerMutation.mutate({
+                                  reason: reportSellerReason.trim(),
+                                  message:
+                                    reportSellerMessage.trim() || undefined,
+                                })
+                              }
+                            >
+                              {reportSellerMutation.isPending
+                                ? "Submitting..."
+                                : "Submit Report"}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </motion.section>
 
@@ -956,134 +995,150 @@ export default function ProfilePage() {
             <section className="w-full">
               <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className={cn("text-xs uppercase tracking-[0.22em]", appearance.mutedTextClass)}>
+                  <p
+                    className={cn(
+                      "text-xs uppercase tracking-[0.22em]",
+                      appearance.mutedTextClass,
+                    )}
+                  >
                     Buyer Proof
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
                     Reviews and buyer confidence
                   </h2>
-                  <p className={cn("mt-2 max-w-2xl text-sm leading-6", appearance.mutedTextClass)}>
-                    Buyers can see recent experiences, seller responses, and the overall rating before they decide to place an order.
+                  <p
+                    className={cn(
+                      "mt-2 max-w-2xl text-sm leading-6",
+                      appearance.mutedTextClass,
+                    )}
+                  >
+                    Buyers can see recent experiences, seller responses, and the
+                    overall rating before they decide to place an order.
                   </p>
                 </div>
                 <div className="flex shrink-0">
-            {me?.user && me.user.role === "buyer" ? (
-              givenReviews?.reviews.some(
-                (review) => review.sellerId === user?.id,
-              ) ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className={cn(
-                    "rounded-full border-0 opacity-50 cursor-not-allowed",
-                    appearance.buttonClass,
-                  )}
-                  style={appearance.accentButtonStyle}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" /> Already Reviewed
-                </Button>
-              ) : (
-                <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
-                  <DialogTrigger asChild>
+                  {me?.user && me.user.role === "buyer" ? (
+                    givenReviews?.reviews.some(
+                      (review) => review.sellerId === user?.id,
+                    ) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                        className={cn(
+                          "rounded-full border-0 opacity-50 cursor-not-allowed",
+                          appearance.buttonClass,
+                        )}
+                        style={appearance.accentButtonStyle}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" /> Already
+                        Reviewed
+                      </Button>
+                    ) : (
+                      <Dialog
+                        open={isReviewOpen}
+                        onOpenChange={setIsReviewOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "rounded-full border-0",
+                              appearance.buttonClass,
+                            )}
+                            style={appearance.accentButtonStyle}
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" /> Write
+                            Review
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Leave a Review</DialogTitle>
+                          </DialogHeader>
+                          <Form {...form}>
+                            <form
+                              onSubmit={form.handleSubmit((values) =>
+                                addReviewMutation.mutate(values),
+                              )}
+                              className="space-y-4"
+                            >
+                              <FormField
+                                control={form.control}
+                                name="rating"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Rating</FormLabel>
+                                    <FormControl>
+                                      <div className="flex gap-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => field.onChange(star)}
+                                            className={cn(
+                                              "text-2xl transition-colors",
+                                              star <= field.value
+                                                ? "text-yellow-400"
+                                                : "text-gray-200",
+                                            )}
+                                          >
+                                            ★
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="comment"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Comment</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        placeholder="Share your thoughts..."
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                type="submit"
+                                className="w-full"
+                                style={appearance.accentButtonStyle}
+                                disabled={addReviewMutation.isPending}
+                              >
+                                {addReviewMutation.isPending
+                                  ? "Submitting..."
+                                  : "Submit Review"}
+                              </Button>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
+                    )
+                  ) : (
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled
                       className={cn(
-                        "rounded-full border-0",
+                        "rounded-full border-0 opacity-50 cursor-not-allowed",
                         appearance.buttonClass,
                       )}
                       style={appearance.accentButtonStyle}
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" /> Write Review
+                      <MessageCircle className="w-4 h-4 mr-2" /> Sign in as a
+                      user to give review
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Leave a Review</DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit((values) =>
-                          addReviewMutation.mutate(values),
-                        )}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="rating"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Rating</FormLabel>
-                              <FormControl>
-                                <div className="flex gap-2">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                      key={star}
-                                      type="button"
-                                      onClick={() => field.onChange(star)}
-                                      className={cn(
-                                        "text-2xl transition-colors",
-                                        star <= field.value
-                                          ? "text-yellow-400"
-                                          : "text-gray-200",
-                                      )}
-                                    >
-                                      ★
-                                    </button>
-                                  ))}
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="comment"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Comment</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Share your thoughts..."
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          style={appearance.accentButtonStyle}
-                          disabled={addReviewMutation.isPending}
-                        >
-                          {addReviewMutation.isPending
-                            ? "Submitting..."
-                            : "Submit Review"}
-                        </Button>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
-              )
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled
-                className={cn(
-                  "rounded-full border-0 opacity-50 cursor-not-allowed",
-                  appearance.buttonClass,
-                )}
-                style={appearance.accentButtonStyle}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" /> Sign in as a user to
-                give review
-              </Button>
-            )}
+                  )}
                 </div>
               </div>
 
@@ -1109,11 +1164,19 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className={cn("rounded-[1.75rem] border p-5", appearance.surfaceClass)}
+              className={cn(
+                "rounded-[1.75rem] border p-5",
+                appearance.surfaceClass,
+              )}
               style={appearance.accentCardStyle}
             >
               <div className="mb-5">
-                <p className={cn("text-xs uppercase tracking-[0.22em]", appearance.mutedTextClass)}>
+                <p
+                  className={cn(
+                    "text-xs uppercase tracking-[0.22em]",
+                    appearance.mutedTextClass,
+                  )}
+                >
                   Buy Channels
                 </p>
                 <h2 className="mt-2 text-xl font-semibold">Shop & contact</h2>
@@ -1163,7 +1226,10 @@ export default function ProfilePage() {
                               const Icon = getPlatformIcon(link.icon);
                               return (
                                 <Icon
-                                  className={cn("h-5 w-5", appearance.iconColorClass)}
+                                  className={cn(
+                                    "h-5 w-5",
+                                    appearance.iconColorClass,
+                                  )}
                                   style={appearance.accentTextStyle}
                                 />
                               );
@@ -1171,12 +1237,20 @@ export default function ProfilePage() {
                           </div>
                           <div className="min-w-0">
                             <p
-                              className={cn("font-semibold truncate", appearance.primaryTextClass)}
+                              className={cn(
+                                "font-semibold truncate",
+                                appearance.primaryTextClass,
+                              )}
                               style={appearance.accentTextStyle}
                             >
                               {link.title}
                             </p>
-                            <p className={cn("text-xs truncate", appearance.mutedTextClass)}>
+                            <p
+                              className={cn(
+                                "text-xs truncate",
+                                appearance.mutedTextClass,
+                              )}
+                            >
                               Open link
                             </p>
                           </div>
@@ -1202,7 +1276,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </motion.section>
-
           </div>
         </div>
 
