@@ -19,67 +19,76 @@ export function registerNotificationsRoutes(app: Express): void {
       return respondForbiddenFromAuthError(res, err);
     }
 
-    const limitParam = req.query.limit ? Number(req.query.limit) : 20;
-    const limit = Math.min(Math.max(1, limitParam), 100);
-    const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
+    try {
+      const limitParam = req.query.limit ? Number(req.query.limit) : 20;
+      const limit = Math.min(Math.max(1, limitParam), 100);
+      const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
 
-    if (req.query.limit && Number.isNaN(limitParam)) {
-      return res.status(400).json(error("VALIDATION_ERROR", "Invalid limit"));
+      if (req.query.limit && Number.isNaN(limitParam)) {
+        return res.status(400).json(error("VALIDATION_ERROR", "Invalid limit"));
+      }
+
+      if (req.query.cursor && Number.isNaN(cursor!)) {
+        return res.status(400).json(error("VALIDATION_ERROR", "Invalid cursor"));
+      }
+
+      const showUnreadOnly = req.query.unreadOnly === "true";
+
+      const conditions = [eq(notifications.userId, req.session.userId!)];
+
+      if (showUnreadOnly) {
+        conditions.push(eq(notifications.isRead, false));
+      }
+
+      if (cursor !== undefined) {
+        conditions.push(gte(notifications.id, cursor + 1));
+      }
+
+      const whereClause =
+        conditions.length === 1 ? conditions[0] : and(...conditions);
+
+      const [notificationsList, unreadCountRow] = await Promise.all([
+        db
+          .select(notificationColumns)
+          .from(notifications)
+          .where(whereClause)
+          .orderBy(desc(notifications.createdAt))
+          .limit(limit + 1),
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(notifications)
+          .where(
+            and(
+              eq(notifications.userId, req.session.userId!),
+              eq(notifications.isRead, false),
+            ),
+          ),
+      ]);
+
+      let nextCursor: number | null = null;
+      let paginatedNotifications = notificationsList;
+      if (notificationsList.length > limit) {
+        paginatedNotifications = notificationsList.slice(0, limit);
+        nextCursor =
+          paginatedNotifications[paginatedNotifications.length - 1]?.id ?? null;
+      }
+
+      const response: any = {
+        items: paginatedNotifications,
+        unreadCount: Number(unreadCountRow?.count ?? 0),
+      };
+      if (nextCursor) {
+        response.nextCursor = nextCursor;
+      }
+
+      return res.status(200).json(ok(response));
+    } catch (err) {
+      return res
+        .status(503)
+        .json(error("SERVICE_UNAVAILABLE", "Notifications are temporarily unavailable", {
+          retryable: true,
+        }));
     }
-
-    if (req.query.cursor && Number.isNaN(cursor!)) {
-      return res.status(400).json(error("VALIDATION_ERROR", "Invalid cursor"));
-    }
-
-    const showUnreadOnly = req.query.unreadOnly === "true";
-
-    const conditions = [eq(notifications.userId, req.session.userId!)];
-
-    if (showUnreadOnly) {
-      conditions.push(eq(notifications.isRead, false));
-    }
-
-    if (cursor !== undefined) {
-      conditions.push(gte(notifications.id, cursor + 1));
-    }
-
-    const whereClause =
-      conditions.length === 1 ? conditions[0] : and(...conditions);
-
-    const notificationsList = await db
-      .select(notificationColumns)
-      .from(notifications)
-      .where(whereClause)
-      .orderBy(desc(notifications.createdAt))
-      .limit(limit + 1);
-
-    let nextCursor: number | null = null;
-    let paginatedNotifications = notificationsList;
-    if (notificationsList.length > limit) {
-      paginatedNotifications = notificationsList.slice(0, limit);
-      nextCursor =
-        paginatedNotifications[paginatedNotifications.length - 1]?.id ?? null;
-    }
-
-    const [unreadCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(notifications)
-      .where(
-        and(
-          eq(notifications.userId, req.session.userId!),
-          eq(notifications.isRead, false),
-        ),
-      );
-
-    const response: any = {
-      items: paginatedNotifications,
-      unreadCount: Number(unreadCount?.count ?? 0),
-    };
-    if (nextCursor) {
-      response.nextCursor = nextCursor;
-    }
-
-    return res.status(200).json(ok(response));
   });
 
   app.patch("/api/me/notifications/:id/read", async (req, res) => {

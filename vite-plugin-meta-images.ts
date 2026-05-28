@@ -1,10 +1,11 @@
 import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 
 /**
  * Vite plugin that updates og:image and twitter:image meta tags
- * to point to the app's opengraph image with the correct Replit domain.
+ * to point to the app's opengraph image with the correct domain.
  */
 export function metaImagesPlugin(): Plugin {
   return {
@@ -12,7 +13,7 @@ export function metaImagesPlugin(): Plugin {
     transformIndexHtml(html) {
       const baseUrl = getDeploymentUrl();
       if (!baseUrl) {
-        log('[meta-images] no Replit deployment domain found, skipping meta tag updates');
+        log('[meta-images] no deployment domain found, skipping meta tag updates');
         return html;
       }
 
@@ -56,6 +57,19 @@ export function metaImagesPlugin(): Plugin {
 }
 
 function getDeploymentUrl(): string | null {
+  // Load environment variables from .env
+  try {
+    dotenv.config();
+  } catch (e) {
+    // Ignore if dotenv fail to load
+  }
+
+  if (process.env.APP_URL && !process.env.APP_URL.includes('localhost') && !process.env.APP_URL.includes('127.0.0.1')) {
+    const url = process.env.APP_URL.replace(/\/$/, '');
+    log('[meta-images] using APP_URL:', url);
+    return url;
+  }
+
   if (process.env.REPLIT_INTERNAL_APP_DOMAIN) {
     const url = `https://${process.env.REPLIT_INTERNAL_APP_DOMAIN}`;
     log('[meta-images] using internal app domain:', url);
@@ -68,11 +82,14 @@ function getDeploymentUrl(): string | null {
     return url;
   }
 
-  return null;
+  // Fallback to production domain for rich preview assets
+  const fallbackUrl = 'https://middelmen.com';
+  log('[meta-images] using default fallback domain:', fallbackUrl);
+  return fallbackUrl;
 }
 
 function log(...args: any[]): void {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
     console.log(...args);
   }
 }
