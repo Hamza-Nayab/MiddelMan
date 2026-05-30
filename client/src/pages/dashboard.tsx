@@ -21,7 +21,7 @@ import {
 } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
-import { CheckCircle2, Clock3, ExternalLink, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock3, ExternalLink, ShieldCheck, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -193,6 +193,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
   const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [orderedLinks, setOrderedLinks] = useState<LinkType[]>([]);
   const [draggedLinkId, setDraggedLinkId] = useState<number | null>(null);
   const dragStartOrderRef = useRef<number[]>([]);
@@ -999,9 +1000,20 @@ export default function Dashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold font-heading">Dashboard</h1>
-                <p className="text-muted-foreground">
-                  Welcome back, {profile.displayName}.
-                </p>
+                {!welcomeDismissed && (
+                  <div className="flex items-center gap-1.5 group">
+                    <p className="text-muted-foreground">
+                      Welcome back, {profile.displayName}.
+                    </p>
+                    <button
+                      onClick={() => setWelcomeDismissed(true)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+                      aria-label="Dismiss welcome message"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
               <Link
                 href={user.username ? `/${user.username}` : "/"}

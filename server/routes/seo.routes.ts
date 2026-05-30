@@ -1,8 +1,110 @@
 import type { Express } from "express";
 import { and, desc, eq } from "./_shared";
-import { db, error, profiles, users } from "./_shared";
+import { db, error, profiles, users, ok, checkRateLimit, getClientKey } from "./_shared";
 
 export function registerSeoRoutes(app: Express): void {
+  // Public users endpoint for LLM / public crawler access
+  app.get("/api/users", async (req, res) => {
+    const clientKey = getClientKey(req);
+    const rateLimitResult = checkRateLimit("public_users_api", clientKey, {
+      maxRequests: 60,
+      windowMs: 60 * 1000,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json(
+        error("RATE_LIMITED", "Too many requests to public profiles API", {
+          retryAfter: rateLimitResult.resetIn,
+        }),
+      );
+    }
+
+    const limitParam = req.query.limit ? Number(req.query.limit) : 20;
+    const offsetParam = req.query.offset ? Number(req.query.offset) : 0;
+
+    const limit = Math.min(Math.max(1, limitParam), 100);
+    const offset = Math.max(0, offsetParam);
+
+    try {
+      const publicUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          createdAt: users.createdAt,
+          displayName: profiles.displayName,
+          bio: profiles.bio,
+          avatarUrl: profiles.avatarUrl,
+          isVerified: profiles.isVerified,
+          avgRating: profiles.avgRating,
+          totalReviews: profiles.totalReviews,
+          updatedAt: profiles.updatedAt,
+        })
+        .from(users)
+        .leftJoin(profiles, eq(profiles.userId, users.id))
+        .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
+        .orderBy(desc(profiles.updatedAt))
+        .limit(limit)
+        .offset(offset);
+
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+      return res.status(200).json(ok({ users: publicUsers }));
+    } catch (err) {
+      console.error("Public users list fetch error:", err);
+      return res.status(500).json(error("SERVER_ERROR", "Failed to fetch public users"));
+    }
+  });
+
+  // Alias for /api/profiles
+  app.get("/api/profiles", async (req, res) => {
+    const clientKey = getClientKey(req);
+    const rateLimitResult = checkRateLimit("public_users_api", clientKey, {
+      maxRequests: 60,
+      windowMs: 60 * 1000,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json(
+        error("RATE_LIMITED", "Too many requests to public profiles API", {
+          retryAfter: rateLimitResult.resetIn,
+        }),
+      );
+    }
+
+    const limitParam = req.query.limit ? Number(req.query.limit) : 20;
+    const offsetParam = req.query.offset ? Number(req.query.offset) : 0;
+
+    const limit = Math.min(Math.max(1, limitParam), 100);
+    const offset = Math.max(0, offsetParam);
+
+    try {
+      const publicProfiles = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          createdAt: users.createdAt,
+          displayName: profiles.displayName,
+          bio: profiles.bio,
+          avatarUrl: profiles.avatarUrl,
+          isVerified: profiles.isVerified,
+          avgRating: profiles.avgRating,
+          totalReviews: profiles.totalReviews,
+          updatedAt: profiles.updatedAt,
+        })
+        .from(users)
+        .leftJoin(profiles, eq(profiles.userId, users.id))
+        .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
+        .orderBy(desc(profiles.updatedAt))
+        .limit(limit)
+        .offset(offset);
+
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+      return res.status(200).json(ok({ profiles: publicProfiles }));
+    } catch (err) {
+      console.error("Public profiles list fetch error:", err);
+      return res.status(500).json(error("SERVER_ERROR", "Failed to fetch public profiles"));
+    }
+  });
+
   app.get("/sitemap.xml", async (_req, res) => {
     try {
       const sellers = await db
@@ -69,3 +171,4 @@ ${urls}
     }
   });
 }
+

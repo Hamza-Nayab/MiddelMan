@@ -5,6 +5,7 @@ import viteConfig from "../vite.config";
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import { rewriteHtml } from "./ssr-meta";
 
 const viteLogger = createLogger();
 
@@ -50,7 +51,14 @@ export async function setupVite(server: Server, app: Express) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
-      const page = await vite.transformIndexHtml(url, template);
+      let page = await vite.transformIndexHtml(url, template);
+
+      // Apply SSR meta tag rewriting for profile pages
+      const ssrMeta = (req as any).__ssrMeta;
+      if (ssrMeta) {
+        page = rewriteHtml(page, ssrMeta);
+      }
+
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);

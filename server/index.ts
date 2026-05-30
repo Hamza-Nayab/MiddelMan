@@ -16,6 +16,7 @@ import { initAuth } from "./auth";
 import { pool } from "./db";
 import { error, toPublicErrorResponse } from "./lib/api-response";
 import { appLog } from "./lib/logger";
+import { registerSsrMetaMiddleware } from "./ssr-meta";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -276,6 +277,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // SSR meta middleware must run before API routes and static handlers
+  // so profile page requests get user-specific meta tags attached
+  registerSsrMetaMiddleware(app);
+
   await registerRoutes(httpServer, app);
 
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
