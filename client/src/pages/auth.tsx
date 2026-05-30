@@ -478,6 +478,14 @@ export default function AuthPage() {
                       )}
                     />
 
+                    <div className="text-xs text-muted-foreground text-center py-1">
+                      By creating an account, you agree to our{" "}
+                      <Link href="/terms" className="text-primary underline font-medium hover:text-primary/80">
+                        Terms and Conditions
+                      </Link>
+                      .
+                    </div>
+
                     <Button
                       type="submit"
                       className="w-full"
