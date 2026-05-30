@@ -1,6 +1,7 @@
 import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -110,6 +111,10 @@ export default function SearchPage() {
 
   return (
     <Layout>
+      <SEO
+        title="Discover Creators & Sellers | MiddelMen"
+        description="Search and verify seller usernames, find trusted creators, and view reviews on MiddelMen."
+      />
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold font-heading mb-4">

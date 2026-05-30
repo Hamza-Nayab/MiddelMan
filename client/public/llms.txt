@@ -1,0 +1,23 @@
+# MiddelMen
+
+> MiddelMen is a trust infrastructure and verification layer for social commerce. It allows independent sellers on platforms like Instagram, WhatsApp, and Facebook to build public trust profiles, collect verified reviews, and secure transactions.
+
+## Core Features
+
+- **Shareable Trust Profile**: One unified link-in-bio page containing contact methods (WhatsApp, Email, Phone), verified seller status, and aggregate ratings.
+- **Verified Reviews**: Reputation management system where buyers submit ratings and comments linked to verified accounts, reducing fraud and spam.
+- **Dispute Resolution**: Dedicated system for buyers and sellers to raise and resolve transaction issues under administrator supervision.
+- **Escrow & Payments (Upcoming)**: Secure transactional vault holding buyer funds until successful delivery is mutually confirmed.
+
+## Navigation & Pages
+
+- [Homepage](https://middelmen.com/): Product overview, key benefits, steps to start, and search utility.
+- [About MiddelMen](https://middelmen.com/about): Explanation of the trust ecosystem, why social sellers use MiddelMen, frequently asked questions (FAQs), and privacy details.
+- [Discover & Search](https://middelmen.com/search): Search engine to look up seller usernames, verify ratings, and check credibility.
+- [Terms of Service](https://middelmen.com/terms): Terms and conditions for platform usage, username policies, and review guidelines.
+
+## Crawler Directives
+
+- **API Base**: `/api` (Blocked for indexation, internal sessions only)
+- **Dashboard**: `/dashboard` (Private seller panel, blocked for crawling)
+- **Sitemap**: [sitemap.xml](https://middelmen.com/sitemap.xml)

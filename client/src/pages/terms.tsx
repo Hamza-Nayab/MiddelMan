@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 
 const gradientStyle = {
   backgroundImage: "linear-gradient(135deg, #253c97 0%, #38b6ff 100%)",
@@ -7,6 +8,10 @@ const gradientStyle = {
 export default function TermsPage() {
   return (
     <Layout>
+      <SEO
+        title="Terms and Conditions | MiddelMen"
+        description="Read the Terms and Conditions for using MiddelMen trust profiles and verified review system."
+      />
       <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
         <section className="mb-12 text-center">
           <h1

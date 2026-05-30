@@ -75,7 +75,7 @@ export function registerNotificationsRoutes(app: Express): void {
 
       const response: any = {
         items: paginatedNotifications,
-        unreadCount: Number(unreadCountRow?.count ?? 0),
+        unreadCount: Number(unreadCountRow[0]?.count ?? 0),
       };
       if (nextCursor) {
         response.nextCursor = nextCursor;

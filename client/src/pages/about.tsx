@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import {
   Accordion,
   AccordionContent,
@@ -28,6 +29,56 @@ export default function About() {
 
   return (
     <Layout>
+      <SEO
+        title="About MiddelMen | Trust Infrastructure for Social Commerce"
+        description="Learn how MiddelMen helps independent sellers build credibility, collect verified reviews, and secure transactions in social commerce."
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is a trust profile?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "A trust profile is a public page that shows your username, bio, links, verified reviews, and ratings. Buyers visit this page before paying to confirm you’re legitimate. You share one link (e.g. middelmen.com/yourname) in your social bio."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Who can create a profile?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Anyone selling through Instagram, Facebook, WhatsApp, or similar platforms can sign up as a seller. Buyers can create accounts to leave reviews. Account creation requires email verification."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do reviews work?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Buyers leave a star rating (1–5) and optional text review after a purchase. Reviews are linked to verified accounts to reduce fake feedback. Sellers can dispute unfair reviews through our dispute system."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does MiddelMen handle payments?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Not yet. Today MiddelMen focuses on profiles and reviews. Escrow and integrated payment features are planned for a future phase."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How can I contact support?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Use the contact information provided in your account settings or through the platform. For disputes, follow the dispute resolution flow in your dashboard."
+              }
+            }
+          ]
+        }}
+      />
       <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
         {/* Hero */}
         <section className="text-center mb-16">

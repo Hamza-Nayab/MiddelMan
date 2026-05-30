@@ -1,10 +1,15 @@
 User-agent: *
 Allow: /
-Allow: /profile/
 Disallow: /admin
-Disallow: /api/
+Disallow: /admin/
 Disallow: /dashboard
-Disallow: /.git
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /verified
+Disallow: /disabled
+Disallow: /access-not-available
 
 Sitemap: https://middelmen.com/sitemap.xml
 

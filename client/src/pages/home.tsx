@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import logoImg from "@/assets/middelman-bg.png";
 import {
   UserRound,
@@ -50,6 +51,40 @@ export default function Home() {
 
   return (
     <Layout>
+      <SEO
+        title="MiddelMen | Build Trust, Then Pay"
+        description="Create a public trust profile, collect verified reviews, and share one link buyers can trust. The ultimate link-in-bio tool for creators and professionals in social commerce."
+        schema={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://middelmen.com/#website",
+              "url": "https://middelmen.com",
+              "name": "MiddelMen",
+              "description": "Verify Your Digital Identity & Build Seller Trust",
+              "publisher": {
+                "@id": "https://middelmen.com/#organization"
+              }
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://middelmen.com/#organization",
+              "name": "MiddelMen",
+              "url": "https://middelmen.com",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://middelmen.com/favicon.png"
+              },
+              "sameAs": [
+                "https://twitter.com/middelman",
+                "https://instagram.com/middelman",
+                "https://github.com/middelman"
+              ]
+            }
+          ]
+        }}
+      />
       {/* Hero Section */}
       <section
         className="relative overflow-hidden pt-2 lg:pt-3 pb-8 lg:pb-12"
