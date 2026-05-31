@@ -178,6 +178,19 @@ const linkIconKeys = [
   "shopify",
 ] as const;
 
+/** Verify URL hostname has a valid TLD (reject garbage like "https://Abcs") */
+function isRealUrl(value: string): boolean {
+  try {
+    const { hostname } = new URL(value);
+    const parts = hostname.split(".");
+    if (parts.length < 2) return false;
+    const tld = parts[parts.length - 1];
+    return tld.length >= 2 && /^[a-zA-Z]+$/.test(tld);
+  } catch {
+    return false;
+  }
+}
+
 export const linkCreateSchema = z.object({
   icon: z.enum(linkIconKeys).optional(),
   title: z.string().min(1).max(40),
@@ -186,6 +199,9 @@ export const linkCreateSchema = z.object({
     .url()
     .refine((value) => value.startsWith("https://"), {
       message: "URL must start with https://",
+    })
+    .refine(isRealUrl, {
+      message: "Please enter a real URL (e.g. https://example.com)",
     }),
 });
 
@@ -198,6 +214,9 @@ export const linkUpdateSchema = z
       .url()
       .refine((value) => value.startsWith("https://"), {
         message: "URL must start with https://",
+      })
+      .refine(isRealUrl, {
+        message: "Please enter a real URL (e.g. https://example.com)",
       })
       .optional(),
     isActive: z.boolean().optional(),

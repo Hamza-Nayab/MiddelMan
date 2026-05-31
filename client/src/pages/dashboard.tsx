@@ -84,7 +84,20 @@ const LinkFormSchema = z.object({
       } catch {
         return false;
       }
-    }, "Must be a valid URL"),
+    }, "Must be a valid URL")
+    .refine((val) => {
+      try {
+        const { hostname } = new URL(val);
+        // Hostname must contain at least one dot (e.g. example.com)
+        // and the TLD part must be 2+ alpha characters
+        const parts = hostname.split(".");
+        if (parts.length < 2) return false;
+        const tld = parts[parts.length - 1];
+        return tld.length >= 2 && /^[a-zA-Z]+$/.test(tld);
+      } catch {
+        return false;
+      }
+    }, "Please enter a real URL (e.g. https://example.com)"),
 });
 
 const optionalString = (schema: z.ZodTypeAny) =>
