@@ -223,13 +223,9 @@ export default function ProfilePage() {
         "image": imageUrl,
         "description": profile.bio || description,
         ...(profile.contactEmail && { "email": profile.contactEmail }),
-        ...(reviewStats?.totalReviews ? {
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": reviewStats.avgRating.toFixed(1),
-            "reviewCount": reviewStats.totalReviews,
-          }
-        } : {})
+        // NOTE: Do NOT add aggregateRating to the Person entity.
+        // Google does not support AggregateRating nested under Person and
+        // reports "Invalid object type for field parent_node" in Search Console.
       }
     };
   }, [user, profile, displayName, reviewStats]);
