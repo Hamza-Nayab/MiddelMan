@@ -30,6 +30,7 @@ const DisabledPage = lazy(() => import("@/pages/disabled"));
 const AccessNotAvailablePage = lazy(() => import("@/pages/access-not-available"));
 const AboutPage = lazy(() => import("@/pages/about"));
 const TermsPage = lazy(() => import("@/pages/terms"));
+const LandingV2 = lazy(() => import("@/pages/landing-v2"));
 
 function PageLoader() {
   return (
@@ -64,6 +65,7 @@ function Router() {
         <Route path="/access-not-available" component={AccessNotAvailablePage} />
         <Route path="/about" component={AboutPage} />
         <Route path="/terms" component={TermsPage} />
+        <Route path="/v2" component={LandingV2} />
         {/* Dynamic route for profiles - MUST be last to avoid conflict */}
         <Route path="/:username" component={ProfilePage} />
         <Route component={NotFound} />
