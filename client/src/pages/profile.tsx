@@ -211,7 +211,7 @@ export default function ProfilePage() {
     const profileUrl = `${origin}/${encodeURIComponent(user.username || "")}`;
     const imageUrl = profile.avatarUrl || `${origin}/default-avatar.png`;
     const description = `View ${displayName}'s verified reviews, seller reputation, and trusted profile on MiddelMen.`;
-    
+
     return {
       "@context": "https://schema.org",
       "@type": "ProfilePage",
@@ -223,13 +223,9 @@ export default function ProfilePage() {
         "image": imageUrl,
         "description": profile.bio || description,
         ...(profile.contactEmail && { "email": profile.contactEmail }),
-        ...(reviewStats?.totalReviews ? {
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": reviewStats.avgRating.toFixed(1),
-            "reviewCount": reviewStats.totalReviews,
-          }
-        } : {})
+        // NOTE: Do NOT add aggregateRating to the Person entity.
+        // Google does not support AggregateRating nested under Person and
+        // reports "Invalid object type for field parent_node" in Search Console.
       }
     };
   }, [user, profile, displayName, reviewStats]);
@@ -365,9 +361,9 @@ export default function ProfilePage() {
     : false;
   const daysUntilUsernameChange = usernameCooldownActive
     ? Math.ceil(
-        (nextUsernameChangeAt!.getTime() - new Date().getTime()) /
-          (24 * 60 * 60 * 1000),
-      )
+      (nextUsernameChangeAt!.getTime() - new Date().getTime()) /
+      (24 * 60 * 60 * 1000),
+    )
     : 0;
   const canChangeUsername =
     !!isOwner &&
@@ -1142,7 +1138,7 @@ export default function ProfilePage() {
                         if (!user?.id) return;
                         const key = `tt-click-${user.id}-${getDayKey()}`;
                         if (shouldSampleSessionEvent(key)) {
-                          void api.trackProfileClick(user.id).catch(() => {});
+                          void api.trackProfileClick(user.id).catch(() => { });
                         }
                       }}
                       initial={{ opacity: 0, y: 20 }}

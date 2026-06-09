@@ -55,7 +55,7 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
-interface ProfileMeta {
+export interface ProfileMeta {
   title: string;
   description: string;
   ogImage: string;
@@ -63,7 +63,7 @@ interface ProfileMeta {
   jsonLd: string;
 }
 
-function buildMetaTags(
+export function buildMetaTags(
   profile: {
     username: string;
     displayName: string;
@@ -95,13 +95,10 @@ function buildMetaTags(
     },
   };
 
-  if (profile.totalReviews > 0) {
-    jsonLd.mainEntity.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: profile.avgRating.toFixed(1),
-      reviewCount: profile.totalReviews,
-    };
-  }
+  // NOTE: Do NOT add aggregateRating to the Person entity.
+  // Google does not support AggregateRating nested under Person and will
+  // report "Invalid object type for field parent_node" in Search Console.
+  // Only Organization, Product, LocalBusiness, etc. are valid parent types.
 
   return {
     title,

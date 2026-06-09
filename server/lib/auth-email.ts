@@ -6,7 +6,7 @@ const buildEmailShell = (title: string, body: string, action: string) => `
   <div style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
     <div style="max-width:640px;margin:0 auto;padding:40px 20px;">
       <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;padding:32px;box-shadow:0 10px 30px rgba(15,23,42,.08);">
-        <p style="margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;">MiddelMan</p>
+        <p style="margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;">MiddelMen</p>
         <h1 style="margin:0 0 16px;font-size:24px;line-height:1.3;">${title}</h1>
         <p style="margin:0 0 24px;font-size:16px;line-height:1.7;color:#4b5563;">${body}</p>
         <a href="${action}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:9999px;font-weight:700;">Open request</a>
@@ -48,7 +48,7 @@ export const sendVerificationEmail = async (params: {
     to: params.to,
     subject: "Verify your account",
     title: "Verify your account",
-    body: "Welcome to MiddelMan. Click the button below to verify your email address and activate your seller profile.",
+    body: "Welcome to MiddelMen. Click the button below to verify your email address and activate your seller profile.",
     actionUrl,
   });
 };
