@@ -1,0 +1,19 @@
+{
+  "buildCommand": "npx vite build",
+  "outputDirectory": "dist/public",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://YOUR-HEROKU-APP.herokuapp.com/api/:path*"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://YOUR-HEROKU-APP.herokuapp.com/sitemap.xml"
+    },
+    {
+      "source": "/((?!api/|sitemap\\.xml).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
