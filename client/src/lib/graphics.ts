@@ -64,19 +64,50 @@ export const getAvatarUrl = (
   if (!value) {
     return generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED);
   }
-  if (value.startsWith("data:") || value.startsWith("http")) return value;
+
+  // 1. Check if it's a preset avatar ID (e.g. "avatar-15") or contains a preset avatar pattern in the URL
+  const presetMatch = value.match(/avatar-(\d+)/i);
+  if (presetMatch) {
+    const avatarId = `avatar-${parseInt(presetMatch[1], 10)}`;
+    const match = avatarOptions.find((option) => option.id === avatarId);
+    if (match) return match.url;
+  }
+
+  // 2. Reject any localhost, private IP, or invalid origin URLs to prevent Chrome Private Network Access alerts
+  if (/localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.|10\.\d+\.|172\.(1[6-9]|2\d|3[01])\./i.test(value)) {
+    return generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED);
+  }
+
+  // 3. Direct match with preset avatar options
   const match = avatarOptions.find(
     (option) => option.id === value || option.url === value,
   );
-  return (
-    match?.url ||
-    generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED)
-  );
+  if (match) return match.url;
+
+  // 4. Data URIs and valid HTTPS/HTTP remote URLs (e.g. Cloudflare R2, DiceBear)
+  if (value.startsWith("data:") || value.startsWith("http")) {
+    return value;
+  }
+
+  return generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED);
 };
 
 export const getAvatarId = (value?: string | null) => {
   if (!value) return avatarOptions[0].id;
+
+  const presetMatch = value.match(/avatar-(\d+)/i);
+  if (presetMatch) {
+    const avatarId = `avatar-${parseInt(presetMatch[1], 10)}`;
+    const match = avatarOptions.find((option) => option.id === avatarId);
+    if (match) return match.id;
+  }
+
+  if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(value)) {
+    return avatarOptions[0].id;
+  }
+
   if (value.startsWith("data:") || value.startsWith("http")) return "custom";
+
   const match = avatarOptions.find(
     (option) => option.id === value || option.url === value,
   );
