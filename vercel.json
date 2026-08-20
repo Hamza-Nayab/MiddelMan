@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR-HEROKU-APP.herokuapp.com/api/:path*"
+      "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/api/:path*"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "https://YOUR-HEROKU-APP.herokuapp.com/sitemap.xml"
+      "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/sitemap.xml"
     },
     {
       "source": "/((?!api/|sitemap\\.xml|assets/|illustrations/|.*\\..*).*)",
@@ -17,4 +17,5 @@
     }
   ]
 }
+
 
