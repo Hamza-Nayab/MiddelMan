@@ -201,8 +201,36 @@ export default function ProfilePage() {
   }, [user?.username, usernameForm]);
 
   const displayName = profile?.displayName || user?.username || "Seller";
-  const seoTitle = user && profile ? `${displayName} | MiddelMen Trust Profile` : "MiddelMen Trust Profile";
-  const seoDescription = user && profile ? `View ${displayName}'s verified reviews, seller reputation, and trusted profile on MiddelMen.` : "View verified reviews, seller reputation, and trusted profile on MiddelMen.";
+  const seoTitle = user && profile
+    ? `${displayName} (@${user.username}) Reviews & Trust Profile | MiddelMen (MiddleMen)`
+    : "MiddelMen Trust Profile | Verified Reviews & Seller Reputation";
+  const seoDescription = user && profile
+    ? `Read verified customer reviews, trust ratings, and seller reputation for ${displayName} (@${user.username}) on MiddelMen (MiddleMen). Check seller credentials before buying.`
+    : "View verified customer reviews, seller reputation, and trusted profile on MiddelMen (MiddleMen).";
+  const seoKeywords = user && profile
+    ? [
+        displayName,
+        user.username || "",
+        `${displayName} reviews`,
+        `${user.username} reviews`,
+        `${displayName} MiddelMen`,
+        `${displayName} MiddleMen`,
+        `${user.username} MiddleMen`,
+        `${displayName} trust score`,
+        "verified seller reviews",
+        "social commerce trust profile",
+        "MiddelMen",
+        "MiddleMen",
+        "Middleman reviews",
+      ]
+    : [
+        "MiddelMen",
+        "MiddleMen",
+        "Middleman",
+        "reviews",
+        "seller reviews",
+        "trust profile",
+      ];
   const seoImage = profile?.avatarUrl || undefined;
 
   const seoSchema = useMemo(() => {
@@ -210,15 +238,17 @@ export default function ProfilePage() {
     const origin = typeof window !== "undefined" ? window.location.origin : "https://middelmen.com";
     const profileUrl = `${origin}/${encodeURIComponent(user.username || "")}`;
     const imageUrl = profile.avatarUrl || `${origin}/default-avatar.png`;
-    const description = `View ${displayName}'s verified reviews, seller reputation, and trusted profile on MiddelMen.`;
+    const description = `Read verified customer reviews, trust ratings, and seller reputation for ${displayName} (@${user.username}) on MiddelMen (MiddleMen).`;
 
     return {
       "@context": "https://schema.org",
       "@type": "ProfilePage",
+      "name": `${displayName} Reviews & Trust Profile | MiddelMen`,
+      "description": description,
       "mainEntity": {
         "@type": "Person",
         "name": displayName,
-        "alternateName": user.username,
+        "alternateName": [user.username, `${displayName} Reviews`, `${user.username} Reviews`].filter(Boolean),
         "url": profileUrl,
         "image": imageUrl,
         "description": profile.bio || description,
@@ -492,6 +522,7 @@ export default function ProfilePage() {
       <SEO
         title={seoTitle}
         description={seoDescription}
+        keywords={seoKeywords}
         image={seoImage}
         type="profile"
         schema={seoSchema}

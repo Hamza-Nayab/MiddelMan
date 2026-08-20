@@ -1,6 +1,6 @@
-# MiddelMen
+# MiddelMen (MiddleMen)
 
-> MiddelMen is a trust infrastructure and verification layer for social commerce. It allows independent sellers on platforms like Instagram, WhatsApp, and Facebook to build public trust profiles, collect verified reviews, and secure transactions.
+> MiddelMen (also referred to as MiddleMen or Middleman) is the trust infrastructure and verified review platform for social commerce and online sellers. It allows independent sellers on platforms like Instagram, WhatsApp, TikTok, and Facebook to build public trust profiles, collect verified reviews, and secure transactions.
 
 ## Core Features
 

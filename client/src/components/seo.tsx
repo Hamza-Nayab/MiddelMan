@@ -3,6 +3,7 @@ import { useEffect } from "react";
 interface SEOProps {
   title: string;
   description: string;
+  keywords?: string | string[];
   robots?: string;
   type?: "website" | "profile" | "article";
   image?: string;
@@ -12,6 +13,7 @@ interface SEOProps {
 export function SEO({
   title,
   description,
+  keywords,
   robots = "index, follow",
   type = "website",
   image,
@@ -39,8 +41,12 @@ export function SEO({
       tag.content = content;
     };
 
-    // 2. Set description & robots
+    // 2. Set description, keywords & robots
     updateMeta("description", description);
+    if (keywords) {
+      const keywordsStr = Array.isArray(keywords) ? keywords.join(", ") : keywords;
+      updateMeta("keywords", keywordsStr);
+    }
     updateMeta("robots", robots);
 
     // 3. Set OpenGraph tags

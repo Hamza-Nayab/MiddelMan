@@ -52,8 +52,25 @@ export default function Home() {
   return (
     <Layout>
       <SEO
-        title="MiddelMen | Build Trust, Then Pay"
-        description="Create a public trust profile, collect verified reviews, and share one link buyers can trust. The ultimate link-in-bio tool for creators and professionals in social commerce."
+        title="MiddelMen | Verified Reviews, Seller Trust Profiles & Social Commerce"
+        description="MiddelMen (MiddleMen) is the trust infrastructure for online commerce. Check verified seller reviews, verify seller reputations, and create trusted link-in-bio profiles."
+        keywords={[
+          "MiddelMen",
+          "MiddleMen",
+          "Middleman",
+          "Middel Men",
+          "Middle Man",
+          "reviews",
+          "seller reviews",
+          "check seller reviews",
+          "middleman reviews",
+          "middelmen reviews",
+          "trust profile",
+          "verified reviews",
+          "social commerce trust",
+          "seller reputation",
+          "trust score",
+        ]}
         schema={{
           "@context": "https://schema.org",
           "@graph": [
@@ -62,15 +79,25 @@ export default function Home() {
               "@id": "https://middelmen.com/#website",
               "url": "https://middelmen.com",
               "name": "MiddelMen",
-              "description": "Verify Your Digital Identity & Build Seller Trust",
+              "alternateName": ["MiddleMen", "Middleman", "Middel Men", "Middle Man"],
+              "description": "Verified seller reviews, trust scores, and reputation profiles for social commerce.",
               "publisher": {
                 "@id": "https://middelmen.com/#organization"
+              },
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://middelmen.com/search?q={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
               }
             },
             {
               "@type": "Organization",
               "@id": "https://middelmen.com/#organization",
               "name": "MiddelMen",
+              "alternateName": ["MiddleMen", "Middleman", "Middel Men", "Middle Man"],
               "url": "https://middelmen.com",
               "logo": {
                 "@type": "ImageObject",
@@ -78,8 +105,7 @@ export default function Home() {
               },
               "sameAs": [
                 "https://twitter.com/middelman",
-                "https://instagram.com/middelman",
-                "https://github.com/middelman"
+                "https://instagram.com/middelman"
               ]
             }
           ]

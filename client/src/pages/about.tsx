@@ -30,8 +30,17 @@ export default function About() {
   return (
     <Layout>
       <SEO
-        title="About MiddelMen | Trust Infrastructure for Social Commerce"
-        description="Learn how MiddelMen helps independent sellers build credibility, collect verified reviews, and secure transactions in social commerce."
+        title="About MiddelMen | Trust Infrastructure for Social Commerce & Reviews"
+        description="Learn how MiddelMen (MiddleMen) helps buyers verify online sellers, read authentic customer reviews, and eliminates social commerce scams."
+        keywords={[
+          "About MiddelMen",
+          "About MiddleMen",
+          "About Middleman",
+          "what is MiddelMen",
+          "social commerce trust platform",
+          "verified seller reviews",
+          "seller reputation management",
+        ]}
         schema={{
           "@context": "https://schema.org",
           "@type": "FAQPage",

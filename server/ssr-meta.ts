@@ -58,6 +58,7 @@ function escapeHtml(str: string): string {
 export interface ProfileMeta {
   title: string;
   description: string;
+  keywords: string;
   ogImage: string;
   canonicalUrl: string;
   jsonLd: string;
@@ -77,21 +78,25 @@ export function buildMetaTags(
 ): ProfileMeta {
   const title = `${profile.displayName} | MiddelMen Trust Profile`;
   const description = profile.bio
-    ? `${profile.bio.slice(0, 150)}${profile.bio.length > 150 ? "…" : ""}`
-    : `View ${profile.displayName}'s verified reviews, seller reputation, and trusted profile on MiddelMen.`;
+    ? `Read verified customer reviews and reputation for ${profile.displayName} (@${profile.username}) on MiddelMen (MiddleMen). ${profile.bio.slice(0, 150)}${profile.bio.length > 150 ? "…" : ""}`
+    : `Read verified customer reviews, ratings, and seller reputation for ${profile.displayName} (@${profile.username}) on MiddelMen (MiddleMen). Check seller trust score and links before transacting.`;
+  const keywords = `${profile.displayName}, ${profile.username}, ${profile.displayName} reviews, ${profile.username} reviews, ${profile.displayName} MiddelMen, ${profile.displayName} MiddleMen, ${profile.username} MiddleMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman`;
   const canonicalUrl = `${baseUrl}/${encodeURIComponent(profile.username)}`;
   const ogImage = profile.avatarUrl || `${baseUrl}/opengraph.jpg`;
 
   const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
+    name: `${profile.displayName} Reviews & Trust Profile | MiddelMen`,
+    description,
+    url: canonicalUrl,
     mainEntity: {
       "@type": "Person",
       name: profile.displayName,
       alternateName: profile.username,
       url: canonicalUrl,
       image: ogImage,
-      description,
+      description: profile.bio || description,
     },
   };
 
@@ -103,6 +108,7 @@ export function buildMetaTags(
   return {
     title,
     description,
+    keywords,
     ogImage,
     canonicalUrl,
     jsonLd: JSON.stringify(jsonLd),
@@ -116,6 +122,7 @@ export function buildMetaTags(
 export function rewriteHtml(html: string, meta: ProfileMeta): string {
   const t = escapeHtml(meta.title);
   const d = escapeHtml(meta.description);
+  const k = escapeHtml(meta.keywords || "");
   const img = escapeHtml(meta.ogImage);
   const url = escapeHtml(meta.canonicalUrl);
 
@@ -124,6 +131,8 @@ export function rewriteHtml(html: string, meta: ProfileMeta): string {
   html = html.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "");
   // Remove existing description metas
   html = html.replace(/<meta[^>]+name=["']description["'][^>]*>/gi, "");
+  // Remove existing keywords metas
+  html = html.replace(/<meta[^>]+name=["']keywords["'][^>]*>/gi, "");
   // Remove existing og: property metas
   html = html.replace(/<meta[^>]+property=["']og:[^"']+["'][^>]*>/gi, "");
   // Remove existing twitter: name metas
@@ -137,6 +146,7 @@ export function rewriteHtml(html: string, meta: ProfileMeta): string {
   const seoTags = [
     `<title>${t}</title>`,
     `<meta name="description" content="${d}" />`,
+    `<meta name="keywords" content="${k}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:title" content="${t}" />`,
     `<meta property="og:description" content="${d}" />`,

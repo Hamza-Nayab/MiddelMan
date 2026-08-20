@@ -112,8 +112,19 @@ export default function SearchPage() {
   return (
     <Layout>
       <SEO
-        title="Discover Creators & Sellers | MiddelMen"
-        description="Search and verify seller usernames, find trusted creators, and view reviews on MiddelMen."
+        title="Search Creators, Sellers & Reviews | MiddelMen (MiddleMen)"
+        description="Search and verify seller usernames, find trusted creators, check seller ratings, and view customer reviews on MiddelMen (MiddleMen)."
+        keywords={[
+          "search sellers",
+          "find seller reviews",
+          "verify seller",
+          "check seller reviews",
+          "MiddelMen search",
+          "MiddleMen search",
+          "Middleman reviews",
+          "trusted sellers",
+          "social commerce reviews",
+        ]}
       />
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
