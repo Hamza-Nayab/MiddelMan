@@ -105,7 +105,9 @@ export function Layout({
                 size="sm"
                 className={cn(
                   "text-muted-foreground whitespace-nowrap",
-                  location.startsWith("/search") && "text-primary bg-accent",
+                  location.startsWith("/search")
+                    ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                    : "hover:bg-muted text-foreground",
                 )}
               >
                 Search
@@ -129,7 +131,9 @@ export function Layout({
               className={cn(
                 buttonVariants({ variant: "ghost" }),
                 "text-sm",
-                location === "/about" && "bg-accent",
+                location === "/about"
+                  ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                  : "hover:bg-muted text-foreground",
               )}
             >
               About
@@ -142,7 +146,9 @@ export function Layout({
                     className={cn(
                       buttonVariants({ variant: "ghost" }),
                       "text-sm",
-                      location === "/dashboard" && "bg-accent",
+                      location === "/dashboard"
+                        ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                        : "hover:bg-muted text-foreground",
                     )}
                   >
                     Dashboard
@@ -154,7 +160,9 @@ export function Layout({
                     className={cn(
                       buttonVariants({ variant: "ghost" }),
                       "text-sm",
-                      location === "/my-reviews" && "bg-accent",
+                      location === "/my-reviews"
+                        ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                        : "hover:bg-muted text-foreground",
                     )}
                   >
                     My Reviews
@@ -166,7 +174,9 @@ export function Layout({
                     className={cn(
                       buttonVariants({ variant: "ghost" }),
                       "text-sm",
-                      location === "/admin" && "bg-accent",
+                      location === "/admin"
+                        ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                        : "hover:bg-muted text-foreground",
                     )}
                   >
                     Admin
@@ -248,7 +258,9 @@ export function Layout({
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                        location === "/about" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                        location === "/about"
+                          ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                          : "text-muted-foreground",
                       )}
                     >
                       About
@@ -262,7 +274,9 @@ export function Layout({
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={cn(
                               "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                              location === "/dashboard" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                              location === "/dashboard"
+                                ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                                : "text-muted-foreground",
                             )}
                           >
                             Dashboard
@@ -274,7 +288,9 @@ export function Layout({
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={cn(
                               "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                              location === "/my-reviews" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                              location === "/my-reviews"
+                                ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                                : "text-muted-foreground",
                             )}
                           >
                             My Reviews
@@ -286,7 +302,9 @@ export function Layout({
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={cn(
                               "flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                              location === "/admin" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                              location === "/admin"
+                                ? "bg-primary text-white hover:bg-primary-hover hover:text-white"
+                                : "text-muted-foreground",
                             )}
                           >
                             Admin
