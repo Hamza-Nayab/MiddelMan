@@ -332,7 +332,7 @@ export const registerSchema = z
     confirmPassword: z.string(),
     role: z.enum(["buyer", "seller"]),
     username: usernameSchema.optional(),
-    avatarUrl: z.string().url().optional(),
+    avatarUrl: z.string().min(1).max(500).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -357,7 +357,7 @@ export const changeUsernameSchema = z.object({
 
 export const onboardingSchema = z.object({
   displayName: displayNameSchema.optional(),
-  avatarUrl: z.string().url().optional(),
+  avatarUrl: z.string().min(1).max(500).optional(),
   bio: z.string().min(10).max(500).optional(),
   username: usernameSchema.optional(),
   role: z.enum(["buyer", "seller"]).optional(),

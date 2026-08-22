@@ -26,7 +26,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api, Profile } from "@/lib/api";
 import { compressAvatar } from "@/lib/avatar";
 import { PRESET_AVATARS, getDefaultPresetAvatar } from "@/lib/preset-avatars";
-import { Upload } from "lucide-react";
+import { Upload, AlertCircle } from "lucide-react";
 
 const displayNameSchema = z
   .string()
@@ -65,6 +65,7 @@ export function OnboardingWizard({
     currentProfile?.avatarUrl || getDefaultPresetAvatar(),
   );
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -85,6 +86,7 @@ export function OnboardingWizard({
       });
     },
     onSuccess: () => {
+      setSubmitError(null);
       queryClient.invalidateQueries({ queryKey: ["me"] });
       toast({
         title: "Profile complete!",
@@ -92,16 +94,54 @@ export function OnboardingWizard({
       });
       onComplete();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      // Try to extract field-level errors from the server response
+      let errorMessage =
+        error?.message || "Something went wrong. Please try again.";
+      let navigateToStep: "bio" | "avatar" | null = null;
+
+      // Parse structured validation errors from the API
+      const details = error?.details || error?.error?.details;
+      if (details?.fieldErrors) {
+        const fieldErrors = details.fieldErrors as Record<string, string[]>;
+        const fieldNames = Object.keys(fieldErrors);
+        const messages = fieldNames
+          .map((field) => `${field}: ${fieldErrors[field].join(", ")}`)
+          .join("; ");
+        errorMessage = messages || errorMessage;
+
+        // Navigate to the step that has the error
+        if (fieldNames.some((f) => f === "displayName" || f === "bio")) {
+          navigateToStep = "bio";
+        } else if (fieldNames.some((f) => f === "avatarUrl")) {
+          navigateToStep = "avatar";
+        }
+      }
+
+      // Check for common error patterns in the message
+      if (/display\s*name/i.test(errorMessage) || /bio/i.test(errorMessage)) {
+        navigateToStep = navigateToStep || "bio";
+      } else if (/avatar/i.test(errorMessage)) {
+        navigateToStep = navigateToStep || "avatar";
+      }
+
+      setSubmitError(errorMessage);
+
+      if (navigateToStep) {
+        setStep(navigateToStep);
+      }
+
       toast({
         title: "Setup failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },
   });
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -127,16 +167,26 @@ export function OnboardingWizard({
   };
 
   const handleNext = async () => {
+    setSubmitError(null);
+
     if (step === "bio") {
       const isBioStepValid = await form.trigger(["displayName", "bio"], {
         shouldFocus: true,
       });
       if (!isBioStepValid) {
-        toast({
-          title: "Please fix the highlighted fields",
-          description: "Display name and bio are required before continuing.",
-          variant: "destructive",
-        });
+        // Build a specific error message from the form errors
+        const errors = form.formState.errors;
+        const errorParts: string[] = [];
+        if (errors.displayName) {
+          errorParts.push(`Display Name: ${errors.displayName.message}`);
+        }
+        if (errors.bio) {
+          errorParts.push(`Bio: ${errors.bio.message}`);
+        }
+
+        setSubmitError(
+          errorParts.join(" · ") || "Please fix the highlighted fields.",
+        );
         return;
       }
 
@@ -147,6 +197,8 @@ export function OnboardingWizard({
   };
 
   const handlePrevious = () => {
+    setSubmitError(null);
+
     if (step === "confirm") {
       setStep("avatar");
     } else if (step === "avatar") {
@@ -155,15 +207,31 @@ export function OnboardingWizard({
   };
 
   const handleSubmit = async () => {
+    setSubmitError(null);
+
     const valid = await form.trigger(["displayName", "bio"], {
       shouldFocus: true,
     });
 
     if (!valid) {
+      const errors = form.formState.errors;
+      const errorParts: string[] = [];
+      if (errors.displayName) {
+        errorParts.push(`Display Name: ${errors.displayName.message}`);
+      }
+      if (errors.bio) {
+        errorParts.push(`Bio: ${errors.bio.message}`);
+      }
+
       setStep("bio");
+      setSubmitError(
+        errorParts.join(" · ") || "Please complete the required fields.",
+      );
       toast({
         title: "Please complete required fields",
-        description: "Add a valid display name and bio to finish onboarding.",
+        description:
+          errorParts.join(" · ") ||
+          "Add a valid display name and bio to finish onboarding.",
         variant: "destructive",
       });
       return;
@@ -171,6 +239,14 @@ export function OnboardingWizard({
 
     completeOnboardingMutation.mutate(form.getValues());
   };
+
+  const ErrorBanner = () =>
+    submitError ? (
+      <div className="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+        <span>{submitError}</span>
+      </div>
+    ) : null;
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -200,6 +276,8 @@ export function OnboardingWizard({
             <div className="text-sm text-muted-foreground">
               Tell us about you and your business.
             </div>
+
+            <ErrorBanner />
 
             <Form {...form}>
               <FormField
@@ -245,6 +323,8 @@ export function OnboardingWizard({
               Choose or upload an avatar.
             </div>
 
+            <ErrorBanner />
+
             {/* Selected avatar preview */}
             <div className="flex justify-center">
               <img
@@ -256,7 +336,9 @@ export function OnboardingWizard({
 
             {/* Grid avatar selector */}
             <div className="space-y-3">
-              <p className="text-sm font-medium">Select or upload an avatar:</p>
+              <p className="text-sm font-medium">
+                Select or upload an avatar:
+              </p>
               <div className="grid grid-cols-4 gap-3">
                 {/* Upload custom button */}
                 <label className="flex flex-col items-center gap-1 cursor-pointer group">
@@ -279,6 +361,7 @@ export function OnboardingWizard({
                 {PRESET_AVATARS.map((url, index) => (
                   <button
                     key={index}
+                    type="button"
                     onClick={() => setSelectedAvatarUrl(url)}
                     className={`h-20 w-20 rounded-lg border-2 overflow-hidden transition ${
                       selectedAvatarUrl === url
@@ -309,6 +392,8 @@ export function OnboardingWizard({
             <div className="text-sm text-muted-foreground mb-4">
               Here's a preview of your seller profile:
             </div>
+
+            <ErrorBanner />
 
             <div className="space-y-3 border rounded-lg p-4">
               <div className="flex justify-center">
