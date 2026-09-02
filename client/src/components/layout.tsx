@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ import {
   Shield,
   ChevronDown,
   User,
+  Compass,
 } from "lucide-react";
 import logoImg from "@/assets/middelman-bg.png";
 import { NotificationBell } from "@/components/notification-bell";
@@ -46,6 +47,7 @@ export function Layout({
 }) {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { data: me, isLoading } = useMeQuery();
 
@@ -63,6 +65,18 @@ export function Layout({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Keyboard shortcut listener for ⌘K / Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) {
@@ -88,46 +102,49 @@ export function Layout({
 
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
-      {/* Defined navbar layer with clean border and subtle elevation shadow */}
-      <nav className="border-b border-border/80 bg-background/95 backdrop-blur-md shadow-xs sticky top-0 z-50 transition-all">
-        <div className="container mx-auto px-4 max-w-7xl h-16 flex items-center justify-between gap-4">
-          {/* Left Zone: Brand Logo with visual weight & Nav Links */}
-          <div className="flex items-center gap-6">
+      {/* Distinct navbar layer with crisp bottom border, subtle elevation shadow, and backdrop blur */}
+      <nav className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md shadow-[0_2px_15px_-3px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.03)] dark:shadow-[0_2px_15px_-3px_rgba(0,0,0,0.4)] sticky top-0 z-50 transition-all">
+        <div className="container mx-auto px-4 max-w-7xl h-16 flex items-center justify-between gap-2 sm:gap-4">
+          
+          {/* ZONE 1: Left - Brand Logo with Micro-interaction & Primary Nav Links */}
+          <div className="flex items-center gap-6 lg:gap-8 shrink-0">
             <Link
               href="/"
-              className="flex items-center gap-2.5 font-heading font-extrabold text-xl tracking-tight text-foreground hover:opacity-90 transition-opacity"
+              className="group flex items-center gap-2.5 font-heading font-extrabold text-xl tracking-tight text-foreground transition-opacity"
             >
-              <img
-                src={logoImg}
-                alt="MiddelMen"
-                className="h-9 w-9 rounded-lg object-contain shadow-xs"
-              />
-              <span className="bg-gradient-to-r from-foreground via-foreground to-primary/80 bg-clip-text">
+              <div className="relative overflow-hidden rounded-lg p-0.5 transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95">
+                <img
+                  src={logoImg}
+                  alt="MiddelMen"
+                  className="h-9 w-9 rounded-lg object-contain shadow-2xs"
+                />
+              </div>
+              <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary dark:from-white dark:via-slate-100 dark:to-sky-400 bg-clip-text font-black tracking-tight transition-all duration-200">
                 MiddelMen
               </span>
             </Link>
 
-            {/* Desktop Navigation Links */}
+            {/* Desktop Navigation Links (Removed redundant Search link; replaced with Explore) */}
             <div className="hidden md:flex items-center gap-1">
               <Link
                 href="/search"
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5",
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 active:scale-95",
                   location.startsWith("/search")
-                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-muted/70",
+                    ? "bg-primary/10 text-primary font-semibold dark:bg-primary/20"
+                    : "text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-zinc-900",
                 )}
               >
-                <Search className="w-3.5 h-3.5" />
-                Search
+                <Compass className="w-3.5 h-3.5 text-sky-500 transition-transform duration-200 group-hover:rotate-45" />
+                Explore
               </Link>
               <Link
                 href="/about"
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 active:scale-95",
                   location === "/about"
-                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-muted/70",
+                    ? "bg-primary/10 text-primary font-semibold dark:bg-primary/20"
+                    : "text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-zinc-900",
                 )}
               >
                 About
@@ -135,31 +152,39 @@ export function Layout({
             </div>
           </div>
 
-          {/* Center Zone: Quick Search Bar on larger viewports */}
-          <div className="hidden lg:flex flex-1 max-w-xs mx-4">
-            <form onSubmit={handleSearchSubmit} className="relative w-full">
-              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* ZONE 2: Center - Centered Search Bar with ⌘K Shortcut Hint and Accent Color */}
+          <div className="hidden md:flex flex-1 max-w-sm lg:max-w-md mx-3 lg:mx-6">
+            <form onSubmit={handleSearchSubmit} className="relative w-full group">
+              {/* Vibrant Sky Blue Search Icon as Brand Accent */}
+              <Search className="w-4 h-4 text-sky-500 dark:text-sky-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200 group-focus-within:text-primary" />
               <Input
+                ref={searchInputRef}
                 type="text"
-                placeholder="Search sellers..."
+                placeholder="Search sellers, categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8.5 w-full pl-8.5 pr-3 rounded-full border-border/70 bg-muted/30 hover:bg-muted/60 focus:bg-background text-xs transition-all duration-300"
+                className="h-9 w-full pl-10 pr-12 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-slate-100/90 dark:hover:bg-zinc-900 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-xs text-foreground placeholder:text-muted-foreground transition-all duration-200 shadow-2xs"
               />
+              {/* Keyboard Shortcut Hint */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-zinc-800 border border-slate-300/60 dark:border-slate-700/60 rounded shadow-2xs">
+                  <span className="text-[11px]">⌘</span>K
+                </kbd>
+              </div>
             </form>
           </div>
 
-          {/* Right Zone: User Area / CTA Actions */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* ZONE 3: Right - Grouped User Dropdown & High-Contrast CTAs */}
+          <div className="hidden md:flex items-center gap-3 shrink-0">
             {user ? (
               <>
-                {/* Primary Role Quick Action */}
+                {/* Contextual Quick Action Button */}
                 {user.role === "seller" && (
                   <Link
                     href="/dashboard"
                     className={cn(
                       buttonVariants({ size: "sm" }),
-                      "h-8.5 px-3.5 text-xs font-semibold gap-1.5 shadow-xs transition-all",
+                      "h-8.5 px-3.5 text-xs font-semibold gap-1.5 shadow-xs transition-all duration-150 hover:shadow-md active:scale-95",
                       location === "/dashboard"
                         ? "bg-primary text-primary-foreground"
                         : "bg-primary/90 hover:bg-primary text-primary-foreground",
@@ -178,7 +203,7 @@ export function Layout({
                         size: "sm",
                         variant: location === "/my-reviews" ? "default" : "outline",
                       }),
-                      "h-8.5 px-3.5 text-xs font-semibold gap-1.5 transition-all",
+                      "h-8.5 px-3.5 text-xs font-semibold gap-1.5 transition-all duration-150 active:scale-95",
                     )}
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
@@ -194,7 +219,7 @@ export function Layout({
                         size: "sm",
                         variant: location.startsWith("/admin") ? "default" : "outline",
                       }),
-                      "h-8.5 px-3.5 text-xs font-semibold gap-1.5 transition-all",
+                      "h-8.5 px-3.5 text-xs font-semibold gap-1.5 transition-all duration-150 active:scale-95",
                     )}
                   >
                     <Shield className="w-3.5 h-3.5" />
@@ -205,11 +230,11 @@ export function Layout({
                 {/* Notifications Bell */}
                 <NotificationBell />
 
-                {/* Grouped User Avatar Dropdown */}
+                {/* Grouped User Avatar Dropdown (Collapses username + role + logout) */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-full border border-border/70 bg-muted/20 hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-zinc-900/60 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:scale-95"
                       aria-label="User account menu"
                     >
                       <Avatar className="h-7 w-7 border border-border/80">
@@ -224,20 +249,20 @@ export function Layout({
                             .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs font-semibold max-w-[110px] truncate text-foreground">
+                      <span className="text-xs font-semibold max-w-[110px] truncate text-slate-800 dark:text-slate-200">
                         {profile?.displayName || user.username}
                       </span>
-                      <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                      <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-foreground transition-colors" />
                     </button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-md">
-                    {/* User Header */}
-                    <div className="px-2 py-2 border-b border-border/60 mb-1">
+                  <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-lg border-slate-200 dark:border-zinc-800 animate-in fade-in-50 zoom-in-95">
+                    {/* User Profile Header */}
+                    <div className="px-2.5 py-2.5 border-b border-border/60 mb-1">
                       <p className="text-sm font-semibold text-foreground truncate">
                         {profile?.displayName || user.username}
                       </p>
-                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                      <div className="flex items-center justify-between gap-2 mt-1">
                         <p className="text-xs text-muted-foreground truncate">
                           @{user.username || "user"}
                         </p>
@@ -262,7 +287,7 @@ export function Layout({
                         <DropdownMenuItem asChild>
                           <Link
                             href="/dashboard"
-                            className="flex items-center gap-2 cursor-pointer text-xs py-2"
+                            className="flex items-center gap-2.5 cursor-pointer text-xs py-2 hover:bg-muted"
                           >
                             <LayoutDashboard className="w-3.5 h-3.5 text-muted-foreground" />
                             <span>Seller Dashboard</span>
@@ -272,7 +297,7 @@ export function Layout({
                           <DropdownMenuItem asChild>
                             <Link
                               href={`/${user.username}`}
-                              className="flex items-center gap-2 cursor-pointer text-xs py-2"
+                              className="flex items-center gap-2.5 cursor-pointer text-xs py-2 hover:bg-muted"
                             >
                               <User className="w-3.5 h-3.5 text-muted-foreground" />
                               <span>View Public Profile</span>
@@ -286,7 +311,7 @@ export function Layout({
                       <DropdownMenuItem asChild>
                         <Link
                           href="/my-reviews"
-                          className="flex items-center gap-2 cursor-pointer text-xs py-2"
+                          className="flex items-center gap-2.5 cursor-pointer text-xs py-2 hover:bg-muted"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                           <span>My Reviews</span>
@@ -298,7 +323,7 @@ export function Layout({
                       <DropdownMenuItem asChild>
                         <Link
                           href="/admin"
-                          className="flex items-center gap-2 cursor-pointer text-xs py-2"
+                          className="flex items-center gap-2.5 cursor-pointer text-xs py-2 hover:bg-muted"
                         >
                           <Shield className="w-3.5 h-3.5 text-muted-foreground" />
                           <span>Admin Console</span>
@@ -312,7 +337,7 @@ export function Layout({
                     <DropdownMenuItem
                       onClick={() => logoutMutation.mutate()}
                       disabled={logoutMutation.isPending}
-                      className="flex items-center gap-2 cursor-pointer text-xs py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                      className="flex items-center gap-2.5 cursor-pointer text-xs py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Log Out</span>
@@ -321,15 +346,20 @@ export function Layout({
                 </DropdownMenu>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {/* High Contrast Sign In Link (Clickable, not grayed out) */}
                 <Link
                   href="/auth"
-                  className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-foreground px-3 py-1.5 transition-colors"
+                  className="text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-primary dark:hover:text-primary px-2.5 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-900 transition-all duration-150 active:scale-95"
                 >
                   Sign In
                 </Link>
+                {/* Strong Visual Anchor: Get Started CTA */}
                 <Link href="/auth">
-                  <Button size="sm" className="h-8.5 px-4 text-xs font-semibold shadow-xs">
+                  <Button
+                    size="sm"
+                    className="h-9 px-4 text-xs font-semibold shadow-xs hover:shadow-md hover:brightness-105 active:scale-95 transition-all duration-150"
+                  >
                     Get Started
                   </Button>
                 </Link>
@@ -337,8 +367,19 @@ export function Layout({
             )}
           </div>
 
-          {/* Mobile Navigation Trigger */}
+          {/* MOBILE NAVIGATION CONTROLS: Keeps Get Started CTA Visible & Shrinks Navigation into Drawer */}
           <div className="flex md:hidden items-center gap-2">
+            {!user && (
+              <Link href="/auth">
+                <Button
+                  size="sm"
+                  className="h-8 px-3 text-xs font-semibold shadow-xs active:scale-95 transition-all"
+                >
+                  Get Started
+                </Button>
+              </Link>
+            )}
+
             {user && <NotificationBell />}
 
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -346,7 +387,7 @@ export function Layout({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 text-foreground"
+                  className="h-9 w-9 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-zinc-900 active:scale-95 transition-transform"
                   aria-label="Toggle navigation menu"
                 >
                   {isMobileMenuOpen ? (
@@ -356,6 +397,7 @@ export function Layout({
                   )}
                 </Button>
               </SheetTrigger>
+
               <SheetContent
                 side="right"
                 className="w-[300px] sm:w-[360px] flex flex-col justify-between p-6 bg-background/98 backdrop-blur-xl border-l border-border"
@@ -378,7 +420,7 @@ export function Layout({
                     </SheetTitle>
                   </SheetHeader>
 
-                  {/* Mobile Quick Search */}
+                  {/* Mobile Search Bar */}
                   <form
                     onSubmit={(e) => {
                       handleSearchSubmit(e);
@@ -386,10 +428,10 @@ export function Layout({
                     }}
                     className="relative"
                   >
-                    <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Search className="w-4 h-4 text-sky-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <Input
                       type="text"
-                      placeholder="Search sellers..."
+                      placeholder="Search sellers, categories..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="h-10 rounded-full border-border/80 bg-muted/40 pl-10 pr-4 text-sm w-full focus:bg-background transition-all"
@@ -405,11 +447,11 @@ export function Layout({
                         "flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                         location.startsWith("/search")
                           ? "bg-primary text-primary-foreground font-semibold"
-                          : "text-slate-600 dark:text-slate-400 hover:bg-muted/70 hover:text-foreground",
+                          : "text-slate-800 dark:text-slate-200 hover:bg-muted/70 hover:text-foreground",
                       )}
                     >
-                      <Search className="w-4 h-4" />
-                      Search Sellers
+                      <Compass className="w-4 h-4 text-sky-500" />
+                      Explore Sellers
                     </Link>
                     <Link
                       href="/about"
@@ -418,7 +460,7 @@ export function Layout({
                         "flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                         location === "/about"
                           ? "bg-primary text-primary-foreground font-semibold"
-                          : "text-slate-600 dark:text-slate-400 hover:bg-muted/70 hover:text-foreground",
+                          : "text-slate-800 dark:text-slate-200 hover:bg-muted/70 hover:text-foreground",
                       )}
                     >
                       About MiddelMen
@@ -434,7 +476,7 @@ export function Layout({
                               "flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                               location === "/dashboard"
                                 ? "bg-primary text-primary-foreground font-semibold"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-muted/70 hover:text-foreground",
+                                : "text-slate-800 dark:text-slate-200 hover:bg-muted/70 hover:text-foreground",
                             )}
                           >
                             <LayoutDashboard className="w-4 h-4" />
@@ -449,7 +491,7 @@ export function Layout({
                               "flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                               location === "/my-reviews"
                                 ? "bg-primary text-primary-foreground font-semibold"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-muted/70 hover:text-foreground",
+                                : "text-slate-800 dark:text-slate-200 hover:bg-muted/70 hover:text-foreground",
                             )}
                           >
                             <MessageSquare className="w-4 h-4" />
@@ -464,7 +506,7 @@ export function Layout({
                               "flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                               location.startsWith("/admin")
                                 ? "bg-primary text-primary-foreground font-semibold"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-muted/70 hover:text-foreground",
+                                : "text-slate-800 dark:text-slate-200 hover:bg-muted/70 hover:text-foreground",
                             )}
                           >
                             <Shield className="w-4 h-4" />
@@ -523,7 +565,7 @@ export function Layout({
                         className="w-full"
                       >
                         <Button className="w-full justify-center text-sm font-semibold shadow-xs">
-                          Get Started
+                          Sign In / Register
                         </Button>
                       </Link>
                     </div>
