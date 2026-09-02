@@ -31,12 +31,12 @@ export function Footer() {
 
           {/* Visual Trust Reinforcement Badges */}
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 sm:gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-sky-300 border border-blue-500/20 shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
               Verified Sellers
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 shadow-2xs">
-              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-sky-300 border border-blue-500/20 shadow-2xs">
+              <Star className="w-3.5 h-3.5 text-blue-600 fill-blue-600 dark:text-sky-400 dark:fill-sky-400" />
               Real Reviews
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-sky-300 border border-blue-500/20 shadow-2xs">

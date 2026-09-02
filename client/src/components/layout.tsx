@@ -119,7 +119,7 @@ export function Layout({
                   className="h-9 w-9 rounded-lg object-contain shadow-2xs"
                 />
               </div>
-              <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary dark:from-white dark:via-slate-100 dark:to-sky-400 bg-clip-text font-black tracking-tight transition-all duration-200">
+              <span className="text-slate-900 dark:text-slate-50 font-black tracking-tight transition-colors duration-200">
                 MiddelMen
               </span>
             </Link>
@@ -160,10 +160,10 @@ export function Layout({
               <Input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search sellers, categories..."
+                placeholder="Quick search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full pl-10 pr-12 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-slate-100/90 dark:hover:bg-zinc-900 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-xs text-foreground placeholder:text-muted-foreground transition-all duration-200 shadow-2xs"
+                className="h-9 w-full pl-10 pr-12 rounded-full border border-slate-200 dark:border-slate-700/80 bg-slate-50/80 dark:bg-zinc-900/90 hover:bg-slate-100/90 dark:hover:bg-zinc-850 focus:bg-white dark:focus:bg-zinc-900 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 transition-all duration-200 shadow-2xs"
               />
               {/* Keyboard Shortcut Hint */}
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
@@ -415,7 +415,7 @@ export function Layout({
                           alt="MiddelMen"
                           className="h-8 w-8 rounded-lg object-contain shadow-xs"
                         />
-                        <span>MiddelMen</span>
+                        <span className="text-slate-900 dark:text-slate-50">MiddelMen</span>
                       </Link>
                     </SheetTitle>
                   </SheetHeader>
@@ -431,10 +431,10 @@ export function Layout({
                     <Search className="w-4 h-4 text-sky-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <Input
                       type="text"
-                      placeholder="Search sellers, categories..."
+                      placeholder="Quick search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 rounded-full border-border/80 bg-muted/40 pl-10 pr-4 text-sm w-full focus:bg-background transition-all"
+                      className="h-10 rounded-full border-border/80 bg-muted/40 pl-10 pr-4 text-sm w-full text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:bg-background transition-all"
                     />
                   </form>
 

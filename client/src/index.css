@@ -123,6 +123,45 @@
   --text-secondary: 217.92 19.2% 70%;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 223.08 47.8% 11.2%;
+    --foreground: 0 0% 98%;
+
+    --card: 223.08 47.8% 5%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 223.08 47.8% 5%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 210 100% 50%;
+    --primary-hover: 210 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 223.08 47.8% 20%;
+    --muted-foreground: 217.92 19.2% 60%;
+
+    --accent: 202.15 64.9% 59.8%;
+    --accent-foreground: 223.08 47.8% 11.2%;
+
+    --destructive: 0 84.6% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142.83 70.3% 45.2%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 224.62 10% 22%;
+    --input: 224.62 10% 22%;
+    --ring: 202.15 64.9% 59.8%;
+
+    --text-primary: 0 0% 98%;
+    --text-secondary: 217.92 19.2% 70%;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

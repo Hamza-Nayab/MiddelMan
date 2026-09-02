@@ -201,28 +201,22 @@ export default function Home() {
             {/* Left: Content */}
             <div className="space-y-5 lg:space-y-6">
               <div className="space-y-3 hero-slide-up hero-slide-up-1">
-                <h1
-                  className="text-5xl md:text-7xl font-bold font-heading leading-tight tracking-tight bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, #253c97 0%, #38b6ff 100%)",
-                  }}
-                >
+                <h1 className="text-5xl md:text-7xl font-bold font-heading leading-tight tracking-tight text-primary">
                   Build Trust
                   <br />
                   Then Pay.
                 </h1>
                 <p className="text-lg md:text-xl text-gray-700 max-w-lg leading-relaxed">
                   Create a public{" "}
-                  <span className="font-semibold" style={{ color: "#253c97" }}>
+                  <span className="font-semibold text-sky-500">
                     trust profile
                   </span>
                   , collect{" "}
-                  <span className="font-semibold" style={{ color: "#38b6ff" }}>
+                  <span className="font-semibold text-sky-500">
                     verified reviews
                   </span>
                   , and share{" "}
-                  <span className="font-semibold" style={{ color: "#253c97" }}>
+                  <span className="font-semibold text-sky-500">
                     one link
                   </span>{" "}
                   buyers can trust.
@@ -232,24 +226,15 @@ export default function Home() {
               {/* Trust Signals */}
               <div className="hero-slide-up hero-slide-up-2 flex flex-wrap gap-3 text-sm text-gray-600">
                 <span className="flex items-center gap-2">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: "#38b6ff" }}
-                  ></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                   Free to start
                 </span>
                 <span className="flex items-center gap-2">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: "#253c97" }}
-                  ></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                   Dispute protection
                 </span>
                 <span className="flex items-center gap-2">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: "#38b6ff" }}
-                  ></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                   No spam
                 </span>
               </div>
@@ -263,7 +248,7 @@ export default function Home() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="w-full px-5 py-4 pl-13 text-foreground placeholder-gray-500 border border-gray-300 rounded-2xl bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 group-hover:border-gray-400"
+                    className="w-full px-5 py-4 pl-13 text-foreground placeholder-gray-500 border border-gray-300 rounded-2xl bg-white shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 group-hover:border-gray-400"
                     style={
                       {
                         boxShadow: "rgba(56,182,255,0.1) 0 4px 12px",
@@ -272,8 +257,7 @@ export default function Home() {
                   />
                   <button
                     onClick={handleSearch}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-all duration-200"
-                    style={{ color: "#253c97" }}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary transition-all duration-200 hover:scale-105"
                     aria-label="Search"
                   >
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,21 +278,7 @@ export default function Home() {
                 <Link href="/auth">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto px-8 py-3 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg active:scale-95"
-                    style={{
-                      backgroundColor: "#253c97",
-                      boxShadow: "0 4px 16px rgba(37,60,151,0.2)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow =
-                        "0 8px 24px rgba(37,60,151,0.35)";
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 16px rgba(37,60,151,0.2)";
-                      e.currentTarget.style.transform = "translateY(0)";
-                    }}
+                    className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
                   >
                     Create Seller Profile
                   </Button>
@@ -393,7 +363,7 @@ export default function Home() {
                   className="w-1/2 h-full object-contain hero-svg-animation"
                   style={{
                     filter: "drop-shadow(0 4px 12px rgba(37,60,151,0.08))",
-                    transform: "scale(1.5)",
+                    transform: "scale(1.32)",
                     transformOrigin: "center",
                   }}
                 />
@@ -403,15 +373,15 @@ export default function Home() {
                   className="w-1/2 h-full object-contain hero-svg-animation"
                   style={{
                     filter: "drop-shadow(0 4px 12px rgba(37,60,151,0.08))",
-                    transform: "scale(1.5)",
+                    transform: "scale(1.62)",
                     transformOrigin: "center",
                   }}
                 />
               </div>
 
-              {/* Floating Badge 1 */}
+              {/* Floating Badge 1: Top Right */}
               <div
-                className="absolute top-16 right-12 float-animation z-20 badge-parallax"
+                className="absolute top-14 right-8 lg:right-12 float-animation z-20 badge-parallax pointer-events-auto"
                 style={{
                   transform: `translate(${!prefersReducedMotion ? parallax.x * 0.2 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.2 : 0}px)`,
                 }}
@@ -419,9 +389,9 @@ export default function Home() {
                 <PillBadge icon="✓" text="Verified Reviews" />
               </div>
 
-              {/* Floating Badge 2 */}
+              {/* Floating Badge 2: Left of SVGs */}
               <div
-                className="absolute bottom-24 left-12 float-animation-2 z-20 badge-parallax"
+                className="absolute -left-16 lg:-left-28 top-[36%] -translate-y-1/2 float-animation-2 z-20 badge-parallax pointer-events-auto"
                 style={{
                   transform: `translate(${!prefersReducedMotion ? parallax.x * 0.15 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.15 : 0}px)`,
                 }}
@@ -429,9 +399,9 @@ export default function Home() {
                 <PillBadge icon="🛡️" text="Dispute Support" />
               </div>
 
-              {/* Floating Badge 3 */}
+              {/* Floating Badge 3: Bottom Right */}
               <div
-                className="absolute bottom-16 right-16 float-animation-3 z-20 badge-parallax"
+                className="absolute bottom-14 right-8 lg:right-12 float-animation-3 z-20 badge-parallax pointer-events-auto"
                 style={{
                   transform: `translate(${!prefersReducedMotion ? parallax.x * 0.2 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.2 : 0}px)`,
                 }}
@@ -706,7 +676,7 @@ export default function Home() {
 function PillBadge({ icon, text }: { icon: string; text: string }) {
   return (
     <div
-      className="px-3 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm text-xs font-medium shadow-sm transition-all duration-300"
+      className="px-3.5 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm text-xs font-medium shadow-sm transition-all duration-300"
       style={{
         background: "rgba(255, 255, 255, 0.90)",
         border: "1px solid rgba(100, 116, 139, 0.15)",
@@ -715,7 +685,6 @@ function PillBadge({ icon, text }: { icon: string; text: string }) {
     >
       <span className="text-sm">{icon}</span>
       <span>{text}</span>
-      <span className="ml-1 text-slate-400">✓</span>
     </div>
   );
 }
