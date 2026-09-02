@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/seo";
+import { Footer } from "@/components/footer";
 import {
   Accordion,
   AccordionContent,
@@ -393,6 +394,7 @@ export default function About() {
           </Link>
         </section>
       </div>
+      <Footer />
     </Layout>
   );
 }

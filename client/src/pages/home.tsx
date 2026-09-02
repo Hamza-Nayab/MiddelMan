@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/seo";
-import logoImg from "@/assets/middelman-bg.png";
+import { Footer } from "@/components/footer";
 import {
   UserRound,
   BadgeCheck,
@@ -13,9 +13,6 @@ import {
   Shield,
   CheckCircle,
   Lock,
-  Twitter,
-  Instagram,
-  Github,
 } from "lucide-react";
 
 export default function Home() {
@@ -701,185 +698,8 @@ export default function Home() {
         </div>
       </section>
 
-      <HomeFooter />
+      <Footer />
     </Layout>
-  );
-}
-
-function HomeFooter() {
-  return (
-    <footer className="border-t border-border bg-background/95">
-      <div className="container mx-auto px-4 max-w-7xl py-12 md:py-14">
-        <div className="text-center md:text-left mb-10">
-          <div className="flex items-center justify-center md:justify-start gap-3">
-            <img
-              src={logoImg}
-              alt="MiddelMen logo"
-              className="h-9 w-9 rounded-[4px] object-contain"
-            />
-            <h2 className="text-2xl md:text-3xl font-bold text-text-primary">
-              MiddelMen
-            </h2>
-          </div>
-          <p className="mt-2 text-sm md:text-base text-text-secondary">
-            Trusted profiles. Real reviews. Zero scams.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 pb-10 border-b border-border text-center md:text-left">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
-              Product
-            </h3>
-            <ul className="space-y-2.5 text-sm text-text-secondary">
-              <li>
-                <Link href="/" className="hover:text-primary transition-colors">
-                  Explore
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/search"
-                  className="hover:text-primary transition-colors"
-                >
-                  Search
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="hover:text-primary transition-colors"
-                >
-                  Dashboard
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
-              Company
-            </h3>
-            <ul className="space-y-2.5 text-sm text-text-secondary">
-              <li>
-                <Link
-                  href="/about#about"
-                  className="hover:text-primary transition-colors"
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about#faq"
-                  className="hover:text-primary transition-colors"
-                >
-                  FAQs
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="/about#privacy"
-                  className="hover:text-primary transition-colors"
-                >
-                  Privacy
-                </a>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="hover:text-primary transition-colors"
-                >
-                  Terms
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
-              Sellers
-            </h3>
-            <ul className="space-y-2.5 text-sm text-text-secondary">
-              <li>
-                <Link
-                  href="/auth"
-                  className="hover:text-primary transition-colors"
-                >
-                  Create profile
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="hover:text-primary transition-colors"
-                >
-                  Manage links
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="hover:text-primary transition-colors"
-                >
-                  Analytics
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
-              Socials
-            </h3>
-            <ul className="space-y-2.5 text-sm text-text-secondary">
-              <li>
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Twitter size={15} />
-                  Twitter/X
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Instagram size={15} />
-                  Instagram
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Github size={15} />
-                  GitHub
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-text-secondary">
-          <p>© 2025 MiddelMen. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/terms"
-              className="hover:text-primary transition-colors"
-            >
-              Terms
-            </Link>
-            <a href="#" className="hover:text-primary transition-colors">
-              Privacy
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
   );
 }
 

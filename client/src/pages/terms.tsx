@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/seo";
+import { Footer } from "@/components/footer";
 
 const gradientStyle = {
   backgroundImage: "linear-gradient(135deg, #253c97 0%, #38b6ff 100%)",
@@ -179,6 +180,7 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
+      <Footer />
     </Layout>
   );
 }
