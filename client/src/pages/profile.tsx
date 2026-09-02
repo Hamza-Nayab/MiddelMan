@@ -537,8 +537,8 @@ export default function ProfilePage() {
         >
           <img
             src={logoImg}
-            alt=""
-            className="h-9 w-9 rounded-[4px] object-cover"
+            alt="MiddelMen"
+            className="h-9 w-9 rounded-[4px] object-contain"
           />
           <span className="font-semibold">MiddelMen</span>
         </Link>

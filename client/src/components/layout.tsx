@@ -78,8 +78,8 @@ export function Layout({
           >
             <img
               src={logoImg}
-              alt=""
-              className="h-10 w-10 rounded-[4px] object-cover"
+              alt="MiddelMen"
+              className="h-10 w-10 rounded-[4px] object-contain"
             />
             MiddelMen
           </Link>
@@ -225,8 +225,8 @@ export function Layout({
                       >
                         <img
                           src={logoImg}
-                          alt=""
-                          className="h-8 w-8 rounded-[4px] object-cover"
+                          alt="MiddelMen"
+                          className="h-8 w-8 rounded-[4px] object-contain"
                         />
                         MiddelMen
                       </Link>

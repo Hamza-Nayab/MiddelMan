@@ -715,7 +715,7 @@ function HomeFooter() {
             <img
               src={logoImg}
               alt="MiddelMen logo"
-              className="h-9 w-9 rounded-[4px] object-cover"
+              className="h-9 w-9 rounded-[4px] object-contain"
             />
             <h2 className="text-2xl md:text-3xl font-bold text-text-primary">
               MiddelMen
