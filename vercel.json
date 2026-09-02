@@ -12,7 +12,7 @@
       "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/sitemap.xml"
     },
     {
-      "source": "/((?!api/|sitemap\\.xml|assets/|illustrations/|.*\\..*).*)",
+      "source": "/((?!api/|sitemap\\.xml|assets/|illustrations/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
       "destination": "/index.html"
     }
   ]
