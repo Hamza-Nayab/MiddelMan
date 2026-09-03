@@ -37,6 +37,8 @@ type ProfilePreviewPhoneProps = {
   gradientPreset?: ProfileGradientPreset;
   accentColor?: string | null;
   compact?: boolean;
+  openHref?: string;
+  openTarget?: string;
 };
 
 const MOCK_REVIEWS = [
@@ -78,6 +80,8 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
   gradientPreset,
   accentColor,
   compact = false,
+  openHref,
+  openTarget,
 }: ProfilePreviewPhoneProps) {
   const activeLinks = useMemo(
     () => links.filter((link) => link.isActive),
@@ -96,7 +100,8 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
     return whatsappE164 ? buildWhatsAppUrl(whatsappE164) : null;
   }, [whatsappNumber, countryCode]);
 
-  const profileHref = username ? `/${username}` : "/";
+  const profileHref = openHref || (username ? `/${username}` : "/");
+  const resolvedTarget = openTarget ?? (openHref ? undefined : "_blank");
   const appearance = resolveProfileAppearance({
     theme,
     backgroundPreset,
@@ -120,10 +125,10 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
           </h3>
           <Link
             href={profileHref}
-            target="_blank"
+            target={resolvedTarget}
             className={cn(
               "rounded-full px-2 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950",
-              !username && "pointer-events-none opacity-50",
+              !profileHref && "pointer-events-none opacity-50",
             )}
           >
             Open
