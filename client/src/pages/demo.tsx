@@ -19,42 +19,43 @@ import {
   platformIconMap,
   type PlatformKey,
 } from "@/lib/graphics";
+import logoImg from "@/assets/middelman-bg.png";
 
 const DEMO_PROFILE = {
   id: 1,
-  username: "johndoe",
-  displayName: "John Doe",
-  bio: "Digital Entrepreneur • Tech Enthusiast • Always Learning",
-  avatar: "nova",
+  username: "middelmen",
+  displayName: "MiddelMen",
+  bio: "SAAS, TrustLayer, Trust Partner",
+  avatar: logoImg,
   theme: "gradient" as const,
 };
 
 const DEMO_LINKS = [
   {
     id: 1,
-    title: "My Portfolio",
-    url: "https://example.com",
+    title: "Official Platform",
+    url: "https://middelmen.com",
     icon: "website",
     isActive: true,
   },
   {
     id: 2,
     title: "LinkedIn",
-    url: "https://linkedin.com/in/johndoe",
+    url: "https://linkedin.com/company/middelmen",
     icon: "linkedin",
     isActive: true,
   },
   {
     id: 3,
     title: "X (Twitter)",
-    url: "https://twitter.com/johndoe",
+    url: "https://twitter.com/middelmen",
     icon: "x",
     isActive: true,
   },
   {
     id: 4,
     title: "GitHub",
-    url: "https://github.com/johndoe",
+    url: "https://github.com/middelmen",
     icon: "github",
     isActive: true,
   },
@@ -66,7 +67,7 @@ const DEMO_REVIEWS = [
     authorName: "Sarah",
     rating: 5,
     comment:
-      "Fantastic work! John delivers excellence on every project. Highly recommended!",
+      "Fantastic work! MiddelMen delivers excellence on every transaction. Highly recommended!",
     createdAt: new Date(Date.now() - 86400000).toISOString(),
   },
   {
@@ -101,7 +102,7 @@ export default function DemoProfile() {
     comment: "",
   });
 
-  const avatarUrl = getAvatarUrl(DEMO_PROFILE.avatar);
+  const avatarUrl = logoImg;
   const avgRating =
     DEMO_REVIEWS.length > 0
       ? (
@@ -123,9 +124,13 @@ export default function DemoProfile() {
         <div className="container mx-auto px-4 max-w-2xl">
           {/* Profile Header */}
           <div className="text-center mb-12">
-            <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-primary/20">
-              <AvatarImage src={avatarUrl} alt={DEMO_PROFILE.displayName} />
-              <AvatarFallback>{DEMO_PROFILE.displayName[0]}</AvatarFallback>
+            <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-primary/20 bg-white shadow-sm flex items-center justify-center overflow-hidden">
+              <AvatarImage
+                src={avatarUrl}
+                alt={DEMO_PROFILE.displayName}
+                className="object-contain p-2"
+              />
+              <AvatarFallback>MM</AvatarFallback>
             </Avatar>
             <h1 className="text-4xl font-bold mb-2">
               {DEMO_PROFILE.displayName}

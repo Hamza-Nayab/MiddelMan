@@ -1012,15 +1012,6 @@ function ProvideCard({
           {description}
         </p>
       </div>
-
-      {!comingSoon && (
-        <div className="mt-8 pt-2">
-          <span className="text-sm font-bold text-primary px-3 py-1.5 -ml-3 rounded-full hover:bg-blue-50 transition-all flex items-center gap-1 w-fit cursor-pointer border-b border-transparent hover:border-blue-100">
-            Learn more 
-            <span className="group-hover:translate-x-0.5 transition-transform text-lg leading-none">&rarr;</span>
-          </span>
-        </div>
-      )}
     </div>
   );
 }

@@ -533,14 +533,25 @@ export default function ProfilePage() {
       <div className="relative z-10 container max-w-6xl mx-auto px-4 py-8 md:py-12 pb-24">
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
+          className="group mb-8 inline-flex items-center gap-2.5 font-heading font-extrabold text-xl tracking-tight text-foreground transition-opacity"
         >
-          <img
-            src={logoImg}
-            alt="MiddelMen"
-            className="h-9 w-9 rounded-[4px] object-contain"
-          />
-          <span className="font-semibold">MiddelMen</span>
+          <div className="relative overflow-hidden rounded-lg p-0.5 transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95">
+            <img
+              src={logoImg}
+              alt="MiddelMen"
+              className="h-9 w-9 rounded-lg object-contain shadow-2xs"
+            />
+          </div>
+          <span
+            className={cn(
+              "font-black tracking-tight transition-colors duration-200",
+              appearance.usesDynamicBackground && !appearance.usesBrightBackground
+                ? "text-white"
+                : "text-slate-900 dark:text-slate-50",
+            )}
+          >
+            MiddelMen
+          </span>
         </Link>
 
         <motion.section
