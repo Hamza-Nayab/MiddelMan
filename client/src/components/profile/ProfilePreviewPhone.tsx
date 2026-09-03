@@ -1,8 +1,9 @@
 import { memo, useMemo } from "react";
 import { Link } from "wouter";
 import { Link as LinkType } from "@/lib/api";
-import { ExternalLink, Mail, Phone, ShieldCheck, Star } from "lucide-react";
+import { ExternalLink, Mail, Phone, Star } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
+import logoImg from "@/assets/middelman-bg.png";
 import {
   getAvatarUrl,
   platformIconMap,
@@ -194,7 +195,11 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                   appearance.primaryTextClass,
                 )}
               >
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <img
+                  src={logoImg}
+                  alt="MiddelMen"
+                  className="h-4 w-4 rounded-[3px] object-contain"
+                />
                 MiddelMen
               </div>
 

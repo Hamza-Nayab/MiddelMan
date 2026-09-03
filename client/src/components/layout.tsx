@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -418,6 +419,9 @@ export function Layout({
                         <span className="text-slate-900 dark:text-slate-50">MiddelMen</span>
                       </Link>
                     </SheetTitle>
+                    <SheetDescription className="sr-only">
+                      Mobile navigation menu
+                    </SheetDescription>
                   </SheetHeader>
 
                   {/* Mobile Search Bar */}
