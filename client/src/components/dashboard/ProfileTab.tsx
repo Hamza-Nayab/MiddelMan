@@ -26,8 +26,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { avatarOptions } from "@/lib/graphics";
 import PhoneInput from "react-phone-number-input";
+import {
+  avatarOptions,
+  isCustomAvatar,
+  getAvatarId,
+  getAvatarUrl,
+} from "@/lib/graphics";
 import { User } from "lucide-react";
 import type { MutableRefObject } from "react";
 
@@ -281,14 +286,16 @@ export const ProfileTab = memo(function ProfileTab({
                   <FormControl>
                     <div className="grid grid-cols-4 gap-3">
                       {avatarOptions.map((option) => {
-                        const isCustomValue =
-                          option.id === "custom" &&
-                          typeof field.value === "string" &&
-                          (field.value.startsWith("data:") ||
-                            field.value.startsWith("http"));
-                        const isSelected = field.value === option.id || isCustomValue;
+                        const isCustomOption = option.id === "custom";
+                        const hasCustomAvatar = isCustomAvatar(field.value);
+                        const isSelected = isCustomOption
+                          ? hasCustomAvatar
+                          : field.value === option.id ||
+                            (!hasCustomAvatar &&
+                              getAvatarId(field.value) === option.id);
                         const customPreview =
-                          customAvatarPreview || (isCustomValue ? field.value : option.url);
+                          customAvatarPreview ||
+                          (hasCustomAvatar ? field.value : option.url);
                         return (
                           <button
                             key={option.id}
@@ -298,6 +305,7 @@ export const ProfileTab = memo(function ProfileTab({
                                 avatarInputRef.current?.click();
                                 return;
                               }
+                              setCustomAvatarPreview(null);
                               field.onChange(option.id);
                             }}
                             className={cn(
@@ -308,7 +316,11 @@ export const ProfileTab = memo(function ProfileTab({
                             )}
                           >
                             <img
-                              src={option.id === "custom" ? customPreview : option.url}
+                              src={
+                                option.id === "custom"
+                                  ? customPreview
+                                  : option.url
+                              }
                               alt={option.label}
                               className="h-16 w-16 mx-auto"
                             />

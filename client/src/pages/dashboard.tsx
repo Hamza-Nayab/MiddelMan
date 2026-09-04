@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
 import {
   getAvatarId,
+  isCustomAvatar,
   platformIconMap,
   platformOptions,
   type PlatformKey,
@@ -560,15 +561,23 @@ export default function Dashboard() {
   const updateProfileMutation = useMutation({
     mutationFn: (values: z.infer<typeof ProfileFormSchema>) => {
       const normalizedPhone = values.phoneNumber
-        ? normalizeToE164(values.phoneNumber, values.countryCode)
+        ? normalizeToE164(values.phoneNumber, values.countryCode) || undefined
         : undefined;
       const normalizedWhatsApp = values.whatsappNumber
-        ? normalizeToE164(values.whatsappNumber, values.countryCode)
+        ? normalizeToE164(values.whatsappNumber, values.countryCode) || undefined
         : undefined;
+
+      let normalizedAvatar = values.avatarUrl;
+      if (normalizedAvatar) {
+        normalizedAvatar = isCustomAvatar(normalizedAvatar)
+          ? normalizedAvatar
+          : getAvatarId(normalizedAvatar);
+      }
 
       const payload = Object.fromEntries(
         Object.entries({
           ...values,
+          avatarUrl: normalizedAvatar,
           phoneNumber: normalizedPhone,
           whatsappNumber: normalizedWhatsApp,
         }).filter(([, value]) => value !== undefined),
@@ -587,10 +596,21 @@ export default function Dashboard() {
         description: "Your profile changes are saved.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      let message = error?.message || "Failed to update profile";
+      const details = error?.details;
+      if (details?.fieldErrors) {
+        const fieldErrors = details.fieldErrors as Record<string, string[]>;
+        const parts = Object.entries(fieldErrors).map(
+          ([field, errs]) => `${field}: ${errs.join(", ")}`,
+        );
+        if (parts.length > 0) {
+          message = parts.join(" · ");
+        }
+      }
       toast({
         title: "Update failed",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     },
@@ -606,12 +626,9 @@ export default function Dashboard() {
     defaultValues: {
       displayName: profile?.displayName || "",
       bio: profile?.bio || "",
-      avatarUrl:
-        profile?.avatarUrl &&
-        (profile.avatarUrl.startsWith("data:") ||
-          profile.avatarUrl.startsWith("http"))
-          ? profile.avatarUrl
-          : getAvatarId(profile?.avatarUrl),
+      avatarUrl: isCustomAvatar(profile?.avatarUrl)
+        ? profile!.avatarUrl!
+        : getAvatarId(profile?.avatarUrl),
       contactEmail: profile?.contactEmail || "",
       phoneNumber: profile?.phoneNumber || "",
       whatsappNumber: profile?.whatsappNumber || "",
@@ -620,15 +637,14 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
+    const avatarVal = isCustomAvatar(profile?.avatarUrl)
+      ? profile!.avatarUrl!
+      : getAvatarId(profile?.avatarUrl);
+
     profileForm.reset({
       displayName: profile?.displayName || "",
       bio: profile?.bio || "",
-      avatarUrl:
-        profile?.avatarUrl &&
-        (profile.avatarUrl.startsWith("data:") ||
-          profile.avatarUrl.startsWith("http"))
-          ? profile.avatarUrl
-          : getAvatarId(profile?.avatarUrl),
+      avatarUrl: avatarVal,
       contactEmail: profile?.contactEmail || "",
       phoneNumber: profile?.phoneNumber || "",
       whatsappNumber: profile?.whatsappNumber || "",
@@ -637,12 +653,8 @@ export default function Dashboard() {
     setIsWhatsAppSameAsPhone(
       !!profile?.phoneNumber && profile.phoneNumber === profile?.whatsappNumber,
     );
-    if (
-      profile?.avatarUrl &&
-      (profile.avatarUrl.startsWith("data:") ||
-        profile.avatarUrl.startsWith("http"))
-    ) {
-      setCustomAvatarPreview(profile.avatarUrl);
+    if (isCustomAvatar(profile?.avatarUrl)) {
+      setCustomAvatarPreview(profile!.avatarUrl!);
     } else {
       setCustomAvatarPreview(null);
     }

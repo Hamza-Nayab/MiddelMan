@@ -107,6 +107,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             await db.insert(profiles).values({
               userId: createdUser.id,
               displayName,
+              avatarUrl: "avatar-1",
             });
 
             user = createdUser;
@@ -129,6 +130,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             await db.insert(profiles).values({
               userId: user.id,
               displayName,
+              avatarUrl: "avatar-1",
             });
           }
 

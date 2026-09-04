@@ -26,13 +26,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { api, Profile } from "@/lib/api";
 import { compressAvatar } from "@/lib/avatar";
 import { PRESET_AVATARS, getDefaultPresetAvatar } from "@/lib/preset-avatars";
-import { getAvatarId, getAvatarUrl } from "@/lib/graphics";
+import { getAvatarId, getAvatarUrl, isCustomAvatar } from "@/lib/graphics";
 import { Upload, AlertCircle } from "lucide-react";
 
 const displayNameSchema = z
   .string()
   .min(2, "Display name must be at least 2 characters")
-  .max(50, "Display name must be at most 50 characters")
+  .max(50, "Display name cannot exceed 50 characters")
   .regex(
     /^[\p{L}\p{N}\s\-_.,!?'"()]+$/u,
     "Display name contains invalid characters",
@@ -41,7 +41,7 @@ const displayNameSchema = z
 const bioSchema = z
   .string()
   .min(10, "Bio must be at least 10 characters")
-  .max(500, "Bio must be at most 500 characters");
+  .max(500, "Bio cannot exceed 500 characters");
 
 const onboardingSchema = z.object({
   displayName: displayNameSchema,
@@ -63,7 +63,9 @@ export function OnboardingWizard({
 }: OnboardingWizardProps) {
   const [step, setStep] = useState<"bio" | "avatar" | "confirm">("bio");
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState(
-    currentProfile?.avatarUrl || getDefaultPresetAvatar(),
+    isCustomAvatar(currentProfile?.avatarUrl)
+      ? currentProfile!.avatarUrl!
+      : currentProfile?.avatarUrl || "avatar-1",
   );
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -82,10 +84,7 @@ export function OnboardingWizard({
     mutationFn: async (values: OnboardingForm) => {
       // Normalize preset avatar Vite asset paths to canonical IDs (e.g. "avatar-15")
       // before sending to server. Custom uploads (data: or http) are sent as-is.
-      const isCustomUpload =
-        selectedAvatarUrl.startsWith("data:") ||
-        selectedAvatarUrl.startsWith("http");
-      const avatarValue = isCustomUpload
+      const avatarValue = isCustomAvatar(selectedAvatarUrl)
         ? selectedAvatarUrl
         : getAvatarId(selectedAvatarUrl);
 
@@ -368,24 +367,31 @@ export function OnboardingWizard({
                 </label>
 
                 {/* Preset avatars grid */}
-                {PRESET_AVATARS.map((url, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setSelectedAvatarUrl(url)}
-                    className={`h-20 w-20 rounded-lg border-2 overflow-hidden transition ${
-                      selectedAvatarUrl === url
-                        ? "border-primary ring-2 ring-primary ring-offset-1 shadow-md"
-                        : "border-border hover:border-primary/50 hover:shadow-sm"
-                    }`}
-                  >
-                    <img
-                      src={url}
-                      alt={`Avatar ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </button>
-                ))}
+                {PRESET_AVATARS.map((url, index) => {
+                  const avatarId = `avatar-${index + 1}`;
+                  const isSelected =
+                    selectedAvatarUrl === avatarId ||
+                    selectedAvatarUrl === url ||
+                    getAvatarId(selectedAvatarUrl) === avatarId;
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedAvatarUrl(avatarId)}
+                      className={`h-20 w-20 rounded-lg border-2 overflow-hidden transition ${
+                        isSelected
+                          ? "border-primary ring-2 ring-primary ring-offset-1 shadow-md"
+                          : "border-border hover:border-primary/50 hover:shadow-sm"
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Avatar ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

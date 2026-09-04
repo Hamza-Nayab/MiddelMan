@@ -194,13 +194,8 @@ export function registerAuthRoutes(app: Express): void {
     const profileData: any = {
       userId: createdUser.id,
       displayName,
+      avatarUrl: parsed.data.avatarUrl || "avatar-1",
     };
-
-    if (role !== "seller") {
-      profileData.avatarUrl =
-        parsed.data.avatarUrl ||
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${createdUser.id}`;
-    }
 
     await db.insert(profiles).values(profileData);
 

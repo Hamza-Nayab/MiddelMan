@@ -123,7 +123,7 @@ export const profileUpdateSchema = z
   .object({
     displayName: z.string().min(2).max(50).optional(),
     bio: z.string().max(160).optional(),
-    avatarUrl: z.string().min(1).max(200).optional(),
+    avatarUrl: z.string().min(1).max(500).optional(),
     contactEmail: z.string().email().max(254).optional(),
     whatsappNumber: z
       .string()

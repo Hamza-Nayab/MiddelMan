@@ -57,15 +57,42 @@ export const generateRandomFallbackAvatar = (seed: string | number) => {
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 };
 
+export const isPresetAvatarId = (id?: string | null): boolean => {
+  if (!id) return false;
+  return /^avatar-(1[0-5]|[1-9])$/.test(id);
+};
+
+export const isCustomAvatar = (value?: string | null): boolean => {
+  if (!value) return false;
+  if (isPresetAvatarId(value)) return false;
+  if (value === "custom" || value.includes("dicebear.com")) return false;
+  if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(value)) return false;
+  if (
+    avatarOptions.some(
+      (opt) => opt.id !== "custom" && (opt.url === value || opt.id === value),
+    )
+  ) {
+    return false;
+  }
+  if (value.match(/avatar-(\d+)/i)) return false;
+  return value.startsWith("http") || value.startsWith("data:");
+};
+
 export const getAvatarUrl = (
   value?: string | null,
   fallbackSeed?: string | number,
 ) => {
-  if (!value) {
-    return generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED);
+  if (!value || value === "custom") {
+    return presetAvatar01;
   }
 
-  // 1. Check if it's a preset avatar ID (e.g. "avatar-15") or contains a preset avatar pattern in the URL
+  // 1. Direct ID match for preset avatars (e.g. "avatar-1" to "avatar-15")
+  if (/^avatar-(1[0-5]|[1-9])$/.test(value)) {
+    const option = avatarOptions.find((opt) => opt.id === value);
+    if (option) return option.url;
+  }
+
+  // 2. Check if it contains a preset avatar pattern in the URL (e.g. Vite build asset path)
   const presetMatch = value.match(/avatar-(\d+)/i);
   if (presetMatch) {
     const avatarId = `avatar-${parseInt(presetMatch[1], 10)}`;
@@ -73,28 +100,40 @@ export const getAvatarUrl = (
     if (match) return match.url;
   }
 
-  // 2. Reject any localhost, private IP, or invalid origin URLs to prevent Chrome Private Network Access alerts
-  if (/localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.|10\.\d+\.|172\.(1[6-9]|2\d|3[01])\./i.test(value)) {
-    return generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED);
+  // 3. Reject any localhost, private IP, or dicebear fallback to use reliable presetAvatar01
+  if (
+    /localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.|10\.\d+\.|172\.(1[6-9]|2\d|3[01])\./i.test(
+      value,
+    ) ||
+    value.includes("dicebear.com")
+  ) {
+    return presetAvatar01;
   }
 
-  // 3. Direct match with preset avatar options
+  // 4. Direct match with preset avatar options
   const match = avatarOptions.find(
-    (option) => option.id === value || option.url === value,
+    (option) =>
+      (option.id === value || option.url === value) && option.id !== "custom",
   );
   if (match) return match.url;
 
-  // 4. Data URIs and valid HTTPS/HTTP remote URLs (e.g. Cloudflare R2, DiceBear)
+  // 5. Genuine custom uploads (Cloudflare R2, valid remote URLs, data URIs)
   if (value.startsWith("data:") || value.startsWith("http")) {
     return value;
   }
 
-  return generateRandomFallbackAvatar(fallbackSeed ?? RANDOM_FALLBACK_SEED);
+  return presetAvatar01;
 };
 
 export const getAvatarId = (value?: string | null) => {
-  if (!value) return avatarOptions[0].id;
+  if (!value || value === "custom") return avatarOptions[0].id;
 
+  // 1. Direct match with preset avatar IDs (avatar-1 to avatar-15)
+  if (/^avatar-(1[0-5]|[1-9])$/.test(value)) {
+    return value;
+  }
+
+  // 2. Check if it contains avatar-(\d+) in the path or URL
   const presetMatch = value.match(/avatar-(\d+)/i);
   if (presetMatch) {
     const avatarId = `avatar-${parseInt(presetMatch[1], 10)}`;
@@ -102,16 +141,26 @@ export const getAvatarId = (value?: string | null) => {
     if (match) return match.id;
   }
 
-  if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(value)) {
+  // 3. Reject localhost, private IP, dicebear
+  if (
+    /localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(value) ||
+    value.includes("dicebear.com")
+  ) {
     return avatarOptions[0].id;
   }
 
-  if (value.startsWith("data:") || value.startsWith("http")) return "custom";
-
+  // 4. Direct match with preset avatar options URLs
   const match = avatarOptions.find(
-    (option) => option.id === value || option.url === value,
+    (option) => option.url === value && option.id !== "custom",
   );
-  return match?.id || avatarOptions[0].id;
+  if (match) return match.id;
+
+  // 5. Genuine custom upload URL (R2 or data URI) -> return the URL itself
+  if (value.startsWith("data:") || value.startsWith("http")) {
+    return value;
+  }
+
+  return avatarOptions[0].id;
 };
 
 export const platformOptions = [
