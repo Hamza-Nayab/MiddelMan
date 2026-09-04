@@ -21,8 +21,20 @@ export function registerSearchRoutes(app: Express): void {
       );
     }
 
-    return searchController.search(req, res);
+    try {
+      return await searchController.search(req, res);
+    } catch (err) {
+      return res.status(500).json(
+        error("SEARCH_FAILED", "Search is temporarily unavailable"),
+      );
+    }
   });
 
-  app.get("/api/search/suggest", searchController.suggest);
+  app.get("/api/search/suggest", async (req, res) => {
+    try {
+      return await searchController.suggest(req, res);
+    } catch (err) {
+      return res.status(200).json({ ok: true, data: { suggestions: [] } });
+    }
+  });
 }

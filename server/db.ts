@@ -45,5 +45,9 @@ const pool = new Pool({
   enableChannelBinding?: boolean;
 });
 
+pool.on("error", (err) => {
+  console.error("[db:pool] Unexpected error on idle client:", err.message);
+});
+
 export const db = drizzle(pool, { schema });
 export { pool };

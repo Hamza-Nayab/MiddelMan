@@ -18,6 +18,14 @@ import { error, toPublicErrorResponse } from "./lib/api-response";
 import { appLog } from "./lib/logger";
 import { registerSsrMetaMiddleware } from "./ssr-meta";
 
+process.on("unhandledRejection", (reason) => {
+  console.error("[process] Unhandled Promise Rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[process] Uncaught Exception:", error);
+});
+
 const isProduction = process.env.NODE_ENV === "production";
 
 if (isProduction) {

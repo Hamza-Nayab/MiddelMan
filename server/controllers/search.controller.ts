@@ -53,14 +53,22 @@ export function createSearchController(deps: { ok: OkFn; error: ErrorFn }) {
           .status(400)
           .json(deps.error("VALIDATION_ERROR", err.message));
       }
-      throw err;
+      console.error("[search] Error executing search:", err);
+      return res
+        .status(500)
+        .json(deps.error("SEARCH_FAILED", "Search is temporarily unavailable"));
     }
   };
 
   const suggest = async (req: Request, res: Response) => {
-    const rawQuery = typeof req.query.q === "string" ? req.query.q : "";
-    const suggestions = await getSearchSuggestions(rawQuery);
-    return res.status(200).json(deps.ok({ suggestions }));
+    try {
+      const rawQuery = typeof req.query.q === "string" ? req.query.q : "";
+      const suggestions = await getSearchSuggestions(rawQuery);
+      return res.status(200).json(deps.ok({ suggestions }));
+    } catch (err) {
+      console.error("[search] Error getting suggestions:", err);
+      return res.status(200).json(deps.ok({ suggestions: [] }));
+    }
   };
 
   return {
