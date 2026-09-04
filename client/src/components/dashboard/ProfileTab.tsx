@@ -280,64 +280,78 @@ export const ProfileTab = memo(function ProfileTab({
             <FormField
               control={profileForm.control}
               name="avatarUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avatar</FormLabel>
-                  <FormControl>
-                    <div className="grid grid-cols-4 gap-3">
-                      {avatarOptions.map((option) => {
-                        const isCustomOption = option.id === "custom";
-                        const hasCustomAvatar = isCustomAvatar(field.value);
-                        const isSelected = isCustomOption
-                          ? hasCustomAvatar
-                          : field.value === option.id ||
-                            (!hasCustomAvatar &&
-                              getAvatarId(field.value) === option.id);
-                        const customPreview =
-                          customAvatarPreview ||
-                          (hasCustomAvatar ? field.value : option.url);
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => {
-                              if (option.id === "custom") {
-                                avatarInputRef.current?.click();
-                                return;
-                              }
-                              setCustomAvatarPreview(null);
-                              field.onChange(option.id);
-                            }}
-                            className={cn(
-                              "rounded-xl border p-2 transition",
-                              isSelected
-                                ? "border-primary ring-2 ring-primary/30"
-                                : "border-border hover:border-primary/40",
-                            )}
-                          >
-                            <img
-                              src={
-                                option.id === "custom"
-                                  ? customPreview
-                                  : option.url
-                              }
-                              alt={option.label}
-                              className="h-16 w-16 mx-auto object-contain"
-                            />
-                            <span className="mt-2 block text-xs text-muted-foreground">
-                              {option.label}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </FormControl>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (event) => {
+              render={({ field }) => {
+                const uploadedCustomAvatar =
+                  customAvatarPreview ||
+                  (isCustomAvatar(field.value) ? field.value : null) ||
+                  (isCustomAvatar(user?.avatarUrl) ? user?.avatarUrl : null);
+
+                const hasCustomSelected = Boolean(
+                  isCustomAvatar(field.value) ||
+                    (uploadedCustomAvatar && field.value === uploadedCustomAvatar),
+                );
+
+                return (
+                  <FormItem>
+                    <FormLabel>Avatar</FormLabel>
+                    <FormControl>
+                      <div className="grid grid-cols-4 gap-3">
+                        {avatarOptions.map((option) => {
+                          const isCustomOption = option.id === "custom";
+                          const isSelected = isCustomOption
+                            ? hasCustomSelected
+                            : field.value === option.id ||
+                              (!hasCustomSelected &&
+                                getAvatarId(field.value) === option.id);
+
+                          const displaySrc = isCustomOption
+                            ? uploadedCustomAvatar || option.url
+                            : option.url;
+
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => {
+                                if (isCustomOption) {
+                                  if (
+                                    uploadedCustomAvatar &&
+                                    field.value !== uploadedCustomAvatar
+                                  ) {
+                                    field.onChange(uploadedCustomAvatar);
+                                  } else {
+                                    avatarInputRef.current?.click();
+                                  }
+                                  return;
+                                }
+                                field.onChange(option.id);
+                              }}
+                              className={cn(
+                                "rounded-xl border p-2 transition",
+                                isSelected
+                                  ? "border-primary ring-2 ring-primary/30"
+                                  : "border-border hover:border-primary/40",
+                              )}
+                            >
+                              <img
+                                src={displaySrc}
+                                alt={option.label}
+                                className="h-16 w-16 mx-auto object-contain"
+                              />
+                              <span className="mt-2 block text-xs text-muted-foreground">
+                                {option.label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormControl>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (event) => {
                       const file = event.target.files?.[0];
                       if (!file) return;
 
@@ -391,8 +405,9 @@ export const ProfileTab = memo(function ProfileTab({
                     <p className="text-xs text-muted-foreground">Uploading avatar...</p>
                   ) : null}
                   <FormMessage />
-                </FormItem>
-              )}
+                  </FormItem>
+                );
+              }}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

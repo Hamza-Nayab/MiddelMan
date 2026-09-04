@@ -1,102 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" fill="none">
-  <defs>
-    <!-- Background Ambient Glow -->
-    <radialGradient id="bucketAmbient" cx="50%" cy="55%" r="48%">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.22" />
-      <stop offset="70%" stop-color="#6366f1" stop-opacity="0.08" />
-      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
-    </radialGradient>
-
-    <!-- Outer Bucket Body Gradient (Vibrant SaaS Blue) -->
-    <linearGradient id="bucketBody" x1="20%" y1="0%" x2="80%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="45%" stop-color="#2563eb" />
-      <stop offset="100%" stop-color="#1d4ed8" />
-    </linearGradient>
-
-    <!-- Bucket Rim & Metal Accents -->
-    <linearGradient id="bucketRim" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#93c5fd" />
-      <stop offset="35%" stop-color="#ffffff" />
-      <stop offset="70%" stop-color="#60a5fa" />
-      <stop offset="100%" stop-color="#2563eb" />
-    </linearGradient>
-
-    <!-- Inner Cavity Gradient -->
-    <linearGradient id="bucketInner" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="60%" stop-color="#1e293b" />
-      <stop offset="100%" stop-color="#334155" />
-    </linearGradient>
-
-    <!-- Upload Arrow Gradient -->
-    <linearGradient id="uploadArrow" x1="50%" y1="100%" x2="50%" y2="0%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="50%" stop-color="#60a5fa" />
-      <stop offset="100%" stop-color="#ffffff" />
-    </linearGradient>
-
-    <!-- Subtle Metallic Ribs -->
-    <linearGradient id="metalRib" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.2" />
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.6" />
-      <stop offset="100%" stop-color="#2563eb" stop-opacity="0.2" />
-    </linearGradient>
-  </defs>
-
-  <!-- Ambient Backdrop -->
-  <circle cx="140" cy="145" r="115" fill="url(#bucketAmbient)" />
-
-  <!-- Base Floor Shadow -->
-  <ellipse cx="140" cy="242" rx="72" ry="14" fill="#090d16" fill-opacity="0.28" />
-
-  <!-- Arched Handle Behind Bucket -->
-  <path d="M72 144 C72 66, 208 66, 208 144" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.45" />
-  <path d="M72 144 C72 68, 208 68, 208 144" stroke="#e2e8f0" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.9" />
-
-  <!-- Bucket Body (Tapered Cylinder) -->
-  <path d="M68 142 L86 224 C89 235, 110 242, 140 242 C170 242, 191 235, 194 224 L212 142 Z" fill="url(#bucketBody)" />
-
-  <!-- Highlights & Shadows on Bucket Wall -->
-  <path d="M74 144 L90 224 C92 230, 102 235, 116 237 L102 145 C86 144, 78 143, 74 144 Z" fill="#ffffff" fill-opacity="0.16" />
-  <path d="M206 144 L190 224 C188 230, 178 235, 164 237 L178 145 C194 144, 202 143, 206 144 Z" fill="#0f172a" fill-opacity="0.22" />
-
-  <!-- High-tech Body Horizontal Rings -->
-  <path d="M78 184 C95 194, 185 194, 202 184 L199 193 C183 203, 97 203, 81 193 Z" fill="url(#metalRib)" />
-  <path d="M84 210 C98 218, 182 218, 196 210 L194 217 C180 224, 100 224, 86 217 Z" fill="url(#metalRib)" />
-
-  <!-- Bucket Interior Void -->
-  <ellipse cx="140" cy="142" rx="72" ry="24" fill="url(#bucketInner)" />
-
-  <!-- Inner Cyan / Blue Glow Ring inside Void -->
-  <ellipse cx="140" cy="144" rx="52" ry="16" fill="#1d4ed8" fill-opacity="0.75" />
-  <ellipse cx="140" cy="145" rx="36" ry="10" fill="#38bdf8" fill-opacity="0.6" />
-
-  <!-- Top Rim (3D Ring) -->
-  <ellipse cx="140" cy="142" rx="72" ry="23" stroke="url(#bucketRim)" stroke-width="7" fill="none" />
-  <ellipse cx="140" cy="142" rx="72" ry="23" stroke="#ffffff" stroke-width="2" stroke-opacity="0.75" fill="none" />
-
-  <!-- Side Handle Brackets / Hinges -->
-  <rect x="61" y="136" width="11" height="15" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" />
-  <circle cx="66.5" cy="143.5" r="2.5" fill="#1e293b" />
-
-  <rect x="208" y="136" width="11" height="15" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" />
-  <circle cx="213.5" cy="143.5" r="2.5" fill="#1e293b" />
-
-  <!-- Floating Data Dots / Sparks -->
-  <circle cx="106" cy="116" r="3.5" fill="#60a5fa" fill-opacity="0.85" />
-  <circle cx="174" cy="120" r="4.5" fill="#93c5fd" fill-opacity="0.8" />
-  <circle cx="94" cy="80" r="2.5" fill="#38bdf8" fill-opacity="0.9" />
-  <circle cx="186" cy="84" r="3" fill="#60a5fa" fill-opacity="0.85" />
-
-  <!-- Upload Arrow Rising from Bucket -->
-  <path d="M140 44 L174 88 H152 V146 H128 V88 H106 Z" fill="url(#uploadArrow)" />
-
-  <!-- Center Arrow Crease Highlight -->
-  <path d="M140 46 L140 144" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.9" />
-
-  <!-- Four-Point Star Sparkles -->
-  <path d="M140 28 Q140 36 148 36 Q140 36 140 44 Q140 36 132 36 Q140 36 140 28 Z" fill="#ffffff" />
-  <path d="M198 64 Q198 70 204 70 Q198 70 198 76 Q198 70 192 70 Q198 70 198 64 Z" fill="#93c5fd" />
-  <path d="M82 68 Q82 73 87 73 Q82 73 82 78 Q82 73 77 73 Q82 73 82 68 Z" fill="#67e8f9" />
+  <style>
+    .cloud-icon { fill: #0f172a; stroke: #0f172a; }
+    @media (prefers-color-scheme: dark) {
+      .cloud-icon { fill: #f8fafc; stroke: #f8fafc; }
+    }
+  </style>
+  <path
+    class="cloud-icon"
+    d="M76 200 H204 C230 200 250 180 250 154 C250 130 232 110 208 108 C204 76 176 50 142 50 C110 50 84 73 78 103 C52 107 32 128 32 154 C32 180 52 200 76 200 Z"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+  <path
+    class="cloud-icon"
+    stroke="none"
+    d="M140 76 L180 124 H154 V164 H126 V124 H100 Z"
+  />
+  <path
+    class="cloud-icon"
+    stroke="none"
+    d="M96 142 H112 V172 H168 V142 H184 V180 C184 184 180 188 176 188 H104 C100 188 96 184 96 180 Z"
+  />
 </svg>
