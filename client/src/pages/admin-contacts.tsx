@@ -67,32 +67,37 @@ export default function AdminContactsPage() {
       id: number;
       status?: ContactStatus;
       notes?: string;
+      silent?: boolean;
     }) =>
       api.updateAdminContact(id, {
         status,
         adminNotes: notes !== undefined ? notes : undefined,
       }),
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-contacts"] });
       if (selectedContact && selectedContact.id === result.contact.id) {
         setSelectedContact(result.contact);
         setAdminNotes(result.contact.adminNotes || "");
       }
-      toast({
-        title: "Contact updated",
-        description: "Submission status and notes were successfully saved.",
-      });
+      if (!variables?.silent) {
+        toast({
+          title: "Contact updated",
+          description: "Submission status and notes were successfully saved.",
+        });
+      }
     },
-    onError: (err) => {
-      const msg =
-        err instanceof ApiError
-          ? err.message
-          : "Failed to update submission. Please try again.";
-      toast({
-        title: "Update failed",
-        description: msg,
-        variant: "destructive",
-      });
+    onError: (err, variables) => {
+      if (!variables?.silent) {
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : "Failed to update submission. Please try again.";
+        toast({
+          title: "Update failed",
+          description: msg,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -101,7 +106,7 @@ export default function AdminContactsPage() {
     setAdminNotes(contact.adminNotes || "");
     // Automatically mark unread message as read when inspected
     if (contact.status === "unread") {
-      updateMutation.mutate({ id: contact.id, status: "read" });
+      updateMutation.mutate({ id: contact.id, status: "read", silent: true });
     }
   };
 

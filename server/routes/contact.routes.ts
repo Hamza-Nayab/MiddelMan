@@ -5,11 +5,11 @@ import {
   db,
   error,
   getClientKey,
-  logAdminAction,
   ok,
   requireAdmin,
   respondForbiddenFromAuthError,
 } from "./_shared";
+import { appLog } from "../lib/logger";
 import { contacts } from "@shared/schema";
 import type { ContactStatus } from "@shared/types";
 
@@ -283,10 +283,12 @@ export function registerContactRoutes(app: Express): void {
         .where(eq(contacts.id, contactId))
         .returning();
 
-      await logAdminAction(adminUser.id, "UPDATE_CONTACT", undefined, {
+      appLog("info", "admin", "ADMIN_CONTACT_UPDATED", {
+        adminId: adminUser.id,
         contactId,
         previousStatus: existing.status,
         newStatus: parsed.data.status,
+        hasNotes: parsed.data.adminNotes !== undefined,
       });
 
       return res.status(200).json(ok({ contact: updated }));

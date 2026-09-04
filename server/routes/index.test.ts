@@ -1324,7 +1324,6 @@ describe("route groups", () => {
           },
         ],
       ],
-      insert: [[]],
     });
     const updateRes = await request("PATCH", "/api/admin/contacts/1", {
       headers: { "x-test-user-id": String(adminUser.id) },
