@@ -1214,6 +1214,7 @@ export default function ProfilePage() {
                                     appearance.iconColorClass,
                                   )}
                                   style={appearance.accentTextStyle}
+                                  aria-hidden="true"
                                 />
                               );
                             })()}

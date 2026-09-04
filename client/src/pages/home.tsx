@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
@@ -22,8 +22,13 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import { ProfilePreviewPhone } from "@/components/profile/ProfilePreviewPhone";
 import type { Link as LinkType } from "@/lib/api";
+
+const ProfilePreviewPhone = lazy(() =>
+  import("@/components/profile/ProfilePreviewPhone").then((m) => ({
+    default: m.ProfilePreviewPhone,
+  })),
+);
 
 const DEMO_PREVIEW_LINKS: LinkType[] = [
   {
@@ -728,22 +733,30 @@ export default function Home() {
                   <ArrowRight size={13} className="text-blue-500" />
                 </div>
 
-                <ProfilePreviewPhone
-                  displayName="Alex Rivera"
-                  username="alexrivera"
-                  bio="Curated vintage streetwear & luxury sneakers. Shipping worldwide with guaranteed authenticity."
-                  avatarValue="avatar-1"
-                  links={DEMO_PREVIEW_LINKS}
-                  avgRating={4.9}
-                  totalReviews={28}
-                  phoneNumber="+1234567890"
-                  whatsappNumber="+1234567890"
-                  countryCode="+1"
-                  contactEmail="alex@riveravintage.com"
-                  theme="light"
-                  compact={true}
-                  openHref="/demo"
-                />
+                <Suspense
+                  fallback={
+                    <div className="h-[560px] w-[300px] rounded-[36px] border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-zinc-900/60 animate-pulse flex items-center justify-center text-xs text-muted-foreground">
+                      Loading preview...
+                    </div>
+                  }
+                >
+                  <ProfilePreviewPhone
+                    displayName="Alex Rivera"
+                    username="alexrivera"
+                    bio="Curated vintage streetwear & luxury sneakers. Shipping worldwide with guaranteed authenticity."
+                    avatarValue="avatar-1"
+                    links={DEMO_PREVIEW_LINKS}
+                    avgRating={4.9}
+                    totalReviews={28}
+                    phoneNumber="+1234567890"
+                    whatsappNumber="+1234567890"
+                    countryCode="+1"
+                    contactEmail="alex@riveravintage.com"
+                    theme="light"
+                    compact={true}
+                    openHref="/demo"
+                  />
+                </Suspense>
               </div>
 
               {/* Caption Beneath Phone */}

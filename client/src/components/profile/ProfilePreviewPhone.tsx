@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, lazy, Suspense } from "react";
 import { Link } from "wouter";
 import { Link as LinkType } from "@/lib/api";
 import { ExternalLink, Mail, Phone, Star } from "lucide-react";
@@ -11,13 +11,22 @@ import {
 } from "@/lib/graphics";
 import { cn } from "@/lib/utils";
 import { normalizeToE164, buildWhatsAppUrl } from "@/lib/phone";
-import { Antigravity, Aurora, Iridescence } from "@/components/backgrounds";
 import {
   resolveProfileAppearance,
   type ProfileBackgroundPreset,
   type ProfileBaseTheme,
   type ProfileGradientPreset,
 } from "@/lib/profile-appearance";
+
+const Antigravity = lazy(() =>
+  import("@/components/backgrounds").then((m) => ({ default: m.Antigravity })),
+);
+const Aurora = lazy(() =>
+  import("@/components/backgrounds").then((m) => ({ default: m.Aurora })),
+);
+const Iridescence = lazy(() =>
+  import("@/components/backgrounds").then((m) => ({ default: m.Iridescence })),
+);
 
 type ProfilePreviewPhoneProps = {
   displayName: string;
@@ -155,31 +164,33 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
           <div className="absolute top-0 inset-x-0 z-20 mx-auto h-5 w-28 rounded-b-2xl bg-black/90" />
 
           {appearance.usesDynamicBackground ? (
-            <div
-              className="absolute inset-0 z-0 overflow-hidden"
-              style={
-                appearance.hasGradientBackground && appearance.gradientBackground
-                  ? { background: appearance.gradientBackground }
-                  : undefined
-              }
-            >
-              {appearance.backgroundPreset === "antigravity" && (
-                <Antigravity count={120} color="#FF9FFC" particleSize={1.5} />
-              )}
-              {appearance.backgroundPreset === "aurora" && (
-                <Aurora
-                  colorStops={["#5227FF", "#7cff67", "#5227FF"]}
-                  amplitude={1}
-                  blend={0.5}
-                />
-              )}
-              {appearance.backgroundPreset === "iridescence" && (
-                <Iridescence speed={1} amplitude={0.1} mouseReact={false} />
-              )}
-              {appearance.overlayClass && (
-                <div className={cn("absolute inset-0", appearance.overlayClass)} />
-              )}
-            </div>
+            <Suspense fallback={null}>
+              <div
+                className="absolute inset-0 z-0 overflow-hidden"
+                style={
+                  appearance.hasGradientBackground && appearance.gradientBackground
+                    ? { background: appearance.gradientBackground }
+                    : undefined
+                }
+              >
+                {appearance.backgroundPreset === "antigravity" && (
+                  <Antigravity count={120} color="#FF9FFC" particleSize={1.5} />
+                )}
+                {appearance.backgroundPreset === "aurora" && (
+                  <Aurora
+                    colorStops={["#5227FF", "#7cff67", "#5227FF"]}
+                    amplitude={1}
+                    blend={0.5}
+                  />
+                )}
+                {appearance.backgroundPreset === "iridescence" && (
+                  <Iridescence speed={1} amplitude={0.1} mouseReact={false} />
+                )}
+                {appearance.overlayClass && (
+                  <div className={cn("absolute inset-0", appearance.overlayClass)} />
+                )}
+              </div>
+            </Suspense>
           ) : null}
 
           <div
@@ -269,6 +280,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <Phone
                       className={cn("w-3.5 h-3.5", appearance.iconColorClass)}
                       style={appearance.accentTextStyle}
+                      aria-hidden="true"
                     />
                   </a>
                 )}
@@ -288,6 +300,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <SiWhatsapp
                       className={cn("w-3.5 h-3.5", appearance.iconColorClass)}
                       style={appearance.accentTextStyle}
+                      aria-hidden="true"
                     />
                   </a>
                 )}
@@ -305,6 +318,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                     <Mail
                       className={cn("w-3.5 h-3.5", appearance.iconColorClass)}
                       style={appearance.accentTextStyle}
+                      aria-hidden="true"
                     />
                   </a>
                 )}
@@ -367,6 +381,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                             <Icon
                               className={cn("h-5 w-5", appearance.iconColorClass)}
                               style={appearance.accentTextStyle}
+                              aria-hidden="true"
                             />
                           </div>
                           <span
@@ -384,6 +399,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                             "w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity",
                             appearance.iconColorClass,
                           )}
+                          aria-hidden="true"
                         />
                       </div>
                     );

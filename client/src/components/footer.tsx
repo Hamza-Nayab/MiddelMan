@@ -18,6 +18,8 @@ export function Footer() {
               <img
                 src={logoImg}
                 alt="MiddelMen logo"
+                width={36}
+                height={36}
                 className="h-9 w-9 rounded-lg object-contain shadow-xs"
               />
               <span className="text-2xl font-heading font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
@@ -32,15 +34,15 @@ export function Footer() {
           {/* Visual Trust Reinforcement Badges */}
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 sm:gap-2.5">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-sky-300 border border-blue-500/20 shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" aria-hidden="true" />
               Verified Sellers
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-sky-300 border border-blue-500/20 shadow-2xs">
-              <Star className="w-3.5 h-3.5 text-blue-600 fill-blue-600 dark:text-sky-400 dark:fill-sky-400" />
+              <Star className="w-3.5 h-3.5 text-blue-600 fill-blue-600 dark:text-sky-400 dark:fill-sky-400" aria-hidden="true" />
               Real Reviews
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-sky-300 border border-blue-500/20 shadow-2xs">
-              <Lock className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
+              <Lock className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" aria-hidden="true" />
               Zero Scams
             </span>
           </div>
@@ -184,7 +186,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >
-                  <Twitter size={15} />
+                  <Twitter size={15} aria-hidden="true" />
                   Twitter / X
                 </a>
               </li>
@@ -195,7 +197,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >
-                  <Instagram size={15} />
+                  <Instagram size={15} aria-hidden="true" />
                   Instagram
                 </a>
               </li>
@@ -206,7 +208,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >
-                  <Github size={15} />
+                  <Github size={15} aria-hidden="true" />
                   GitHub
                 </a>
               </li>

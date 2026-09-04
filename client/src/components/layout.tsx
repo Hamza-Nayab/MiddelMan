@@ -117,6 +117,8 @@ export function Layout({
                 <img
                   src={logoImg}
                   alt="MiddelMen"
+                  width={36}
+                  height={36}
                   className="h-9 w-9 rounded-lg object-contain shadow-2xs"
                 />
               </div>
@@ -414,6 +416,8 @@ export function Layout({
                         <img
                           src={logoImg}
                           alt="MiddelMen"
+                          width={32}
+                          height={32}
                           className="h-8 w-8 rounded-lg object-contain shadow-xs"
                         />
                         <span className="text-slate-900 dark:text-slate-50">MiddelMen</span>

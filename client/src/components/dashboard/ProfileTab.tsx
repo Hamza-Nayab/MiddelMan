@@ -511,7 +511,7 @@ export const ProfileTab = memo(function ProfileTab({
                                 }}
                                 aria-label="Open WhatsApp preview"
                               >
-                                <WhatsAppIcon className="h-4 w-4" />
+                                <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
                               </Button>
                             </span>
                           </TooltipTrigger>

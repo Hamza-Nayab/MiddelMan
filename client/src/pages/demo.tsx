@@ -175,12 +175,12 @@ export default function DemoProfile() {
                         <div className="h-9 w-9 rounded-full bg-accent text-white flex items-center justify-center shadow-xs">
                           {(() => {
                             const Icon = getPlatformIcon(link.icon);
-                            return <Icon className="h-5 w-5 text-white" />;
+                            return <Icon className="h-5 w-5 text-white" aria-hidden="true" />;
                           })()}
                         </div>
                         <span className="font-medium">{link.title}</span>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                      <ExternalLink className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     </div>
                   </Card>
                 </a>
