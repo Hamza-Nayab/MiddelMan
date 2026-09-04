@@ -13,6 +13,7 @@ import presetAvatar12 from "@/assets/preset-avatars/avatar-12.svg";
 import presetAvatar13 from "@/assets/preset-avatars/avatar-13.svg";
 import presetAvatar14 from "@/assets/preset-avatars/avatar-14.svg";
 import presetAvatar15 from "@/assets/preset-avatars/avatar-15.svg";
+import uploadBucketIcon from "@/assets/preset-avatars/upload-bucket.svg";
 import { Globe } from "lucide-react";
 import {
   SiFacebook,
@@ -44,7 +45,7 @@ export const avatarOptions = [
   { id: "avatar-13", label: "Avatar 13", url: presetAvatar13 },
   { id: "avatar-14", label: "Avatar 14", url: presetAvatar14 },
   { id: "avatar-15", label: "Avatar 15", url: presetAvatar15 },
-  { id: "custom", label: "Custom", url: presetAvatar01 },
+  { id: "custom", label: "Custom", url: uploadBucketIcon },
 ] as const;
 
 const RANDOM_FALLBACK_SEED = Math.floor(Math.random() * 1_000_000_000);

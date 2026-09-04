@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,15 +33,7 @@ import {
   getAvatarId,
   getAvatarUrl,
 } from "@/lib/graphics";
-import {
-  User,
-  UploadCloud,
-  Upload,
-  Trash2,
-  CheckCircle2,
-  Sparkles,
-  Loader2,
-} from "lucide-react";
+import { User } from "lucide-react";
 import type { MutableRefObject } from "react";
 
 type ProfileTabProps = {
@@ -105,59 +97,6 @@ export const ProfileTab = memo(function ProfileTab({
   whatsappPreviewUrl,
   WhatsAppIcon,
 }: ProfileTabProps) {
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleAvatarFile = async (file?: File | null) => {
-    if (!file) return;
-
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      toast({
-        title: "Unsupported format",
-        description: "Please upload a JPG, PNG, or WebP image.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Image too large",
-        description: "Maximum file size is 5MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsAvatarUploading(true);
-      const compressedFile = await compressAvatar(file);
-      const { avatarUrl } = await api.uploadAvatar(compressedFile);
-      setCustomAvatarPreview(avatarUrl);
-      profileForm.setValue("avatarUrl", avatarUrl, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-
-      toast({
-        title: "Custom Avatar Uploaded",
-        description: "Your logo has been uploaded to your Cloudflare R2 bucket.",
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Upload failed";
-      toast({
-        title: "Upload failed",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsAvatarUploading(false);
-      if (avatarInputRef.current) {
-        avatarInputRef.current.value = "";
-      }
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -341,237 +280,119 @@ export const ProfileTab = memo(function ProfileTab({
             <FormField
               control={profileForm.control}
               name="avatarUrl"
-              render={({ field }) => {
-                const hasCustomAvatar = isCustomAvatar(field.value);
-                const currentAvatarId = !hasCustomAvatar ? getAvatarId(field.value) : null;
-                const activeCustomUrl = customAvatarPreview || (hasCustomAvatar ? field.value : null);
-
-                return (
-                  <FormItem className="space-y-4">
-                    <div>
-                      <FormLabel className="text-sm font-semibold text-foreground">
-                        Profile Avatar & Logo
-                      </FormLabel>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Upload your custom store logo to our secure Cloudflare R2 bucket or select an official character avatar.
-                      </p>
-                    </div>
-
-                    {/* Dedicated Custom Avatar Bucket Card */}
-                    <div className="rounded-2xl border border-border/80 bg-slate-50/50 dark:bg-zinc-900/50 p-4 sm:p-5 shadow-2xs space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                            <UploadCloud className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-foreground">
-                                Custom Logo & Avatar Bucket
-                              </h4>
-                              {hasCustomAvatar && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                  <CheckCircle2 className="w-3 h-3" /> Active
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Secure Cloudflare R2 storage • High-speed CDN delivery
-                            </p>
-                          </div>
-                        </div>
-
-                        {hasCustomAvatar && (
-                          <div className="flex items-center gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={isAvatarUploading}
-                              onClick={() => avatarInputRef.current?.click()}
-                              className="h-8 px-3 text-xs gap-1.5"
-                            >
-                              <Upload className="h-3.5 w-3.5" />
-                              Replace
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={isAvatarUploading}
-                              onClick={() => {
-                                setCustomAvatarPreview(null);
-                                field.onChange("avatar-1");
-                                toast({
-                                  title: "Custom avatar removed",
-                                  description: "Switched to default character avatar.",
-                                });
-                              }}
-                              className="h-8 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Remove
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Dropzone Container or Active Preview Card */}
-                      {hasCustomAvatar && activeCustomUrl ? (
-                        <div className="flex items-center gap-4 p-3.5 rounded-xl border border-primary/20 bg-background/90 shadow-2xs">
-                          <div className="relative h-16 w-16 shrink-0 rounded-xl border-2 border-primary/40 bg-muted/40 shadow-xs overflow-hidden flex items-center justify-center">
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Avatar</FormLabel>
+                  <FormControl>
+                    <div className="grid grid-cols-4 gap-3">
+                      {avatarOptions.map((option) => {
+                        const isCustomOption = option.id === "custom";
+                        const hasCustomAvatar = isCustomAvatar(field.value);
+                        const isSelected = isCustomOption
+                          ? hasCustomAvatar
+                          : field.value === option.id ||
+                            (!hasCustomAvatar &&
+                              getAvatarId(field.value) === option.id);
+                        const customPreview =
+                          customAvatarPreview ||
+                          (hasCustomAvatar ? field.value : option.url);
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => {
+                              if (option.id === "custom") {
+                                avatarInputRef.current?.click();
+                                return;
+                              }
+                              setCustomAvatarPreview(null);
+                              field.onChange(option.id);
+                            }}
+                            className={cn(
+                              "rounded-xl border p-2 transition",
+                              isSelected
+                                ? "border-primary ring-2 ring-primary/30"
+                                : "border-border hover:border-primary/40",
+                            )}
+                          >
                             <img
-                              src={activeCustomUrl}
-                              alt="Custom Avatar Preview"
-                              className="h-full w-full object-contain p-1"
+                              src={
+                                option.id === "custom"
+                                  ? customPreview
+                                  : option.url
+                              }
+                              alt={option.label}
+                              className="h-16 w-16 mx-auto object-contain"
                             />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-foreground truncate">
-                              Custom Brand Logo Active
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              This image is visible to buyers across your trust profile, store badges, and search listings.
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                <Sparkles className="w-3 h-3" /> CDN Cached & WebP Optimized
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onDragEnter={(e) => {
-                            e.preventDefault();
-                            setIsDragging(true);
-                          }}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setIsDragging(true);
-                          }}
-                          onDragLeave={() => setIsDragging(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setIsDragging(false);
-                            const file = e.dataTransfer.files?.[0];
-                            if (file) handleAvatarFile(file);
-                          }}
-                          onClick={() => {
-                            if (!isAvatarUploading) avatarInputRef.current?.click();
-                          }}
-                          className={cn(
-                            "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-200 bg-background/50",
-                            isDragging
-                              ? "border-primary bg-primary/10 ring-4 ring-primary/20 scale-[1.01]"
-                              : "border-border hover:border-primary/60 hover:bg-muted/40",
-                            isAvatarUploading && "pointer-events-none opacity-80",
-                          )}
-                        >
-                          {isAvatarUploading ? (
-                            <div className="flex flex-col items-center justify-center py-2 space-y-2">
-                              <Loader2 className="h-7 w-7 animate-spin text-primary" />
-                              <p className="text-sm font-semibold text-foreground">
-                                Uploading to Cloudflare R2 bucket...
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Compressing and optimizing image to WebP
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center space-y-2">
-                              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                <UploadCloud className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-foreground">
-                                  Drag & drop your store logo here, or{" "}
-                                  <span className="text-primary underline font-bold">browse</span>
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  PNG, JPG, or WebP up to 5MB • Automatically scaled & converted to WebP
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2 pt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5">
-                                  <Sparkles className="h-3 w-3 text-amber-500" />
-                                  Cloudflare R2 Bucket
-                                </span>
-                                <span>•</span>
-                                <span>High-resolution CDN Delivery</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            <span className="mt-2 block text-xs text-muted-foreground">
+                              {option.label}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
+                  </FormControl>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
 
-                    <input
-                      ref={avatarInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (file) handleAvatarFile(file);
-                      }}
-                    />
+                      const inputElement = event.currentTarget;
 
-                    {/* Preset Avatars Section */}
-                    <div className="space-y-2.5 pt-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                          Or Choose From Preset Character Avatars
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          15 options
-                        </span>
-                      </div>
+                      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                        toast({
+                          title: "Unsupported format",
+                          description: "Use JPG, PNG, or WEBP.",
+                          variant: "destructive",
+                        });
+                        inputElement.value = "";
+                        return;
+                      }
 
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
-                        {avatarOptions
-                          .filter((option) => option.id !== "custom")
-                          .map((option) => {
-                            const isSelected =
-                              !hasCustomAvatar && currentAvatarId === option.id;
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast({
+                          title: "Image too large",
+                          description: "Max size is 5MB.",
+                          variant: "destructive",
+                        });
+                        inputElement.value = "";
+                        return;
+                      }
 
-                            return (
-                              <button
-                                key={option.id}
-                                type="button"
-                                onClick={() => {
-                                  setCustomAvatarPreview(null);
-                                  field.onChange(option.id);
-                                }}
-                                className={cn(
-                                  "group relative flex flex-col items-center rounded-xl border p-2.5 transition-all duration-150 text-center hover:-translate-y-0.5",
-                                  isSelected
-                                    ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-xs"
-                                    : "border-border hover:border-primary/40 hover:bg-muted/40",
-                                )}
-                              >
-                                {isSelected && (
-                                  <div className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xs">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                  </div>
-                                )}
-                                <img
-                                  src={option.url}
-                                  alt={option.label}
-                                  className="h-14 w-14 object-contain transition-transform duration-150 group-hover:scale-105"
-                                />
-                                <span className="mt-1.5 block text-[11px] font-medium text-muted-foreground group-hover:text-foreground">
-                                  {option.label}
-                                </span>
-                              </button>
-                            );
-                          })}
-                      </div>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+                      try {
+                        setIsAvatarUploading(true);
+                        const compressedFile = await compressAvatar(file);
+                        const { avatarUrl } = await api.uploadAvatar(compressedFile);
+                        setCustomAvatarPreview(avatarUrl);
+                        field.onChange(avatarUrl);
+
+                        toast({
+                          title: "Avatar uploaded",
+                          description: "Your avatar has been updated successfully.",
+                        });
+                      } catch (error) {
+                        const message = error instanceof Error ? error.message : "Upload failed";
+                        toast({
+                          title: "Upload failed",
+                          description: message,
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsAvatarUploading(false);
+                        inputElement.value = "";
+                      }
+                    }}
+                  />
+                  {isAvatarUploading ? (
+                    <p className="text-xs text-muted-foreground">Uploading avatar...</p>
+                  ) : null}
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
