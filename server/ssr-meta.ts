@@ -24,6 +24,8 @@ const KNOWN_ROUTES = new Set([
   "access-not-available",
   "about",
   "terms",
+  "contact",
+  "contacts",
   "v2",
   // Static assets & API
   "api",

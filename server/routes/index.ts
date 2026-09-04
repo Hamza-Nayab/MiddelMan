@@ -12,6 +12,7 @@ import { registerProfileRoutes } from "./profile.routes";
 import { registerReviewsRoutes } from "./reviews.routes";
 import { registerSearchRoutes } from "./search.routes";
 import { registerSeoRoutes } from "./seo.routes";
+import { registerContactRoutes } from "./contact.routes";
 
 let allRoutesRegistered = false;
 
@@ -53,4 +54,5 @@ export async function registerAllRoutes(app: Express): Promise<void> {
   registerAnalyticsRoutes(app);
   registerNotificationsRoutes(app);
   registerSeoRoutes(app);
+  registerContactRoutes(app);
 }

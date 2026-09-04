@@ -16,6 +16,11 @@ import type {
   User as SharedUser,
   UserRole,
   UsernameCheckResponse as SharedUsernameCheckResponse,
+  ContactMessage,
+  ContactStatus,
+  ContactSubmissionPayload,
+  AdminContactsResponse,
+  AdminContactUpdatePayload,
 } from "@shared/types";
 
 export type {
@@ -24,6 +29,11 @@ export type {
   ReviewStats,
   SearchResponse,
   UserRole,
+  ContactMessage,
+  ContactStatus,
+  ContactSubmissionPayload,
+  AdminContactsResponse,
+  AdminContactUpdatePayload,
 };
 
 export type ApiErrorPayload = {
@@ -773,4 +783,26 @@ export const api = {
       "POST",
       "/api/me/notifications/mark-all-read",
     ),
+
+  // Contact & Inquiries
+  submitContact: (data: ContactSubmissionPayload) =>
+    request<{ success: boolean; message: string }>("POST", "/api/contact", data),
+  getAdminContacts: (params?: {
+    status?: string;
+    q?: string;
+    limit?: number;
+    cursor?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.q) query.set("q", params.q);
+    if (params?.limit !== undefined) query.set("limit", String(params.limit));
+    if (params?.cursor !== undefined) query.set("cursor", String(params.cursor));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<AdminContactsResponse>("GET", `/api/admin/contacts${suffix}`);
+  },
+  getAdminContactById: (id: number) =>
+    request<ContactMessage>("GET", `/api/admin/contacts/${id}`),
+  updateAdminContact: (id: number, data: AdminContactUpdatePayload) =>
+    request<{ contact: ContactMessage }>("PATCH", `/api/admin/contacts/${id}`, data),
 };

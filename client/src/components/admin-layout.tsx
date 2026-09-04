@@ -9,11 +9,12 @@ import {
   AlertTriangle,
   BarChart3,
   Shield,
+  Mail,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useMeQuery } from "@/hooks/use-me";
 
-type NavTab = "users" | "reviews" | "disputes" | "analytics" | "admins";
+type NavTab = "users" | "reviews" | "disputes" | "analytics" | "admins" | "contacts";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -49,6 +50,12 @@ const navItems: Array<{
     label: "Disputes",
     icon: <AlertTriangle className="w-4 h-4" />,
     path: "/admin/disputes",
+  },
+  {
+    id: "contacts",
+    label: "Contacts",
+    icon: <Mail className="w-4 h-4" />,
+    path: "/admin/contacts",
   },
   {
     id: "analytics",

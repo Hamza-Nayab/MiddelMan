@@ -247,6 +247,8 @@ const expectedRoutes = [
   "DELETE /api/me/links/:id",
   "GET /api/admin/admins",
   "GET /api/admin/analytics/overview",
+  "GET /api/admin/contacts",
+  "GET /api/admin/contacts/:id",
   "GET /api/admin/disputes",
   "GET /api/admin/reviews",
   "GET /api/admin/sellers/:sellerId",
@@ -271,6 +273,7 @@ const expectedRoutes = [
   "GET /api/username/check",
   "GET /api/users",
   "GET /sitemap.xml",
+  "PATCH /api/admin/contacts/:id",
   "PATCH /api/admin/disputes/:id/resolve",
   "PATCH /api/admin/reviews/:id/hide",
   "PATCH /api/admin/users/:id/disable",
@@ -292,6 +295,7 @@ const expectedRoutes = [
   "POST /api/auth/forgot-password",
   "POST /api/auth/resend-verification",
   "POST /api/auth/reset-password",
+  "POST /api/contact",
   "POST /api/me/avatar",
   "POST /api/me/links",
   "POST /api/me/notifications/mark-all-read",
@@ -1214,6 +1218,123 @@ describe("route groups", () => {
     assert.equal(sitemap.status, 200);
     assert.match(sitemap.body, /<urlset/);
     assert.match(sitemap.body, /seller-one/);
+    assertDbQueuesEmpty();
+  });
+
+  it("contacts", async () => {
+    // 1. Public contact submission valid
+    setDbQueues({
+      insert: [
+        [
+          {
+            id: 1,
+            name: "John Doe",
+            email: "john@example.com",
+            phone: "+1234567890",
+            message: "Hello, this is a test message for support.",
+            status: "unread",
+          },
+        ],
+      ],
+    });
+    const submitRes = await request("POST", "/api/contact", {
+      body: {
+        name: "John Doe",
+        email: "john@example.com",
+        phone: "+1234567890",
+        message: "Hello, this is a test message for support.",
+      },
+    });
+    assert.equal(submitRes.status, 201);
+    assert.equal(submitRes.body.data.success, true);
+    assertDbQueuesEmpty();
+
+    // 2. Public contact submission validation failure
+    setDbQueues({});
+    const invalidSubmit = await request("POST", "/api/contact", {
+      body: {
+        name: "J",
+        email: "not-an-email",
+        message: "short",
+      },
+    });
+    assert.equal(invalidSubmit.status, 400);
+    assert.equal(invalidSubmit.body.error.code, "VALIDATION_ERROR");
+    assertDbQueuesEmpty();
+
+    // 3. Admin contacts list unauthenticated
+    setDbQueues({});
+    const unauthAdmin = await request("GET", "/api/admin/contacts");
+    assert.equal(unauthAdmin.status, 401);
+    assert.equal(unauthAdmin.body.error.code, "UNAUTHORIZED");
+    assertDbQueuesEmpty();
+
+    // 4. Admin contacts list non-admin forbidden
+    setDbQueues({ select: [[buyerUser]] });
+    const nonAdmin = await request("GET", "/api/admin/contacts", {
+      headers: { "x-test-user-id": String(buyerUser.id) },
+    });
+    assert.equal(nonAdmin.status, 403);
+    assert.equal(nonAdmin.body.error.code, "FORBIDDEN");
+    assertDbQueuesEmpty();
+
+    // 5. Admin contacts list success
+    setDbQueues({
+      select: [
+        [adminUser],
+        [
+          {
+            id: 1,
+            name: "John Doe",
+            email: "john@example.com",
+            phone: "+1234567890",
+            message: "Hello, this is a test message for support.",
+            status: "unread",
+            adminNotes: null,
+            resolvedByAdminId: null,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+          },
+        ],
+        [{ count: 1 }],
+        [{ count: 1 }],
+      ],
+    });
+    const adminList = await request("GET", "/api/admin/contacts", {
+      headers: { "x-test-user-id": String(adminUser.id) },
+    });
+    assert.equal(adminList.status, 200);
+    assert.equal(adminList.body.data.items.length, 1);
+    assert.equal(adminList.body.data.unreadCount, 1);
+    assertDbQueuesEmpty();
+
+    // 6. Admin update contact status & notes
+    setDbQueues({
+      select: [
+        [adminUser],
+        [{ id: 1, status: "unread" }],
+      ],
+      update: [
+        [
+          {
+            id: 1,
+            name: "John Doe",
+            status: "read",
+            adminNotes: "Replied via email",
+          },
+        ],
+      ],
+      insert: [[]],
+    });
+    const updateRes = await request("PATCH", "/api/admin/contacts/1", {
+      headers: { "x-test-user-id": String(adminUser.id) },
+      body: {
+        status: "read",
+        adminNotes: "Replied via email",
+      },
+    });
+    assert.equal(updateRes.status, 200);
+    assert.equal(updateRes.body.data.contact.status, "read");
     assertDbQueuesEmpty();
   });
 });

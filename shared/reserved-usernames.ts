@@ -14,6 +14,8 @@ export const RESERVED_USERNAMES = new Set<string>([
   "api",
   "assets",
   "auth",
+  "contact",
+  "contacts",
   "dashboard",
   "demo",
   "disabled",
