@@ -234,7 +234,12 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                 <img
                   src={getAvatarUrl(avatarValue, userId ?? undefined)}
                   alt={displayName}
-                  className="h-full w-full object-cover"
+                  className={cn(
+                    "h-full w-full",
+                    avatarValue?.includes("middelman") || avatarValue?.includes("logo")
+                      ? "object-contain p-2 bg-white"
+                      : "object-cover",
+                  )}
                 />
               </div>
 
@@ -354,9 +359,38 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                         (link.icon as PlatformKey) || "website"
                       ] || platformIconMap.website;
 
+                    const getBrandIconColor = (iconKey?: string | null) => {
+                      if (appearance.accentColor) return "";
+                      if (appearance.usesDynamicBackground && !appearance.usesBrightBackground) {
+                        return "text-white";
+                      }
+                      switch (iconKey) {
+                        case "linkedin":
+                          return "text-[#0A66C2] dark:text-[#38bdf8]";
+                        case "facebook":
+                          return "text-[#0866FF] dark:text-[#60a5fa]";
+                        case "instagram":
+                          return "text-[#E1306C] dark:text-[#f472b6]";
+                        case "whatsapp":
+                          return "text-[#25D366]";
+                        case "tiktok":
+                        case "x":
+                        case "twitter":
+                        case "threads":
+                          return "text-slate-900 dark:text-white";
+                        case "website":
+                          return "text-blue-600 dark:text-blue-400";
+                        default:
+                          return appearance.iconColorClass;
+                      }
+                    };
+
                     return (
-                      <div
+                      <a
                         key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className={cn(
                           "group flex cursor-pointer items-center justify-between rounded-[20px] border p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
                           appearance.surfaceClass,
@@ -379,7 +413,7 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                             style={appearance.accentIconStyle}
                           >
                             <Icon
-                              className={cn("h-5 w-5", appearance.iconColorClass)}
+                              className={cn("h-5 w-5", getBrandIconColor(link.icon) || appearance.iconColorClass)}
                               style={appearance.accentTextStyle}
                               aria-hidden="true"
                             />
@@ -396,12 +430,12 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
                         </div>
                         <ExternalLink
                           className={cn(
-                            "w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity",
+                            "w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity",
                             appearance.iconColorClass,
                           )}
                           aria-hidden="true"
                         />
-                      </div>
+                      </a>
                     );
                   })}
                 </div>

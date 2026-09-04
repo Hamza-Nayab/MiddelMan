@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
 import { users } from "@shared/schema";
+import { isReservedUsername } from "@shared/reserved-usernames";
 import { db } from "./db";
 
 const MAX_USERNAME_LENGTH = 20;
 
-const normalizeUsernameSeed = (seed: string) => {
+export const normalizeUsernameSeed = (seed: string) => {
   const cleaned = seed
     .toLowerCase()
     .replace(/\s+/g, "")
@@ -24,6 +25,11 @@ export const generateUniqueUsername = async (seed: string) => {
     const suffix = i === 0 ? "" : String(i);
     const trimmed = base.slice(0, MAX_USERNAME_LENGTH - suffix.length);
     const candidate = `${trimmed}${suffix}`;
+
+    // Skip any candidate that matches reserved routes/system names
+    if (isReservedUsername(candidate)) {
+      continue;
+    }
 
     const [existing] = await db
       .select({ id: users.id })
@@ -45,8 +51,9 @@ export const generateUsernameSuggestions = async (
   const suggestions: string[] = [];
 
   // Try numeric suffixes first
-  for (let i = 1; i <= count * 2 && suggestions.length < count; i += 1) {
+  for (let i = 1; i <= count * 3 && suggestions.length < count; i += 1) {
     const candidate = `${base}${i}`;
+    if (isReservedUsername(candidate)) continue;
 
     const [existing] = await db
       .select({ id: users.id })
@@ -59,8 +66,9 @@ export const generateUsernameSuggestions = async (
   }
 
   // If we need more, try with underscores
-  for (let i = 1; i <= count && suggestions.length < count; i += 1) {
+  for (let i = 1; i <= count * 3 && suggestions.length < count; i += 1) {
     const candidate = `${base}_${i}`;
+    if (isReservedUsername(candidate)) continue;
 
     const [existing] = await db
       .select({ id: users.id })
@@ -75,8 +83,9 @@ export const generateUsernameSuggestions = async (
   // If we still need more, try removing last character and adding suffix
   if (suggestions.length < count && base.length > 5) {
     const shortened = base.slice(0, -1);
-    for (let i = 1; i <= count && suggestions.length < count; i += 1) {
+    for (let i = 1; i <= count * 3 && suggestions.length < count; i += 1) {
       const candidate = `${shortened}${i}`;
+      if (isReservedUsername(candidate)) continue;
 
       const [existing] = await db
         .select({ id: users.id })

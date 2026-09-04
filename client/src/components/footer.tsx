@@ -1,6 +1,14 @@
 import { Link } from "wouter";
 import logoImg from "@/assets/middelman-bg.png";
-import { ShieldCheck, Star, Lock, Twitter, Instagram, Github } from "lucide-react";
+import { ShieldCheck, Star, Lock } from "lucide-react";
+import {
+  SiFacebook,
+  SiInstagram,
+  SiTiktok,
+  SiX,
+  SiThreads,
+} from "react-icons/si";
+import { FaLinkedin } from "react-icons/fa";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -181,35 +189,68 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li>
                 <a
-                  href="https://twitter.com/middelman"
+                  href="https://www.linkedin.com/company/middelmen/about/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                  className="inline-flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >
-                  <Twitter size={15} aria-hidden="true" />
-                  Twitter / X
+                  <FaLinkedin className="h-3.5 w-3.5 shrink-0 text-[#0A66C2] dark:text-[#38bdf8]" aria-hidden="true" />
+                  LinkedIn
                 </a>
               </li>
               <li>
                 <a
-                  href="https://instagram.com/middelman"
+                  href="https://www.facebook.com/profile.php?id=61593947706156"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                  className="inline-flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >
-                  <Instagram size={15} aria-hidden="true" />
+                  <SiFacebook className="h-3.5 w-3.5 shrink-0 text-[#0866FF] dark:text-[#60a5fa]" aria-hidden="true" />
+                  Facebook
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.instagram.com/middel.men/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                >
+                  <SiInstagram className="h-3.5 w-3.5 shrink-0 text-[#E1306C] dark:text-[#f472b6]" aria-hidden="true" />
                   Instagram
                 </a>
               </li>
               <li>
                 <a
-                  href="https://github.com/Hamza-Nayab/MiddelMan"
+                  href="https://www.tiktok.com/@middelmen"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                  className="inline-flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >
-                  <Github size={15} aria-hidden="true" />
-                  GitHub
+                  <SiTiktok className="h-3.5 w-3.5 shrink-0 text-slate-900 dark:text-white" aria-hidden="true" />
+                  TikTok
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://x.com/realMiddelMen"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                >
+                  <SiX className="h-3.5 w-3.5 shrink-0 text-slate-900 dark:text-white" aria-hidden="true" />
+                  X / Twitter
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.threads.com/@middel.men"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                >
+                  <SiThreads className="h-3.5 w-3.5 shrink-0 text-slate-900 dark:text-white" aria-hidden="true" />
+                  Threads
                 </a>
               </li>
             </ul>

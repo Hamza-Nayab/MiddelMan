@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db";
 import { users, profiles } from "@shared/schema";
+import { isReservedUsername } from "@shared/reserved-usernames";
 import { eq, sql } from "drizzle-orm";
 
 /**
@@ -23,6 +24,7 @@ const KNOWN_ROUTES = new Set([
   "access-not-available",
   "about",
   "terms",
+  "v2",
   // Static assets & API
   "api",
   "assets",
@@ -36,13 +38,13 @@ const KNOWN_ROUTES = new Set([
 
 /**
  * Returns the lowercase username if the path looks like a profile route,
- * or null if it matches a known static route / multi-segment path.
+ * or null if it matches a known static route / multi-segment path / reserved word.
  */
 function isProfileRoute(path: string): string | null {
   const segments = path.split("/").filter(Boolean);
   if (segments.length !== 1) return null;
   const slug = segments[0].toLowerCase();
-  if (KNOWN_ROUTES.has(slug)) return null;
+  if (KNOWN_ROUTES.has(slug) || isReservedUsername(slug)) return null;
   if (slug.startsWith(".")) return null;
   return slug;
 }

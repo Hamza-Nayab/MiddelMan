@@ -41,22 +41,43 @@ const DEMO_LINKS = [
   {
     id: 2,
     title: "LinkedIn",
-    url: "https://linkedin.com/company/middelmen",
+    url: "https://www.linkedin.com/company/middelmen/about/",
     icon: "linkedin",
     isActive: true,
   },
   {
     id: 3,
-    title: "X (Twitter)",
-    url: "https://twitter.com/middelmen",
-    icon: "x",
+    title: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=61593947706156",
+    icon: "facebook",
     isActive: true,
   },
   {
     id: 4,
-    title: "GitHub",
-    url: "https://github.com/middelmen",
-    icon: "github",
+    title: "Instagram",
+    url: "https://www.instagram.com/middel.men/",
+    icon: "instagram",
+    isActive: true,
+  },
+  {
+    id: 5,
+    title: "TikTok",
+    url: "https://www.tiktok.com/@middelmen",
+    icon: "tiktok",
+    isActive: true,
+  },
+  {
+    id: 6,
+    title: "X (Twitter)",
+    url: "https://x.com/realMiddelMen",
+    icon: "x",
+    isActive: true,
+  },
+  {
+    id: 7,
+    title: "Threads",
+    url: "https://www.threads.com/@middel.men",
+    icon: "threads",
     isActive: true,
   },
 ];
@@ -162,29 +183,54 @@ export default function DemoProfile() {
           <div className="mb-12">
             <h2 className="text-xl font-bold mb-4">Connect</h2>
             <div className="grid gap-3">
-              {DEMO_LINKS.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer hover:border-primary/50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-accent text-white flex items-center justify-center shadow-xs">
-                          {(() => {
-                            const Icon = getPlatformIcon(link.icon);
-                            return <Icon className="h-5 w-5 text-white" aria-hidden="true" />;
-                          })()}
+              {DEMO_LINKS.map((link) => {
+                const getBadgeClass = (icon?: string | null) => {
+                  switch (icon) {
+                    case "linkedin":
+                      return "bg-[#0A66C2] text-white";
+                    case "facebook":
+                      return "bg-[#0866FF] text-white";
+                    case "instagram":
+                      return "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white";
+                    case "tiktok":
+                      return "bg-black text-white dark:bg-white dark:text-black";
+                    case "x":
+                    case "twitter":
+                      return "bg-black text-white dark:bg-white dark:text-black";
+                    case "threads":
+                      return "bg-black text-white dark:bg-white dark:text-black";
+                    case "website":
+                    default:
+                      return "bg-blue-600 text-white";
+                  }
+                };
+
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Card className="p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all duration-200 group cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3.5">
+                          <div className={`h-10 w-10 rounded-full ${getBadgeClass(link.icon)} flex items-center justify-center shadow-xs shrink-0`}>
+                            {(() => {
+                              const Icon = getPlatformIcon(link.icon);
+                              return <Icon className="h-5 w-5" aria-hidden="true" />;
+                            })()}
+                          </div>
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">
+                            {link.title}
+                          </span>
                         </div>
-                        <span className="font-medium">{link.title}</span>
+                        <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
                       </div>
-                      <ExternalLink className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                  </Card>
-                </a>
-              ))}
+                    </Card>
+                  </a>
+                );
+              })}
             </div>
           </div>
 

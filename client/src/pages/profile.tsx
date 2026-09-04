@@ -63,6 +63,10 @@ import {
   useGivenReviewsQuery,
   useProfileBundleQuery,
 } from "@/hooks/use-profile";
+import {
+  isReservedUsername,
+  RESERVED_USERNAME_ERROR_MESSAGE,
+} from "@shared/reserved-usernames";
 
 const ReviewFormSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -78,6 +82,10 @@ const UsernameChangeSchema = z.object({
     .regex(
       USERNAME_REGEX,
       "Use lowercase letters, numbers, dots, underscores, or hyphens",
+    )
+    .refine(
+      (val) => !isReservedUsername(val),
+      RESERVED_USERNAME_ERROR_MESSAGE,
     ),
 });
 

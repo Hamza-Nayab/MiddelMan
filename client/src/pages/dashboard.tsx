@@ -40,6 +40,10 @@ import {
   resolveProfileAppearance,
   validateHexColor,
 } from "@/lib/profile-appearance";
+import {
+  isReservedUsername,
+  RESERVED_USERNAME_ERROR_MESSAGE,
+} from "@shared/reserved-usernames";
 import { useMeQuery } from "@/hooks/use-me";
 
 const LINKS_QUERY_KEY = ["links"] as const;
@@ -63,6 +67,10 @@ const UsernameChangeSchema = z.object({
     .regex(
       USERNAME_REGEX,
       "Use lowercase letters, numbers, dots, underscores, or hyphens",
+    )
+    .refine(
+      (val) => !isReservedUsername(val),
+      RESERVED_USERNAME_ERROR_MESSAGE,
     ),
 });
 

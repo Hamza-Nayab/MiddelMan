@@ -421,6 +421,35 @@ describe("route groups", () => {
     assert.equal(usernameCheck.body.data.available, true);
     assertDbQueuesEmpty();
 
+    // Test reserved username check returns available: false, isReserved: true, and non-reserved suggestions
+    setDbQueues({ select: [[], [], [], [], []] });
+    const reservedCheck = await request(
+      "GET",
+      "/api/username/check?username=admin",
+    );
+    assert.equal(reservedCheck.status, 200);
+    assert.equal(reservedCheck.body.data.available, false);
+    assert.equal(reservedCheck.body.data.isReserved, true);
+    assert.ok(reservedCheck.body.data.suggestions.length > 0);
+    assert.equal(reservedCheck.body.data.suggestions[0], "admin1");
+    assertDbQueuesEmpty();
+
+    // Test registering with reserved username fails
+    setDbQueues({});
+    const reservedRegister = await request("POST", "/api/auth/register", {
+      body: {
+        displayName: "Admin Seller",
+        email: "admin-seller@example.com",
+        password: "password123",
+        confirmPassword: "password123",
+        role: "seller",
+        username: "admin",
+      },
+    });
+    assert.equal(reservedRegister.status, 400);
+    assert.equal(reservedRegister.body.error.code, "VALIDATION_ERROR");
+    assertDbQueuesEmpty();
+
     setDbQueues({});
     const unauthorized = await request("POST", "/api/me/avatar");
     assert.equal(unauthorized.status, 401);

@@ -26,6 +26,8 @@ import {
   SiReddit,
   SiGithub,
   SiShopify,
+  SiInstagram,
+  SiThreads,
 } from "react-icons/si";
 import { FaLinkedin } from "react-icons/fa";
 
@@ -118,8 +120,8 @@ export const getAvatarUrl = (
   );
   if (match) return match.url;
 
-  // 5. Genuine custom uploads (Cloudflare R2, valid remote URLs, data URIs)
-  if (value.startsWith("data:") || value.startsWith("http")) {
+  // 5. Genuine custom uploads (Cloudflare R2, valid remote URLs, data URIs, local assets)
+  if (value.startsWith("data:") || value.startsWith("http") || value.startsWith("/")) {
     return value;
   }
 
@@ -156,8 +158,8 @@ export const getAvatarId = (value?: string | null) => {
   );
   if (match) return match.id;
 
-  // 5. Genuine custom upload URL (R2 or data URI) -> return the URL itself
-  if (value.startsWith("data:") || value.startsWith("http")) {
+  // 5. Genuine custom upload URL (R2 or data URI or local asset) -> return the URL itself
+  if (value.startsWith("data:") || value.startsWith("http") || value.startsWith("/")) {
     return value;
   }
 
@@ -170,7 +172,7 @@ export const platformOptions = [
     key: "linkedin",
     label: "LinkedIn",
     icon: FaLinkedin,
-    urlHint: "https://linkedin.com/in/",
+    urlHint: "https://linkedin.com/company/",
   },
   {
     key: "facebook",
@@ -178,7 +180,25 @@ export const platformOptions = [
     icon: SiFacebook,
     urlHint: "https://facebook.com/",
   },
+  {
+    key: "instagram",
+    label: "Instagram",
+    icon: SiInstagram,
+    urlHint: "https://instagram.com/",
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    icon: SiTiktok,
+    urlHint: "https://tiktok.com/@",
+  },
   { key: "x", label: "X", icon: SiX, urlHint: "https://x.com/" },
+  {
+    key: "threads",
+    label: "Threads",
+    icon: SiThreads,
+    urlHint: "https://threads.com/@",
+  },
   {
     key: "reddit",
     label: "Reddit",
@@ -190,12 +210,6 @@ export const platformOptions = [
     label: "YouTube",
     icon: SiYoutube,
     urlHint: "https://youtube.com/",
-  },
-  {
-    key: "tiktok",
-    label: "TikTok",
-    icon: SiTiktok,
-    urlHint: "https://tiktok.com/@",
   },
   {
     key: "whatsapp",
@@ -231,10 +245,13 @@ export const platformOptions = [
 
 export type PlatformKey = (typeof platformOptions)[number]["key"];
 
-export const platformIconMap = platformOptions.reduce(
-  (acc, platform) => {
-    acc[platform.key] = platform.icon;
-    return acc;
-  },
-  {} as Record<PlatformKey, React.ComponentType<any>>,
-);
+export const platformIconMap: Record<string, React.ComponentType<any>> = {
+  ...platformOptions.reduce(
+    (acc, platform) => {
+      acc[platform.key] = platform.icon;
+      return acc;
+    },
+    {} as Record<string, React.ComponentType<any>>,
+  ),
+  twitter: SiX,
+};

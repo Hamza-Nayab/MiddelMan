@@ -30,6 +30,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
 import { Check, AlertCircle } from "lucide-react";
 import { useMeQuery } from "@/hooks/use-me";
+import {
+  isReservedUsername,
+  RESERVED_USERNAME_ERROR_MESSAGE,
+} from "@shared/reserved-usernames";
 
 const BuyerLoginSchema = z.object({
   loginType: z.literal("buyer"),
@@ -66,6 +70,10 @@ const RegisterSchema = z
           .regex(
             /^[a-z0-9._-]+$/,
             "Only lowercase letters, numbers, dots, underscores, and hyphens",
+          )
+          .refine(
+            (val) => !isReservedUsername(val),
+            RESERVED_USERNAME_ERROR_MESSAGE,
           )
           .optional(),
       ),
@@ -561,7 +569,9 @@ function UsernameField({ form }: UsernameFieldProps) {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-amber-600">
                     <AlertCircle className="h-4 w-4" />
-                    Username taken
+                    {usernameAvailability.isReserved
+                      ? "Username is reserved"
+                      : "Username taken"}
                   </div>
                   {usernameAvailability.suggestions.length > 0 && (
                     <div className="space-y-1">

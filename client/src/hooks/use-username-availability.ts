@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 interface UsernameCheckResult {
   available: boolean;
   suggestions: string[];
+  isReserved?: boolean;
 }
 
 /**
@@ -74,5 +75,6 @@ export function useUsernameAvailability(username: string) {
     suggestions: data?.suggestions ?? [],
     isChecking: status === "checking",
     isValidFormat,
+    isReserved: Boolean(data?.isReserved),
   };
 }

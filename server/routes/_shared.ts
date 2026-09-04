@@ -35,6 +35,10 @@ import { generateUsernameSuggestions } from "../user-helpers";
 import { uploadAvatarToR2 } from "../r2";
 import { checkRateLimit } from "../rateLimit";
 import {
+  isReservedUsername,
+  RESERVED_USERNAME_ERROR_MESSAGE,
+} from "@shared/reserved-usernames";
+import {
   getReviewStats,
   refreshSellerReviewStatsCache,
 } from "../services/review-stats.service";
@@ -78,6 +82,8 @@ export {
   checkRateLimit,
   getReviewStats,
   refreshSellerReviewStatsCache,
+  isReservedUsername,
+  RESERVED_USERNAME_ERROR_MESSAGE,
 };
 
 export const searchController = createSearchController({ ok, error });
@@ -282,27 +288,6 @@ export const adminResolveDisputeSchema = z.object({
   hideReview: z.boolean().optional(),
 });
 
-export const adminCreateAdminSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  username: z
-    .string()
-    .min(5, "Username must be at least 5 characters")
-    .max(20, "Username must be at most 20 characters")
-    .regex(
-      /^[a-z0-9._-]{5,20}$/,
-      "Username must contain only lowercase letters, numbers, dots, underscores, or hyphens",
-    ),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128, "Password must be at most 128 characters"),
-  displayName: z
-    .string()
-    .min(2, "Display name must be at least 2 characters")
-    .max(50, "Display name must be at most 50 characters")
-    .optional(),
-});
-
 const USERNAME_REGEX = /^[a-z0-9._-]{5,20}$/;
 const DISPLAYNAME_REGEX = /^[\p{L}\p{N}\s\-_.,!?'"()]+$/u;
 
@@ -313,7 +298,25 @@ export const usernameSchema = z
   .regex(
     USERNAME_REGEX,
     "Username must contain only lowercase letters, numbers, dots, underscores, or hyphens",
+  )
+  .refine(
+    (val) => !isReservedUsername(val),
+    RESERVED_USERNAME_ERROR_MESSAGE,
   );
+
+export const adminCreateAdminSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  username: usernameSchema,
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password must be at most 128 characters"),
+  displayName: z
+    .string()
+    .min(2, "Display name must be at least 2 characters")
+    .max(50, "Display name must be at most 50 characters")
+    .optional(),
+});
 
 const displayNameSchema = z
   .string()

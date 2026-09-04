@@ -19,4 +19,5 @@ export type User = {
 export type UsernameCheckResponse = {
   available: boolean;
   suggestions: string[];
+  isReserved?: boolean;
 };

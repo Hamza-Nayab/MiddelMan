@@ -23,6 +23,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { Link as LinkType } from "@/lib/api";
+import logoImg from "@/assets/middelman-bg.png";
 
 const ProfilePreviewPhone = lazy(() =>
   import("@/components/profile/ProfilePreviewPhone").then((m) => ({
@@ -34,9 +35,9 @@ const DEMO_PREVIEW_LINKS: LinkType[] = [
   {
     id: 1,
     userId: 1,
-    title: "Instagram Store",
-    url: "https://instagram.com/alexrivera",
-    icon: "instagram",
+    title: "LinkedIn",
+    url: "https://www.linkedin.com/company/middelmen/about/",
+    icon: "linkedin",
     isActive: true,
     sortOrder: 0,
     createdAt: new Date().toISOString(),
@@ -45,9 +46,9 @@ const DEMO_PREVIEW_LINKS: LinkType[] = [
   {
     id: 2,
     userId: 1,
-    title: "WhatsApp Inquiries",
-    url: "https://wa.me/1234567890",
-    icon: "whatsapp",
+    title: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=61593947706156",
+    icon: "facebook",
     isActive: true,
     sortOrder: 1,
     createdAt: new Date().toISOString(),
@@ -56,11 +57,44 @@ const DEMO_PREVIEW_LINKS: LinkType[] = [
   {
     id: 3,
     userId: 1,
-    title: "Depop Shop",
-    url: "https://depop.com/alexrivera",
-    icon: "shopify",
+    title: "Instagram",
+    url: "https://www.instagram.com/middel.men/",
+    icon: "instagram",
     isActive: true,
     sortOrder: 2,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 4,
+    userId: 1,
+    title: "TikTok",
+    url: "https://www.tiktok.com/@middelmen",
+    icon: "tiktok",
+    isActive: true,
+    sortOrder: 3,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 5,
+    userId: 1,
+    title: "X (Twitter)",
+    url: "https://x.com/realMiddelMen",
+    icon: "x",
+    isActive: true,
+    sortOrder: 4,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 6,
+    userId: 1,
+    title: "Threads",
+    url: "https://www.threads.com/@middel.men",
+    icon: "threads",
+    isActive: true,
+    sortOrder: 5,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -152,8 +186,12 @@ export default function Home() {
                 "url": "https://middelmen.com/favicon.png"
               },
               "sameAs": [
-                "https://twitter.com/middelman",
-                "https://instagram.com/middelman"
+                "https://www.linkedin.com/company/middelmen/about/",
+                "https://www.facebook.com/profile.php?id=61593947706156",
+                "https://www.instagram.com/middel.men/",
+                "https://www.tiktok.com/@middelmen",
+                "https://x.com/realMiddelMen",
+                "https://www.threads.com/@middel.men"
               ]
             }
           ]
@@ -613,8 +651,8 @@ export default function Home() {
                   {/* Greeting & Verification Badge */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 pb-4">
                     <div>
-                      <h4 className="text-base font-bold text-slate-900">Welcome back, Alex 👋</h4>
-                      <p className="text-xs text-slate-500">Seller Dashboard • Authentic Vintage</p>
+                      <h4 className="text-base font-bold text-slate-900">Welcome back, MiddelMen 👋</h4>
+                      <p className="text-xs text-slate-500">Seller Dashboard • Official Store</p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold shadow-2xs">
                       <BadgeCheck size={14} className="text-emerald-600" />
@@ -660,23 +698,30 @@ export default function Home() {
                   {/* Active Links Snippet */}
                   <div className="p-4 sm:p-5 rounded-xl border border-slate-200/80 bg-white shadow-2xs space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Active Links (3)</p>
+                      <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Active Links (6)</p>
                       <span className="text-xs text-blue-600 font-semibold cursor-default">+ Add Link</span>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                          <span className="font-semibold text-slate-800">Instagram Store</span>
+                          <span className="font-semibold text-slate-800">LinkedIn</span>
                         </div>
-                        <span className="text-slate-400 font-mono text-[11px]">1,420 clicks</span>
+                        <span className="text-slate-400 font-mono text-[11px]">2,140 clicks</span>
                       </div>
                       <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                          <span className="font-semibold text-slate-800">WhatsApp Inquiries</span>
+                          <span className="font-semibold text-slate-800">Instagram</span>
                         </div>
-                        <span className="text-slate-400 font-mono text-[11px]">840 clicks</span>
+                        <span className="text-slate-400 font-mono text-[11px]">1,820 clicks</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="font-semibold text-slate-800">TikTok</span>
+                        </div>
+                        <span className="text-slate-400 font-mono text-[11px]">940 clicks</span>
                       </div>
                     </div>
                   </div>
@@ -741,17 +786,14 @@ export default function Home() {
                   }
                 >
                   <ProfilePreviewPhone
-                    displayName="Alex Rivera"
-                    username="alexrivera"
-                    bio="Curated vintage streetwear & luxury sneakers. Shipping worldwide with guaranteed authenticity."
-                    avatarValue="avatar-1"
+                    displayName="MiddelMen"
+                    username="middelmen"
+                    bio="The trust layer for social commerce. Verified reviews, scam protection, and reputation passports for modern sellers."
+                    avatarValue={logoImg}
                     links={DEMO_PREVIEW_LINKS}
                     avgRating={4.9}
                     totalReviews={28}
-                    phoneNumber="+1234567890"
-                    whatsappNumber="+1234567890"
-                    countryCode="+1"
-                    contactEmail="alex@riveravintage.com"
+                    contactEmail="contact@middelmen.com"
                     theme="light"
                     compact={true}
                     openHref="/demo"

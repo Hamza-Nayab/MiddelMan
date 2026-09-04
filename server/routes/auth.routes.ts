@@ -26,6 +26,7 @@ import {
   users,
   changeUsernameSchema,
   checkRateLimit,
+  isReservedUsername,
 } from "./_shared";
 import { appLog } from "../lib/logger";
 import {
@@ -349,6 +350,16 @@ export function registerAuthRoutes(app: Express): void {
         .json(error("VALIDATION_ERROR", "Username is required"));
     }
 
+    if (isReservedUsername(username)) {
+      return res.status(200).json(
+        ok({
+          available: false,
+          suggestions: await generateUsernameSuggestions(username),
+          isReserved: true,
+        }),
+      );
+    }
+
     const parsed = usernameSchema.safeParse(username);
     if (!parsed.success) {
       return res.status(400).json(
@@ -362,18 +373,21 @@ export function registerAuthRoutes(app: Express): void {
     const [existing] = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.username, username));
+      .where(sql`lower(${users.username}) = lower(${username})`);
 
     if (existing) {
       return res.status(200).json(
         ok({
           available: false,
           suggestions: await generateUsernameSuggestions(username),
+          isReserved: false,
         }),
       );
     }
 
-    return res.status(200).json(ok({ available: true, suggestions: [] }));
+    return res
+      .status(200)
+      .json(ok({ available: true, suggestions: [], isReserved: false }));
   });
 
   app.patch("/api/me/username", async (req, res) => {
