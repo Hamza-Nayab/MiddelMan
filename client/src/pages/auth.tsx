@@ -69,7 +69,7 @@ const RegisterSchema = z
           )
           .optional(),
       ),
-    avatarUrl: z.string().url().optional(),
+    avatarUrl: z.string().min(1).max(500).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

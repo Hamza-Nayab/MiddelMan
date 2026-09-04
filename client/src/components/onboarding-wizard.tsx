@@ -26,6 +26,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { api, Profile } from "@/lib/api";
 import { compressAvatar } from "@/lib/avatar";
 import { PRESET_AVATARS, getDefaultPresetAvatar } from "@/lib/preset-avatars";
+import { getAvatarId, getAvatarUrl } from "@/lib/graphics";
 import { Upload, AlertCircle } from "lucide-react";
 
 const displayNameSchema = z
@@ -79,9 +80,18 @@ export function OnboardingWizard({
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async (values: OnboardingForm) => {
+      // Normalize preset avatar Vite asset paths to canonical IDs (e.g. "avatar-15")
+      // before sending to server. Custom uploads (data: or http) are sent as-is.
+      const isCustomUpload =
+        selectedAvatarUrl.startsWith("data:") ||
+        selectedAvatarUrl.startsWith("http");
+      const avatarValue = isCustomUpload
+        ? selectedAvatarUrl
+        : getAvatarId(selectedAvatarUrl);
+
       return api.completeOnboarding({
         displayName: values.displayName,
-        avatarUrl: selectedAvatarUrl,
+        avatarUrl: avatarValue,
         bio: values.bio,
       });
     },
@@ -328,7 +338,7 @@ export function OnboardingWizard({
             {/* Selected avatar preview */}
             <div className="flex justify-center">
               <img
-                src={selectedAvatarUrl}
+                src={getAvatarUrl(selectedAvatarUrl)}
                 alt="Selected avatar"
                 className="h-32 w-32 rounded-full border-4 border-primary/20 shadow-lg"
               />
@@ -398,7 +408,7 @@ export function OnboardingWizard({
             <div className="space-y-3 border rounded-lg p-4">
               <div className="flex justify-center">
                 <img
-                  src={selectedAvatarUrl}
+                  src={getAvatarUrl(selectedAvatarUrl)}
                   alt="Your avatar"
                   className="h-20 w-20 rounded-full border-2 border-border"
                 />
