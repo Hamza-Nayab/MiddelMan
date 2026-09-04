@@ -43,7 +43,7 @@ export default function AdminContactsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("unread");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<ContactMessage | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
@@ -229,10 +229,10 @@ export default function AdminContactsPage() {
               {/* Status Filter Tabs */}
               <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-medium">
                 {[
-                  { key: "all", label: "All" },
                   { key: "unread", label: `Unread (${unreadCount})` },
                   { key: "read", label: "Read" },
                   { key: "archived", label: "Archived" },
+                  { key: "all", label: "All" },
                 ].map((tab) => (
                   <button
                     key={tab.key}
