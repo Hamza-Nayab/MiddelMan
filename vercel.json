@@ -17,7 +17,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(googlebot|Googlebot|bingbot|Bingbot|yandex|duckduckbot|baiduspider|twitterbot|Twitterbot|facebookexternalhit|Facebookexternalhit|WhatsApp|whatsapp|TelegramBot|telegrambot|Discordbot|discordbot|LinkedInBot|linkedinbot|Slackbot|slackbot|Applebot|applebot|bot|Bot|crawler|Crawler|spider|Spider).*"
+          "value": ".*(googlebot|Googlebot|bingbot|Bingbot|yandex|duckduckbot|baiduspider|twitterbot|Twitterbot|facebookexternalhit|Facebookexternalhit|WhatsApp|whatsapp|TelegramBot|telegrambot|Discordbot|discordbot|LinkedInBot|linkedinbot|Slackbot|slackbot|Applebot|applebot|bot|Bot|crawler|Crawler|spider|Spider|preview|Preview|scraper|Scraper|curl|Wget|fetch).*"
         }
       ],
       "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/:username"
