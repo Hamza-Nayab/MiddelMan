@@ -133,8 +133,8 @@ describe("ssr-meta: rewriteHtml", () => {
     assert.ok(result.includes('property="og:image"'));
     assert.ok(result.includes('property="og:image:secure_url"'));
     assert.ok(result.includes('property="og:image:type" content="image/jpeg"'));
-    assert.ok(result.includes('property="og:image:width" content="1200"'));
-    assert.ok(result.includes('property="og:image:height" content="630"'));
+    assert.ok(result.includes('property="og:image:width" content="1920"'));
+    assert.ok(result.includes('property="og:image:height" content="1080"'));
     assert.ok(result.includes('property="og:url"'));
     // Should contain Twitter tags
     assert.ok(result.includes('name="twitter:card" content="summary_large_image"'));

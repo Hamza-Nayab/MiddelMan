@@ -62,6 +62,7 @@ function escapeHtml(str: string): string {
 export interface ProfileMeta {
   title: string;
   description: string;
+  ogDescription?: string;
   keywords: string;
   ogImage: string;
   canonicalUrl: string;
@@ -84,8 +85,11 @@ export function buildMetaTags(
     profile.displayName?.trim() || profile.username?.trim() || "Seller";
   const title = `${displayName} | MiddelMen Trust Profile`;
   const description = profile.bio
-    ? `Read verified customer reviews and reputation for ${displayName} (@${profile.username}) on MiddelMen (MiddleMen). ${profile.bio.slice(0, 150)}${profile.bio.length > 150 ? "…" : ""}`
-    : `Read verified customer reviews, ratings, and seller reputation for ${displayName} (@${profile.username}) on MiddelMen (MiddleMen). Check seller trust score and links before transacting.`;
+    ? `Verified reviews & trust profile for ${displayName} (@${profile.username}) on MiddelMen. ${profile.bio.slice(0, 75)}${profile.bio.length > 75 ? "…" : ""}`
+    : `Read verified customer reviews, ratings, and seller reputation for ${displayName} (@${profile.username}) on MiddelMen. Check trust score before transacting.`;
+  const ogDescription = profile.bio
+    ? `Verified reviews & trust profile for ${displayName} (@${profile.username}) on MiddelMen. ${profile.bio.slice(0, 50)}${profile.bio.length > 50 ? "…" : ""}`
+    : `Read verified customer reviews, ratings, and trust scores for ${displayName} (@${profile.username}) on MiddelMen.`;
   const keywords = `${displayName}, ${profile.username}, ${displayName} reviews, ${profile.username} reviews, ${displayName} MiddelMen, ${displayName} MiddleMen, ${profile.username} MiddleMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman`;
   const canonicalUrl = `${baseUrl}/${encodeURIComponent(profile.username)}`;
   const ogImage =
@@ -119,6 +123,7 @@ export function buildMetaTags(
   return {
     title,
     description,
+    ogDescription,
     keywords,
     ogImage,
     canonicalUrl,
@@ -133,6 +138,7 @@ export function buildMetaTags(
 export function rewriteHtml(html: string, meta: ProfileMeta): string {
   const t = escapeHtml(meta.title);
   const d = escapeHtml(meta.description);
+  const ogD = escapeHtml(meta.ogDescription || meta.description);
   const k = escapeHtml(meta.keywords || "");
   const img = escapeHtml(meta.ogImage);
   const url = escapeHtml(meta.canonicalUrl);
@@ -161,18 +167,18 @@ export function rewriteHtml(html: string, meta: ProfileMeta): string {
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:site_name" content="MiddelMen" />`,
     `<meta property="og:title" content="${t}" />`,
-    `<meta property="og:description" content="${d}" />`,
+    `<meta property="og:description" content="${ogD}" />`,
     `<meta property="og:image" content="${img}" />`,
     `<meta property="og:image:secure_url" content="${img}" />`,
     `<meta property="og:image:type" content="image/jpeg" />`,
-    `<meta property="og:image:width" content="1200" />`,
-    `<meta property="og:image:height" content="630" />`,
+    `<meta property="og:image:width" content="1920" />`,
+    `<meta property="og:image:height" content="1080" />`,
     `<meta property="og:url" content="${url}" />`,
     `<meta property="og:type" content="profile" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:site" content="@middelman" />`,
     `<meta name="twitter:title" content="${t}" />`,
-    `<meta name="twitter:description" content="${d}" />`,
+    `<meta name="twitter:description" content="${ogD}" />`,
     `<meta name="twitter:image" content="${img}" />`,
     `<script type="application/ld+json">${meta.jsonLd}</script>`
   ].join("\n    ");

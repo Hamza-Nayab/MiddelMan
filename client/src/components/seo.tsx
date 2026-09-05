@@ -62,8 +62,8 @@ export function SEO({
     updateMeta("og:image", ogImage, true);
     updateMeta("og:image:secure_url", ogImage, true);
     updateMeta("og:image:type", "image/jpeg", true);
-    updateMeta("og:image:width", "1200", true);
-    updateMeta("og:image:height", "630", true);
+    updateMeta("og:image:width", "1920", true);
+    updateMeta("og:image:height", "1080", true);
 
     // 4. Set Twitter tags
     updateMeta("twitter:card", "summary_large_image");
