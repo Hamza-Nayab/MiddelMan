@@ -127,13 +127,36 @@ describe("ssr-meta: rewriteHtml", () => {
     assert.ok(result.includes('rel="canonical"'));
     assert.ok(result.includes("https://middelmen.com/test-seller"));
     // Should contain OG tags
+    assert.ok(result.includes('property="og:site_name" content="MiddelMen"'));
     assert.ok(result.includes('property="og:title"'));
     assert.ok(result.includes('property="og:description"'));
     assert.ok(result.includes('property="og:image"'));
+    assert.ok(result.includes('property="og:image:secure_url"'));
+    assert.ok(result.includes('property="og:image:type" content="image/jpeg"'));
+    assert.ok(result.includes('property="og:image:width" content="1200"'));
+    assert.ok(result.includes('property="og:image:height" content="630"'));
     assert.ok(result.includes('property="og:url"'));
     // Should contain Twitter tags
-    assert.ok(result.includes('name="twitter:card"'));
+    assert.ok(result.includes('name="twitter:card" content="summary_large_image"'));
+    assert.ok(result.includes('name="twitter:site" content="@middelman"'));
     assert.ok(result.includes('name="twitter:title"'));
+    assert.ok(result.includes('name="twitter:image"'));
+  });
+
+  it("trims display name and falls back to username cleanly", () => {
+    const profileWithSpaces = makeTestProfile({
+      displayName: "  Spaced Seller  ",
+      username: "clean_username",
+    });
+    const meta1 = buildMetaTags(profileWithSpaces, BASE_URL);
+    assert.equal(meta1.title, "Spaced Seller | MiddelMen Trust Profile");
+
+    const profileEmptyDisplay = makeTestProfile({
+      displayName: "   ",
+      username: "clean_username",
+    });
+    const meta2 = buildMetaTags(profileEmptyDisplay, BASE_URL);
+    assert.equal(meta2.title, "clean_username | MiddelMen Trust Profile");
   });
 
   it("injected JSON-LD does not contain aggregateRating", () => {

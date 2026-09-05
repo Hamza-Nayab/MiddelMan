@@ -80,11 +80,13 @@ export function buildMetaTags(
   },
   baseUrl: string,
 ): ProfileMeta {
-  const title = `${profile.displayName} | MiddelMen Trust Profile`;
+  const displayName =
+    profile.displayName?.trim() || profile.username?.trim() || "Seller";
+  const title = `${displayName} | MiddelMen Trust Profile`;
   const description = profile.bio
-    ? `Read verified customer reviews and reputation for ${profile.displayName} (@${profile.username}) on MiddelMen (MiddleMen). ${profile.bio.slice(0, 150)}${profile.bio.length > 150 ? "…" : ""}`
-    : `Read verified customer reviews, ratings, and seller reputation for ${profile.displayName} (@${profile.username}) on MiddelMen (MiddleMen). Check seller trust score and links before transacting.`;
-  const keywords = `${profile.displayName}, ${profile.username}, ${profile.displayName} reviews, ${profile.username} reviews, ${profile.displayName} MiddelMen, ${profile.displayName} MiddleMen, ${profile.username} MiddleMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman`;
+    ? `Read verified customer reviews and reputation for ${displayName} (@${profile.username}) on MiddelMen (MiddleMen). ${profile.bio.slice(0, 150)}${profile.bio.length > 150 ? "…" : ""}`
+    : `Read verified customer reviews, ratings, and seller reputation for ${displayName} (@${profile.username}) on MiddelMen (MiddleMen). Check seller trust score and links before transacting.`;
+  const keywords = `${displayName}, ${profile.username}, ${displayName} reviews, ${profile.username} reviews, ${displayName} MiddelMen, ${displayName} MiddleMen, ${profile.username} MiddleMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman`;
   const canonicalUrl = `${baseUrl}/${encodeURIComponent(profile.username)}`;
   const ogImage =
     profile.avatarUrl &&
@@ -96,12 +98,12 @@ export function buildMetaTags(
   const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
-    name: `${profile.displayName} Reviews & Trust Profile | MiddelMen`,
+    name: `${displayName} Reviews & Trust Profile | MiddelMen`,
     description,
     url: canonicalUrl,
     mainEntity: {
       "@type": "Person",
-      name: profile.displayName,
+      name: displayName,
       alternateName: profile.username,
       url: canonicalUrl,
       image: ogImage,
@@ -157,15 +159,21 @@ export function rewriteHtml(html: string, meta: ProfileMeta): string {
     `<meta name="description" content="${d}" />`,
     `<meta name="keywords" content="${k}" />`,
     `<link rel="canonical" href="${url}" />`,
+    `<meta property="og:site_name" content="MiddelMen" />`,
     `<meta property="og:title" content="${t}" />`,
     `<meta property="og:description" content="${d}" />`,
     `<meta property="og:image" content="${img}" />`,
+    `<meta property="og:image:secure_url" content="${img}" />`,
+    `<meta property="og:image:type" content="image/jpeg" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
     `<meta property="og:url" content="${url}" />`,
     `<meta property="og:type" content="profile" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:site" content="@middelman" />`,
     `<meta name="twitter:title" content="${t}" />`,
     `<meta name="twitter:description" content="${d}" />`,
     `<meta name="twitter:image" content="${img}" />`,
-    `<meta name="twitter:card" content="summary_large_image" />`,
     `<script type="application/ld+json">${meta.jsonLd}</script>`
   ].join("\n    ");
 
@@ -224,14 +232,19 @@ export function registerSsrMetaMiddleware(app: Express): void {
       // Attach profile meta to request for downstream HTML rewriting
       const forwardedHost = req.get("x-forwarded-host");
       const host = (forwardedHost || req.get("host") || "").toLowerCase();
-      const defaultDomain = host.includes("middelmen.com")
-        ? `https://${host}`
-        : process.env.APP_URL?.replace(/\/$/, "") || "https://middelmen.com";
+      const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+      const defaultDomain = isLocal
+        ? `http://${host}`
+        : "https://www.middelmen.com";
+
+      const rawDisplayName = profile.displayName?.trim();
+      const rawUsername = user.username?.trim();
+      const displayName = rawDisplayName || rawUsername || "Seller";
 
       (req as any).__ssrMeta = buildMetaTags(
         {
           username: user.username!,
-          displayName: profile.displayName || user.username || "Seller",
+          displayName,
           bio: profile.bio,
           avatarUrl: profile.avatarUrl,
           isVerified: profile.isVerified,

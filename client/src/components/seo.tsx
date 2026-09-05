@@ -50,18 +50,24 @@ export function SEO({
     updateMeta("robots", robots);
 
     // 3. Set OpenGraph tags
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://middelmen.com";
-    const canonicalUrl = typeof window !== "undefined" ? `${origin}${window.location.pathname}` : "https://middelmen.com";
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://www.middelmen.com";
+    const canonicalUrl = typeof window !== "undefined" ? `${origin}${window.location.pathname}` : "https://www.middelmen.com";
     const ogImage = image || `${origin}/opengraph.jpg`;
 
+    updateMeta("og:site_name", "MiddelMen", true);
     updateMeta("og:title", title, true);
     updateMeta("og:description", description, true);
     updateMeta("og:type", type, true);
     updateMeta("og:url", canonicalUrl, true);
     updateMeta("og:image", ogImage, true);
+    updateMeta("og:image:secure_url", ogImage, true);
+    updateMeta("og:image:type", "image/jpeg", true);
+    updateMeta("og:image:width", "1200", true);
+    updateMeta("og:image:height", "630", true);
 
     // 4. Set Twitter tags
     updateMeta("twitter:card", "summary_large_image");
+    updateMeta("twitter:site", "@middelman");
     updateMeta("twitter:title", title);
     updateMeta("twitter:description", description);
     updateMeta("twitter:image", ogImage);

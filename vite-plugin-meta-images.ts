@@ -47,6 +47,11 @@ export function metaImagesPlugin(): Plugin {
       );
 
       html = html.replace(
+        /<meta\s+property="og:image:secure_url"\s+content="[^"]*"\s*\/>/g,
+        `<meta property="og:image:secure_url" content="${imageUrl}" />`
+      );
+
+      html = html.replace(
         /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/>/g,
         `<meta name="twitter:image" content="${imageUrl}" />`
       );
@@ -83,7 +88,7 @@ function getDeploymentUrl(): string | null {
   }
 
   // Fallback to production domain for rich preview assets
-  const fallbackUrl = 'https://middelmen.com';
+  const fallbackUrl = 'https://www.middelmen.com';
   log('[meta-images] using default fallback domain:', fallbackUrl);
   return fallbackUrl;
 }

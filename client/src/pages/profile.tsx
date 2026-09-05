@@ -239,7 +239,7 @@ export default function ProfilePage() {
         "seller reviews",
         "trust profile",
       ];
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://middelmen.com";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://www.middelmen.com";
   const seoImage = profile?.avatarUrl && (profile.avatarUrl.startsWith("http://") || profile.avatarUrl.startsWith("https://"))
     ? profile.avatarUrl
     : `${origin}/opengraph.jpg`;
