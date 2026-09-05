@@ -421,7 +421,9 @@ export default function ProfilePage() {
   );
   const whatsappUrl = whatsappE164 ? buildWhatsAppUrl(whatsappE164) : null;
   const profileUrl =
-    typeof window !== "undefined" ? window.location.href : `/${username ?? ""}`;
+    typeof window !== "undefined"
+      ? `${window.location.origin}/${user.username}`
+      : `https://www.middelmen.com/${user.username}`;
   const instagramBioCopy = `${profile.displayName} | Reviews & trust profile ${profileUrl}`;
   const whatsappShareCopy = `Check ${profile.displayName}'s trust profile on MiddelMen: ${profileUrl}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(profileUrl)}`;

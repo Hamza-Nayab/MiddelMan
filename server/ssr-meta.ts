@@ -46,7 +46,7 @@ function isProfileRoute(path: string): string | null {
   const segments = path.split("/").filter(Boolean);
   if (segments.length !== 1) return null;
   const slug = segments[0].toLowerCase();
-  if (KNOWN_ROUTES.has(slug) || isReservedUsername(slug)) return null;
+  if (KNOWN_ROUTES.has(slug)) return null;
   if (slug.startsWith(".")) return null;
   return slug;
 }
