@@ -119,29 +119,6 @@ export function useAdminUsers() {
     },
   });
 
-  const roleChangeMutation = useMutation({
-    mutationFn: ({
-      id,
-      role,
-    }: {
-      id: number;
-      role: "admin" | "buyer" | "seller";
-    }) => api.adminSetUserRole(id, role),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
-      toast({
-        title: "Role updated",
-        description: "User role has been updated.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleSearchChange = (newQ: string) => {
     setSearchQ(newQ);
@@ -186,6 +163,5 @@ export function useAdminUsers() {
     handleNextPage,
     disableUserMutation,
     enableUserMutation,
-    roleChangeMutation,
   };
 }

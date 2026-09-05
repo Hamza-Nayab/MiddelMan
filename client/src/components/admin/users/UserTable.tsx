@@ -19,11 +19,8 @@ type UserTableProps = {
   navigate: (path: string) => void;
   onEnable: (id: number) => void;
   onDisable: (id: number) => void;
-  onPromote: (id: number) => void;
-  onDemote: (id: number) => void;
   isEnablePending: boolean;
   isDisablePending: boolean;
-  isRoleChangePending: boolean;
 };
 
 const getRoleBadgeColor = (role: string) => {
@@ -47,11 +44,8 @@ export const UserTable = memo(function UserTable({
   navigate,
   onEnable,
   onDisable,
-  onPromote,
-  onDemote,
   isEnablePending,
   isDisablePending,
-  isRoleChangePending,
 }: UserTableProps) {
   if (isUsersLoading) {
     return <p className="text-sm text-muted-foreground">Loading users...</p>;
@@ -116,11 +110,8 @@ export const UserTable = memo(function UserTable({
               navigate={navigate}
               onEnable={onEnable}
               onDisable={onDisable}
-              onPromote={onPromote}
-              onDemote={onDemote}
               isEnablePending={isEnablePending}
               isDisablePending={isDisablePending}
-              isRoleChangePending={isRoleChangePending}
             />
           </CardContent>
         </Card>

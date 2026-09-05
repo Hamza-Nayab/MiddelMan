@@ -310,11 +310,11 @@ export function registerAdminRoutes(app: Express): void {
         disabledByAdminId: req.session.userId!,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, userId))
+      .where(and(eq(users.id, userId), eq(users.isMasterAdmin, false)))
       .returning();
 
     if (!updated) {
-      return res.status(404).json(error("USER_NOT_FOUND", "User not found"));
+      return res.status(404).json(error("USER_NOT_FOUND", "User not found or cannot disable a Master Admin account"));
     }
 
     await logAdminAction(req.session.userId!, "DISABLE_USER", userId, {
@@ -397,23 +397,32 @@ export function registerAdminRoutes(app: Express): void {
         );
     }
 
+    if (parsed.data.role === "admin") {
+      return res
+        .status(400)
+        .json(
+          error(
+            "INVALID_OPERATION",
+            "Cannot promote users to admin. Admin accounts must be created directly by a Master Admin in the Admins section.",
+          ),
+        );
+    }
+
     const [updated] = await db
       .update(users)
       .set({
         role: parsed.data.role,
-        isMasterAdmin:
-          parsed.data.role === "admin" ? false : users.isMasterAdmin,
+        isMasterAdmin: false,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, userId))
+      .where(and(eq(users.id, userId), eq(users.isMasterAdmin, false)))
       .returning();
 
     if (!updated) {
-      return res.status(404).json(error("USER_NOT_FOUND", "User not found"));
+      return res.status(404).json(error("USER_NOT_FOUND", "User not found or cannot modify a Master Admin account"));
     }
 
-    const actionType =
-      parsed.data.role === "admin" ? "PROMOTE_ADMIN" : "DEMOTE_ADMIN";
+    const actionType = "DEMOTE_ADMIN";
     await logAdminAction(req.session.userId!, actionType, userId, {
       newRole: parsed.data.role,
     });
@@ -585,13 +594,16 @@ export function registerAdminRoutes(app: Express): void {
         );
     }
 
+    const email = parsed.data.email.trim().toLowerCase();
+    const username = parsed.data.username.trim().toLowerCase();
+
     const existingUser = await db
       .select({ email: users.email, username: users.username })
       .from(users)
       .where(
         or(
-          eq(users.email, parsed.data.email),
-          eq(users.username, parsed.data.username),
+          eq(users.email, email),
+          eq(users.username, username),
         ),
       )
       .limit(1);
@@ -602,7 +614,7 @@ export function registerAdminRoutes(app: Express): void {
         .json(
           error(
             "USER_EXISTS",
-            existingUser[0].email === parsed.data.email
+            existingUser[0].email?.toLowerCase() === email
               ? "Email already registered"
               : "Username already registered",
           ),
@@ -614,8 +626,8 @@ export function registerAdminRoutes(app: Express): void {
     const [newAdmin] = await db
       .insert(users)
       .values({
-        email: parsed.data.email,
-        username: parsed.data.username,
+        email,
+        username,
         passwordHash,
         role: "admin",
         isMasterAdmin: false,
@@ -624,12 +636,12 @@ export function registerAdminRoutes(app: Express): void {
 
     await db.insert(profiles).values({
       userId: newAdmin.id,
-      displayName: parsed.data.displayName || parsed.data.username,
+      displayName: parsed.data.displayName || username,
     });
 
     await logAdminAction(req.session.userId!, "PROMOTE_ADMIN", newAdmin.id, {
-      email: parsed.data.email,
-      username: parsed.data.username,
+      email,
+      username,
     });
 
     return res.status(201).json(

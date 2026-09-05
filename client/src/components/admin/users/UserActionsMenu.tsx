@@ -3,18 +3,15 @@ import { Button } from "@/components/ui/button";
 import type { AdminUser } from "@/lib/api";
 
 type UserActionsMenuProps = {
-  user: Pick<AdminUser, "id" | "isDisabled" | "role">;
+  user: Pick<AdminUser, "id" | "isDisabled" | "role" | "isMasterAdmin">;
   searchQ: string;
   roleFilter: string;
   statusFilter: string;
   navigate: (path: string) => void;
   onEnable: (id: number) => void;
   onDisable: (id: number) => void;
-  onPromote: (id: number) => void;
-  onDemote: (id: number) => void;
   isEnablePending: boolean;
   isDisablePending: boolean;
-  isRoleChangePending: boolean;
 };
 
 export const UserActionsMenu = memo(function UserActionsMenu({
@@ -25,11 +22,8 @@ export const UserActionsMenu = memo(function UserActionsMenu({
   navigate,
   onEnable,
   onDisable,
-  onPromote,
-  onDemote,
   isEnablePending,
   isDisablePending,
-  isRoleChangePending,
 }: UserActionsMenuProps) {
   return (
     <div className="flex flex-wrap gap-2 pt-2 border-t">
@@ -51,44 +45,26 @@ export const UserActionsMenu = memo(function UserActionsMenu({
       >
         View Details
       </Button>
-      {user.isDisabled ? (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onEnable(user.id)}
-          disabled={isEnablePending}
-        >
-          Re-enable
-        </Button>
-      ) : (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onDisable(user.id)}
-          disabled={isDisablePending}
-        >
-          Disable
-        </Button>
-      )}
-      {user.role !== "admin" ? (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onPromote(user.id)}
-          disabled={isRoleChangePending}
-        >
-          Promote
-        </Button>
-      ) : (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onDemote(user.id)}
-          disabled={isRoleChangePending}
-        >
-          Demote
-        </Button>
-      )}
+      {!user.isMasterAdmin &&
+        (user.isDisabled ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onEnable(user.id)}
+            disabled={isEnablePending}
+          >
+            Re-enable
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onDisable(user.id)}
+            disabled={isDisablePending}
+          >
+            Disable
+          </Button>
+        ))}
     </div>
   );
 });

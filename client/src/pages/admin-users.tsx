@@ -42,7 +42,6 @@ export default function AdminUsersPage() {
     handleNextPage,
     disableUserMutation,
     enableUserMutation,
-    roleChangeMutation,
   } = useAdminUsers();
   const items = useMemo(() => usersResponse?.items ?? [], [usersResponse?.items]);
   const hasNextPage = usersResponse?.nextCursor !== null;
@@ -62,20 +61,6 @@ export default function AdminUsersPage() {
       });
     },
     [setDisableDialog],
-  );
-
-  const handlePromote = useCallback(
-    (id: number) => {
-      roleChangeMutation.mutate({ id, role: "admin" });
-    },
-    [roleChangeMutation.mutate],
-  );
-
-  const handleDemote = useCallback(
-    (id: number) => {
-      roleChangeMutation.mutate({ id, role: "seller" });
-    },
-    [roleChangeMutation.mutate],
   );
 
   return (
@@ -110,11 +95,8 @@ export default function AdminUsersPage() {
             navigate={navigate}
             onEnable={handleEnable}
             onDisable={handleDisable}
-            onPromote={handlePromote}
-            onDemote={handleDemote}
             isEnablePending={enableUserMutation.isPending}
             isDisablePending={disableUserMutation.isPending}
-            isRoleChangePending={roleChangeMutation.isPending}
           />
         </CardContent>
       </Card>
