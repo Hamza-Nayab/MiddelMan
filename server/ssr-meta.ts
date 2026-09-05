@@ -86,7 +86,12 @@ export function buildMetaTags(
     : `Read verified customer reviews, ratings, and seller reputation for ${profile.displayName} (@${profile.username}) on MiddelMen (MiddleMen). Check seller trust score and links before transacting.`;
   const keywords = `${profile.displayName}, ${profile.username}, ${profile.displayName} reviews, ${profile.username} reviews, ${profile.displayName} MiddelMen, ${profile.displayName} MiddleMen, ${profile.username} MiddleMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman`;
   const canonicalUrl = `${baseUrl}/${encodeURIComponent(profile.username)}`;
-  const ogImage = profile.avatarUrl || `${baseUrl}/opengraph.jpg`;
+  const ogImage =
+    profile.avatarUrl &&
+    (profile.avatarUrl.startsWith("http://") ||
+      profile.avatarUrl.startsWith("https://"))
+      ? profile.avatarUrl
+      : `${baseUrl}/opengraph.jpg`;
 
   const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",
@@ -217,6 +222,12 @@ export function registerSsrMetaMiddleware(app: Express): void {
       }
 
       // Attach profile meta to request for downstream HTML rewriting
+      const forwardedHost = req.get("x-forwarded-host");
+      const host = (forwardedHost || req.get("host") || "").toLowerCase();
+      const defaultDomain = host.includes("middelmen.com")
+        ? `https://${host}`
+        : process.env.APP_URL?.replace(/\/$/, "") || "https://middelmen.com";
+
       (req as any).__ssrMeta = buildMetaTags(
         {
           username: user.username!,
@@ -227,7 +238,7 @@ export function registerSsrMetaMiddleware(app: Express): void {
           avgRating: Number(profile.avgRating) || 0,
           totalReviews: Number(profile.totalReviews) || 0,
         },
-        process.env.APP_URL?.replace(/\/$/, "") || "https://middelmen.com",
+        defaultDomain,
       );
     } catch (err) {
       // Non-fatal: if DB lookup fails, serve generic HTML

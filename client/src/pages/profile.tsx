@@ -239,13 +239,15 @@ export default function ProfilePage() {
         "seller reviews",
         "trust profile",
       ];
-  const seoImage = profile?.avatarUrl || undefined;
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://middelmen.com";
+  const seoImage = profile?.avatarUrl && (profile.avatarUrl.startsWith("http://") || profile.avatarUrl.startsWith("https://"))
+    ? profile.avatarUrl
+    : `${origin}/opengraph.jpg`;
 
   const seoSchema = useMemo(() => {
     if (!user || !profile) return undefined;
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://middelmen.com";
     const profileUrl = `${origin}/${encodeURIComponent(user.username || "")}`;
-    const imageUrl = profile.avatarUrl || `${origin}/default-avatar.png`;
+    const imageUrl = seoImage;
     const description = `Read verified customer reviews, trust ratings, and seller reputation for ${displayName} (@${user.username}) on MiddelMen (MiddleMen).`;
 
     return {

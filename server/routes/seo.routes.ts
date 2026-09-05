@@ -105,7 +105,7 @@ export function registerSeoRoutes(app: Express): void {
     }
   });
 
-  app.get("/sitemap.xml", async (_req, res) => {
+  app.get("/sitemap.xml", async (req, res) => {
     try {
       const sellers = await db
         .select({
@@ -117,7 +117,11 @@ export function registerSeoRoutes(app: Express): void {
         .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
         .orderBy(desc(profiles.updatedAt));
 
-      const baseUrl = process.env.APP_URL || "https://middelmen.com";
+      const forwardedHost = req.get("x-forwarded-host");
+      const host = (forwardedHost || req.get("host") || "").toLowerCase();
+      const baseUrl = host.includes("middelmen.com")
+        ? `https://${host}`
+        : process.env.APP_URL?.replace(/\/$/, "") || "https://middelmen.com";
 
       const urls = sellers
         .filter((s) => s.username)

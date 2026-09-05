@@ -16,6 +16,7 @@ Disallow: /access-not-available
 Disallow: /access-not-available/
 
 Sitemap: https://middelmen.com/sitemap.xml
+Sitemap: https://www.middelmen.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
