@@ -355,6 +355,11 @@ export default function ProfilePage() {
   if (isSellerUnavailable)
     return (
       <div className="h-screen flex items-center justify-center bg-background">
+        <SEO
+          title="Seller Unavailable | MiddelMen"
+          description="This seller is currently unavailable."
+          robots="noindex, nofollow"
+        />
         <div className="text-center">
           <p className="text-lg font-semibold text-muted-foreground mb-2">
             Seller unavailable
@@ -369,6 +374,11 @@ export default function ProfilePage() {
   if (profileError || !user || !profile)
     return (
       <div className="h-screen flex items-center justify-center bg-background">
+        <SEO
+          title="Profile Not Found | MiddelMen"
+          description="The requested profile could not be found."
+          robots="noindex, nofollow"
+        />
         <div className="text-center">
           <p className="text-lg font-semibold text-muted-foreground mb-2">
             Profile not found

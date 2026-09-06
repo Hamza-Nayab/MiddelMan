@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { api, ApiError } from "@/lib/api";
 import {
   Card,
@@ -142,6 +143,11 @@ export default function MyReviewsPage() {
 
   return (
     <Layout>
+      <SEO
+        title="My Reviews | MiddelMen"
+        description="View and manage reviews you have submitted."
+        robots="noindex, nofollow"
+      />
       <div className="container mx-auto px-4 py-10">
         <Card>
           <CardHeader>

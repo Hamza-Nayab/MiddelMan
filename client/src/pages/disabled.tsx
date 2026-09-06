@@ -1,3 +1,4 @@
+import { SEO } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +14,11 @@ export default function DisabledPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
+      <SEO
+        title="Account Disabled | MiddelMen"
+        description="Your MiddelMen account has been disabled."
+        robots="noindex, nofollow"
+      />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">Account Disabled</CardTitle>
@@ -30,10 +36,10 @@ export default function DisabledPage() {
               Support Email
             </p>
             <a
-              href="mailto:support@middlemen.com"
+              href="mailto:support@middelmen.com"
               className="text-sm text-primary hover:underline"
             >
-              support@middlemen.com
+              support@middelmen.com
             </a>
           </div>
 

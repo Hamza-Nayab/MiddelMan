@@ -12,6 +12,8 @@ const KNOWN_ROUTES = new Set([
   "",
   "auth",
   "verified",
+  "verification",
+  "verify",
   "forgot-password",
   "reset-password",
   "onboarding",
@@ -47,6 +49,7 @@ function isProfileRoute(path: string): string | null {
   if (segments.length !== 1) return null;
   const slug = segments[0].toLowerCase();
   if (KNOWN_ROUTES.has(slug)) return null;
+  if (isReservedUsername(slug)) return null;
   if (slug.startsWith(".")) return null;
   return slug;
 }

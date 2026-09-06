@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { ApiError } from "@/lib/api";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import {
   ShieldAlert,
@@ -100,6 +101,11 @@ export function AdminLayout({ children, currentTab }: AdminLayoutProps) {
 
   return (
     <Layout>
+      <SEO
+        title="Admin Console | MiddelMen"
+        description="Admin administration and moderation console."
+        robots="noindex, nofollow"
+      />
       <div className="container mx-auto px-4 py-10">
         <div className="flex flex-col gap-6">
           {/* Header */}

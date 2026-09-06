@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { ProfilePreviewPhone } from "@/components/profile/ProfilePreviewPhone";
 import { LinksTab } from "@/components/dashboard/LinksTab";
@@ -1021,6 +1022,11 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      <SEO
+        title="Seller Dashboard | MiddelMen"
+        description="Manage your MiddelMen trust profile, reviews, and links."
+        robots="noindex, nofollow"
+      />
       <OnboardingWizard
         open={showOnboardingWizard}
         onComplete={handleOnboardingComplete}

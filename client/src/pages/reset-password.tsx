@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -69,6 +70,11 @@ export default function ResetPasswordPage() {
 
   return (
     <Layout>
+      <SEO
+        title="Reset Password | MiddelMen"
+        description="Choose a new password for your MiddelMen account."
+        robots="noindex, nofollow"
+      />
       <div className="container mx-auto max-w-md px-4 py-20">
         <Card className="border-border/60 shadow-lg">
           <CardHeader>

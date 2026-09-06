@@ -35,15 +35,41 @@ export function serveStatic(app: Express) {
     res.status(404).send("Not Found");
   });
 
+  const NOINDEX_PREFIXES = [
+    "/admin",
+    "/dashboard",
+    "/auth",
+    "/verified",
+    "/verification",
+    "/forgot-password",
+    "/reset-password",
+    "/onboarding",
+    "/disabled",
+    "/access-not-available",
+  ];
+
   // fall through to index.html if the file doesn't exist
   // Apply SSR meta tag rewriting for profile pages
-  app.use("*", (_req, res) => {
+  app.use("*", (req, res) => {
     let html = fs.readFileSync(
       path.resolve(distPath, "index.html"),
       "utf-8",
     );
 
-    const ssrMeta = (_req as any).__ssrMeta;
+    const reqPath = req.path.toLowerCase();
+    const shouldNoindex = NOINDEX_PREFIXES.some(
+      (prefix) => reqPath === prefix || reqPath.startsWith(`${prefix}/`),
+    );
+
+    if (shouldNoindex) {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      html = html.replace(
+        /<meta name="robots" content="[^"]*"/i,
+        '<meta name="robots" content="noindex, nofollow"',
+      );
+    }
+
+    const ssrMeta = (req as any).__ssrMeta;
     if (ssrMeta) {
       html = rewriteHtml(html, ssrMeta);
     }

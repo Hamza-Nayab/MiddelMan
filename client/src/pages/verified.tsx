@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
@@ -14,6 +15,11 @@ export default function VerifiedPage() {
 
   return (
     <Layout>
+      <SEO
+        title="Email Verification | MiddelMen"
+        description="Verify your email address to access your MiddelMen account."
+        robots="noindex, nofollow"
+      />
       <div className="container mx-auto max-w-xl px-4 py-20">
         <Card className="border-border/60 shadow-lg">
           <CardContent className="space-y-6 p-8 text-center">

@@ -73,6 +73,8 @@ export const RESERVED_USERNAMES = new Set<string>([
   "v2",
   "verified",
   "verify",
+  "verification",
+  "verify-email",
 
   // Static Assets & Web Meta Files
   "favicon",

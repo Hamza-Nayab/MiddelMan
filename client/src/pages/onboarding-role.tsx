@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -49,6 +50,11 @@ export default function RoleOnboardingPage() {
 
   return (
     <Layout>
+      <SEO
+        title="Choose Account Type | MiddelMen"
+        description="Select your role on MiddelMen."
+        robots="noindex, nofollow"
+      />
       <div className="container max-w-md mx-auto px-4 py-20">
         <Card className="w-full shadow-lg border-border/60">
           <CardHeader className="text-center space-y-2">

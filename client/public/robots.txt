@@ -10,16 +10,18 @@ Disallow: /auth
 Disallow: /auth/
 Disallow: /verified
 Disallow: /verified/
+Disallow: /verification
+Disallow: /verification/
+Disallow: /forgot-password
+Disallow: /forgot-password/
+Disallow: /reset-password
+Disallow: /reset-password/
+Disallow: /onboarding
+Disallow: /onboarding/
 Disallow: /disabled
 Disallow: /disabled/
 Disallow: /access-not-available
 Disallow: /access-not-available/
 
-Sitemap: https://middelmen.com/sitemap.xml
 Sitemap: https://www.middelmen.com/sitemap.xml
 
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -213,6 +214,11 @@ export default function AuthPage() {
 
   return (
     <Layout>
+      <SEO
+        title="Sign In / Register | MiddelMen"
+        description="Sign in or create an account on MiddelMen."
+        robots="noindex, nofollow"
+      />
       <div className="container max-w-md mx-auto px-4 py-20">
         <Card className="w-full shadow-lg border-border/60">
           <CardHeader className="text-center space-y-2">

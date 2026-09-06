@@ -12,7 +12,7 @@
       "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/sitemap.xml"
     },
     {
-      "source": "/:username((?!api/|sitemap\\.xml|assets/|illustrations/|auth|verified|forgot-password|reset-password|onboarding|dashboard|my-reviews|admin|search|demo|disabled|access-not-available|about|terms|contact|contacts|v2|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
+      "source": "/:username((?!api/|sitemap\\.xml|assets/|illustrations/|auth|verified|verification|verify|forgot-password|reset-password|onboarding|dashboard|my-reviews|admin|search|demo|disabled|access-not-available|about|terms|contact|contacts|v2|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
       "has": [
         {
           "type": "header",

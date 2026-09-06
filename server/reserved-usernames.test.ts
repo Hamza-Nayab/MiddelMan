@@ -68,6 +68,8 @@ describe("Reserved Usernames Protection", () => {
         "user",
         "users",
         "verify",
+        "verification",
+        "verify-email",
         "webhook",
       ];
       for (const route of routes) {
