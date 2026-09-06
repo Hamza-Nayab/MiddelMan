@@ -56,7 +56,9 @@ export function serveStatic(app: Express) {
       "utf-8",
     );
 
-    const reqPath = req.path.toLowerCase();
+    const reqPath = (req.originalUrl || req.baseUrl || req.path)
+      .split("?")[0]
+      .toLowerCase();
     const shouldNoindex = NOINDEX_PREFIXES.some(
       (prefix) => reqPath === prefix || reqPath.startsWith(`${prefix}/`),
     );
