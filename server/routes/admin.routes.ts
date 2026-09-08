@@ -557,10 +557,18 @@ export function registerAdminRoutes(app: Express): void {
       .orderBy(desc(reviewDisputes.createdAt))
       .limit(20);
 
+    const normalizedProfile = profile
+      ? {
+          ...profile,
+          avgRating: Number(sellerStats?.avgRating ?? 0),
+          totalReviews: Number(sellerStats?.totalReviews ?? 0),
+        }
+      : null;
+
     return res.status(200).json(
       ok({
         user,
-        profile,
+        profile: normalizedProfile,
         links: userLinks,
         stats: {
           avgRating: Number(sellerStats?.avgRating ?? 0),

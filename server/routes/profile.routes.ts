@@ -80,10 +80,14 @@ export function registerProfileRoutes(app: Express): void {
       } catch {}
     }
 
-    const normalizedProfile = sellerProfileReflectingEmailVerification(
-      profile,
-      user.emailVerified,
-    );
+    const normalizedProfile = {
+      ...sellerProfileReflectingEmailVerification(
+        profile,
+        user.emailVerified,
+      ),
+      avgRating: stats.avgRating,
+      totalReviews: stats.totalReviews,
+    };
 
     return res.status(200).json(
       ok({
@@ -203,10 +207,14 @@ export function registerProfileRoutes(app: Express): void {
       nextCursor = paginatedReviews[paginatedReviews.length - 1]?.id ?? null;
     }
 
-    const normalizedProfile = sellerProfileReflectingEmailVerification(
-      profile,
-      seller.emailVerified,
-    );
+    const normalizedProfile = {
+      ...sellerProfileReflectingEmailVerification(
+        profile,
+        seller.emailVerified,
+      ),
+      avgRating: stats.avgRating,
+      totalReviews: stats.totalReviews,
+    };
 
     const response: any = {
       user: {

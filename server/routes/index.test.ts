@@ -924,6 +924,33 @@ describe("route groups", () => {
       "Rana",
     );
     assertDbQueuesEmpty();
+
+    setDbQueues({
+      select: [
+        [sellerUser],
+        [
+          {
+            reviewId: 77,
+            rating: 5,
+            comment: "Great seller",
+            sellerResponse: null,
+            sellerRespondedAt: null,
+            createdAt: new Date().toISOString(),
+            reviewerName: "Buyer",
+            disputeStatus: null,
+          },
+        ],
+        [{ avgRating: 5, totalReviews: 1 }],
+      ],
+    });
+    const meReviews = await request("GET", "/api/me/reviews", {
+      headers: { "x-test-user-id": String(sellerUser.id) },
+    });
+    assert.equal(meReviews.status, 200);
+    assert.equal(meReviews.body.data.reviews.length, 1);
+    assert.equal(meReviews.body.data.stats.avgRating, 5);
+    assert.equal(meReviews.body.data.stats.totalReviews, 1);
+    assertDbQueuesEmpty();
   });
 
   it("disputes", async () => {

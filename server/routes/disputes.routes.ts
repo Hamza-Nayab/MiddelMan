@@ -499,6 +499,16 @@ export function registerDisputesRoutes(app: Express): void {
       if (hiddenReview?.sellerId) {
         await refreshSellerReviewStatsCache(hiddenReview.sellerId);
       }
+    } else if (parsed.data.hideReview === false && dispute.dispute.reviewId) {
+      const [unhiddenReview] = await db
+        .update(reviews)
+        .set({ isHidden: false })
+        .where(eq(reviews.id, dispute.dispute.reviewId))
+        .returning({ sellerId: reviews.sellerId });
+
+      if (unhiddenReview?.sellerId) {
+        await refreshSellerReviewStatsCache(unhiddenReview.sellerId);
+      }
     }
 
     const notificationType =

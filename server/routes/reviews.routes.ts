@@ -4,6 +4,7 @@ import {
   db,
   error,
   getSessionUser,
+  getReviewStats,
   hashValue,
   ok,
   profiles,
@@ -314,13 +315,7 @@ export function registerReviewsRoutes(app: Express): void {
     const hasMore = reviewRows.length > pageSize;
     const reviewsPage = hasMore ? reviewRows.slice(0, pageSize) : reviewRows;
 
-    const [profileStats] = await db
-      .select({
-        avgRating: profiles.avgRating,
-        totalReviews: profiles.totalReviews,
-      })
-      .from(profiles)
-      .where(eq(profiles.userId, sellerId));
+    const profileStats = await getReviewStats(sellerId);
 
     return res.status(200).json(
       ok({
