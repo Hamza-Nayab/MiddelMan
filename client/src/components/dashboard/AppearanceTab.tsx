@@ -501,7 +501,11 @@ export const AppearanceTab = memo(function AppearanceTab({
                     <button
                       key={option.key}
                       type="button"
-                      onClick={() => setPendingTheme(option.key)}
+                      onClick={() => {
+                        setPendingTheme(option.key);
+                        setPendingBackgroundPreset(null);
+                        setPendingGradientPreset(null);
+                      }}
                       className={cn(
                         "group relative overflow-hidden rounded-xl border bg-white p-3 text-left",
                         liftClass,
