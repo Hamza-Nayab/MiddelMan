@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from "react";
-import { AlertTriangle, ChevronDown, Loader2, Star } from "lucide-react";
+import { ChevronDown, Loader2, Star } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,14 +19,6 @@ import type { Review as ApiReview, ReviewStats } from "@/lib/api";
 import type { ResolvedProfileAppearance } from "@/lib/profile-appearance";
 import { usePublicReviewsInfinite } from "@/hooks/use-reviews";
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface ReviewSectionProps {
   userId: number;
@@ -34,9 +26,6 @@ interface ReviewSectionProps {
   initialStats?: ReviewStats;
   initialNextCursor?: number;
   appearance?: ResolvedProfileAppearance | null;
-  canReport?: boolean;
-  onReportReview?: (reviewId: number, payload: { reason: string; message?: string }) => void;
-  isSubmittingReport?: boolean;
 }
 
 const RATING_OPTIONS = [
@@ -64,19 +53,10 @@ const ReviewItem = memo(
   ({
     review,
     appearance,
-    canReport,
-    onReportReview,
-    isSubmittingReport,
   }: {
     review: ApiReview;
     appearance?: ResolvedProfileAppearance | null;
-    canReport?: boolean;
-    onReportReview?: (reviewId: number, payload: { reason: string; message?: string }) => void;
-    isSubmittingReport?: boolean;
   }) => {
-    const [isReportOpen, setIsReportOpen] = useState(false);
-    const [reportReason, setReportReason] = useState("");
-    const [reportMessage, setReportMessage] = useState("");
     return (
       <div
         className={cn(
@@ -134,61 +114,6 @@ const ReviewItem = memo(
             </p>
           </div>
         ) : null}
-
-        {canReport && onReportReview ? (
-          <div className="flex justify-end">
-            <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
-              <DialogTrigger asChild>
-                <Button type="button" variant="ghost" size="sm" className="h-8 px-2">
-                  <AlertTriangle className="w-3.5 h-3.5 mr-1" />
-                  Report
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Report Review</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3">
-                  <input
-                    value={reportReason}
-                    onChange={(event) => setReportReason(event.target.value)}
-                    placeholder="Reason"
-                    className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                  />
-                  <Textarea
-                    value={reportMessage}
-                    onChange={(event) => setReportMessage(event.target.value)}
-                    placeholder="Add context (optional)"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsReportOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      disabled={isSubmittingReport || !reportReason.trim()}
-                      onClick={() => {
-                        onReportReview(review.id, {
-                          reason: reportReason.trim(),
-                          message: reportMessage.trim() || undefined,
-                        });
-                        setIsReportOpen(false);
-                        setReportReason("");
-                        setReportMessage("");
-                      }}
-                    >
-                      {isSubmittingReport ? "Sending..." : "Submit Report"}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        ) : null}
       </div>
     );
   },
@@ -215,9 +140,6 @@ export function ReviewsSection({
   initialStats,
   initialNextCursor,
   appearance,
-  canReport,
-  onReportReview,
-  isSubmittingReport,
 }: ReviewSectionProps) {
   const [rating, setRating] = useState("all");
   const seededStats = useMemo(() => {
@@ -397,9 +319,6 @@ export function ReviewsSection({
                   key={review.id}
                   review={review}
                   appearance={appearance}
-                  canReport={canReport}
-                  onReportReview={onReportReview}
-                  isSubmittingReport={isSubmittingReport}
                 />
               ))}
             </div>

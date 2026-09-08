@@ -14,7 +14,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   Copy,
-  Flag,
   Star,
   MessageCircle,
   ExternalLink,
@@ -109,8 +108,6 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
-  const [reportSellerReason, setReportSellerReason] = useState("");
-  const [reportSellerMessage, setReportSellerMessage] = useState("");
 
   // Compute sampling decision (before we know if owner)
   const shouldSampleTrack = useMemo(() => {
@@ -289,51 +286,6 @@ export default function ProfilePage() {
       toast({
         title: "Update failed",
         description: message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const reportSellerMutation = useMutation({
-    mutationFn: (values: { reason: string; message?: string }) =>
-      api.reportSellerByUsername(username!, values),
-    onSuccess: () => {
-      setReportSellerReason("");
-      setReportSellerMessage("");
-      toast({
-        title: "Report submitted",
-        description: "Thanks. Our team will review this seller report.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Report failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const reportReviewMutation = useMutation({
-    mutationFn: ({
-      reviewId,
-      reason,
-      message,
-    }: {
-      reviewId: number;
-      reason: string;
-      message?: string;
-    }) => api.reportReview(reviewId, { reason, message }),
-    onSuccess: () => {
-      toast({
-        title: "Review reported",
-        description: "Thanks. Our team will review this report.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Report failed",
-        description: error.message,
         variant: "destructive",
       });
     },
@@ -718,8 +670,7 @@ export default function ProfilePage() {
                     <p
                       className={cn("mt-1 text-sm", appearance.mutedTextClass)}
                     >
-                      Share this profile, contact the seller, or raise a
-                      concern.
+                      Share this profile or contact the seller.
                     </p>
                   </div>
                   <div
@@ -923,72 +874,6 @@ export default function ProfilePage() {
                       </div>
                     </DialogContent>
                   </Dialog>
-
-                  {!isOwner && me?.user ? (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full"
-                        >
-                          <Flag className="w-4 h-4 mr-2" />
-                          Report Seller
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Report Seller</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-3">
-                          <Input
-                            value={reportSellerReason}
-                            onChange={(event) =>
-                              setReportSellerReason(event.target.value)
-                            }
-                            placeholder="Reason"
-                          />
-                          <Textarea
-                            value={reportSellerMessage}
-                            onChange={(event) =>
-                              setReportSellerMessage(event.target.value)
-                            }
-                            placeholder="Add details (optional)"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                setReportSellerReason("");
-                                setReportSellerMessage("");
-                              }}
-                            >
-                              Clear
-                            </Button>
-                            <Button
-                              type="button"
-                              disabled={
-                                reportSellerMutation.isPending ||
-                                !reportSellerReason.trim()
-                              }
-                              onClick={() =>
-                                reportSellerMutation.mutate({
-                                  reason: reportSellerReason.trim(),
-                                  message:
-                                    reportSellerMessage.trim() || undefined,
-                                })
-                              }
-                            >
-                              {reportSellerMutation.isPending
-                                ? "Submitting..."
-                                : "Submit Report"}
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  ) : null}
                 </div>
               </div>
             </div>
@@ -1154,11 +1039,6 @@ export default function ProfilePage() {
                   initialStats={data?.stats}
                   initialNextCursor={data?.nextCursor}
                   appearance={appearance}
-                  canReport={!isOwner && Boolean(me?.user)}
-                  onReportReview={(reviewId, payload) =>
-                    reportReviewMutation.mutate({ reviewId, ...payload })
-                  }
-                  isSubmittingReport={reportReviewMutation.isPending}
                 />
               )}
             </section>
