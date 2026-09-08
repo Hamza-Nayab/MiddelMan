@@ -305,17 +305,27 @@ export const usernameSchema = z
   );
 
 export const adminCreateAdminSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  username: usernameSchema,
+  email: z.string().trim().email("Invalid email address"),
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be at most 20 characters")
+    .regex(
+      /^[a-zA-Z0-9._-]+$/,
+      "Username must contain only letters, numbers, dots, underscores, or hyphens",
+    ),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
     .max(128, "Password must be at most 128 characters"),
   displayName: z
     .string()
-    .min(2, "Display name must be at least 2 characters")
+    .trim()
     .max(50, "Display name must be at most 50 characters")
-    .optional(),
+    .optional()
+    .nullable()
+    .transform((val) => (val && val.trim().length > 0 ? val.trim() : undefined)),
 });
 
 const displayNameSchema = z

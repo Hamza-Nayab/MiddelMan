@@ -21,8 +21,12 @@ import {
   MessageSquareQuote,
   Sparkles,
   ArrowRight,
+  LayoutDashboard,
+  MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 import type { Link as LinkType } from "@/lib/api";
+import { useMeQuery } from "@/hooks/use-me";
 import logoImg from "@/assets/middelman-bg.png";
 
 const ProfilePreviewPhone = lazy(() =>
@@ -101,6 +105,8 @@ const DEMO_PREVIEW_LINKS: LinkType[] = [
 ];
 
 export default function Home() {
+  const { data: me } = useMeQuery();
+  const user = me?.user ?? null;
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
@@ -364,14 +370,78 @@ export default function Home() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4 pt-2 hero-slide-up hero-slide-up-4">
-                <Link href="/auth">
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
-                  >
-                    Create Seller Profile
-                  </Button>
-                </Link>
+                {!user && (
+                  <Link href="/auth">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
+                    >
+                      Create Seller Profile
+                    </Button>
+                  </Link>
+                )}
+
+                {user?.role === "seller" && (
+                  <>
+                    <Link href="/dashboard">
+                      <Button
+                        size="lg"
+                        className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center gap-2"
+                      >
+                        <LayoutDashboard size={18} />
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                    {user.username && (
+                      <Link href={`/${user.username}`}>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="w-full sm:w-auto px-6 py-3 font-semibold rounded-xl transition-all duration-200 hover:shadow-md active:scale-95 inline-flex items-center gap-2"
+                        >
+                          <ExternalLink size={16} />
+                          View My Profile
+                        </Button>
+                      </Link>
+                    )}
+                  </>
+                )}
+
+                {user?.role === "buyer" && (
+                  <>
+                    <Link href="/my-reviews">
+                      <Button
+                        size="lg"
+                        className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center gap-2"
+                      >
+                        <MessageSquare size={18} />
+                        My Reviews
+                      </Button>
+                    </Link>
+                    <Link href="/onboarding/role">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full sm:w-auto px-6 py-3 font-semibold rounded-xl transition-all duration-200 hover:shadow-md active:scale-95 inline-flex items-center gap-2"
+                      >
+                        <UserRound size={16} />
+                        Become a Seller
+                      </Button>
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === "admin" && (
+                  <Link href="/admin">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center gap-2"
+                    >
+                      <Shield size={18} />
+                      Admin Dashboard
+                    </Button>
+                  </Link>
+                )}
               </div>
 
               {/* Micro Feature Cards */}

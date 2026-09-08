@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { AdminLayout } from "@/components/admin-layout";
 import {
   Card,
@@ -68,9 +68,18 @@ export default function AdminAdminsPage() {
       setShowCreateDialog(false);
     },
     onError: (error) => {
+      let errorMsg = error.message;
+      if (error instanceof ApiError && error.details?.fieldErrors) {
+        const fieldErrors = Object.values(
+          error.details.fieldErrors as Record<string, string[]>,
+        ).flat();
+        if (fieldErrors.length > 0) {
+          errorMsg = fieldErrors.join(". ");
+        }
+      }
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Failed to create admin",
+        description: errorMsg,
         variant: "destructive",
       });
     },
@@ -98,7 +107,13 @@ export default function AdminAdminsPage() {
       return;
     }
 
-    createAdminMutation.mutate(formData);
+    const trimmedDisplayName = formData.displayName.trim();
+    createAdminMutation.mutate({
+      email: formData.email.trim(),
+      username: formData.username.trim().toLowerCase(),
+      password: formData.password,
+      displayName: trimmedDisplayName ? trimmedDisplayName : undefined,
+    });
   };
 
   const admins = adminsResponse?.admins || [];
@@ -202,11 +217,11 @@ export default function AdminAdminsPage() {
                   setFormData({ ...formData, username: e.target.value })
                 }
                 required
-                pattern="^[a-z0-9._-]{5,20}$"
-                title="5-20 characters, lowercase letters, numbers, dots, underscores, hyphens"
+                pattern="^[a-zA-Z0-9._-]{3,20}$"
+                title="3-20 characters, letters, numbers, dots, underscores, hyphens"
               />
               <p className="text-xs text-muted-foreground">
-                5-20 characters, lowercase only
+                3-20 characters, letters, numbers, dots, underscores, hyphens
               </p>
             </div>
 

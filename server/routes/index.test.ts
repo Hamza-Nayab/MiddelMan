@@ -1114,6 +1114,37 @@ describe("route groups", () => {
     assert.equal(resolveDispute.status, 200);
     assert.equal(resolveDispute.body.data.dispute.status, "resolved_valid");
     assertDbQueuesEmpty();
+
+    const masterAdminUser = makeUser({
+      id: 10,
+      username: "master-admin",
+      role: "admin",
+      email: "master@example.com",
+      isMasterAdmin: true,
+    });
+    setDbQueues({
+      select: [
+        [masterAdminUser],
+        [],
+      ],
+      insert: [
+        [{ id: 99, username: "admin-new", email: "newadmin@example.com", role: "admin", isMasterAdmin: false, createdAt: new Date() }],
+        [[]],
+        [[]],
+      ],
+    });
+    const createAdminRes = await request("POST", "/api/admin/admins", {
+      headers: { "x-test-user-id": String(masterAdminUser.id) },
+      body: {
+        email: "newadmin@example.com",
+        username: "admin-new",
+        password: "password123",
+        displayName: "",
+      },
+    });
+    assert.equal(createAdminRes.status, 201);
+    assert.equal(createAdminRes.body.data.admin.username, "admin-new");
+    assertDbQueuesEmpty();
   });
 
   it("search", async () => {

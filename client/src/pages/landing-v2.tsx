@@ -23,10 +23,15 @@ import {
   Plus,
   UserRound,
   ShieldCheck,
-  BadgeCheck
+  BadgeCheck,
+  LayoutDashboard,
+  MessageSquare,
 } from "lucide-react";
+import { useMeQuery } from "@/hooks/use-me";
 
 export default function LandingV2() {
+  const { data: me } = useMeQuery();
+  const user = me?.user ?? null;
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
 
@@ -400,14 +405,78 @@ export default function LandingV2() {
 
                   {/* CTAs */}
                   <div className="flex flex-col sm:flex-row gap-4 pt-2 hero-slide-up hero-slide-up-4">
-                    <Link href="/auth">
-                      <Button
-                        size="lg"
-                        className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95"
-                      >
-                        Create Seller Profile
-                      </Button>
-                    </Link>
+                    {!user && (
+                      <Link href="/auth">
+                        <Button
+                          size="lg"
+                          className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95"
+                        >
+                          Create Seller Profile
+                        </Button>
+                      </Link>
+                    )}
+
+                    {user?.role === "seller" && (
+                      <>
+                        <Link href="/dashboard">
+                          <Button
+                            size="lg"
+                            className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95 inline-flex items-center gap-2"
+                          >
+                            <LayoutDashboard size={18} />
+                            Go to Dashboard
+                          </Button>
+                        </Link>
+                        {user.username && (
+                          <Link href={`/${user.username}`}>
+                            <Button
+                              size="lg"
+                              variant="outline"
+                              className="w-full sm:w-auto px-6 py-3 border-slate-700 text-slate-200 hover:bg-slate-800 font-semibold rounded-xl transition-all duration-200 active:scale-95 inline-flex items-center gap-2"
+                            >
+                              <ExternalLink size={16} />
+                              View My Profile
+                            </Button>
+                          </Link>
+                        )}
+                      </>
+                    )}
+
+                    {user?.role === "buyer" && (
+                      <>
+                        <Link href="/my-reviews">
+                          <Button
+                            size="lg"
+                            className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95 inline-flex items-center gap-2"
+                          >
+                            <MessageSquare size={18} />
+                            My Reviews
+                          </Button>
+                        </Link>
+                        <Link href="/onboarding/role">
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            className="w-full sm:w-auto px-6 py-3 border-slate-700 text-slate-200 hover:bg-slate-800 font-semibold rounded-xl transition-all duration-200 active:scale-95 inline-flex items-center gap-2"
+                          >
+                            <UserRound size={16} />
+                            Become a Seller
+                          </Button>
+                        </Link>
+                      </>
+                    )}
+
+                    {user?.role === "admin" && (
+                      <Link href="/admin">
+                        <Button
+                          size="lg"
+                          className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95 inline-flex items-center gap-2"
+                        >
+                          <Shield size={18} />
+                          Admin Dashboard
+                        </Button>
+                      </Link>
+                    )}
                   </div>
 
                   {/* Micro Feature Cards */}
@@ -860,11 +929,34 @@ export default function LandingV2() {
             Create your account today. Build credibility, eliminate risk, and capture verified social commerce.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth">
-              <Button size="lg" className="px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:scale-105 active:scale-95">
-                Get Started for Free <ArrowRight size={16} className="ml-2" />
-              </Button>
-            </Link>
+            {!user && (
+              <Link href="/auth">
+                <Button size="lg" className="px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:scale-105 active:scale-95">
+                  Get Started for Free <ArrowRight size={16} className="ml-2" />
+                </Button>
+              </Link>
+            )}
+            {user?.role === "seller" && (
+              <Link href="/dashboard">
+                <Button size="lg" className="px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:scale-105 active:scale-95">
+                  Go to Dashboard <ArrowRight size={16} className="ml-2" />
+                </Button>
+              </Link>
+            )}
+            {user?.role === "buyer" && (
+              <Link href="/my-reviews">
+                <Button size="lg" className="px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:scale-105 active:scale-95">
+                  Go to My Reviews <ArrowRight size={16} className="ml-2" />
+                </Button>
+              </Link>
+            )}
+            {user?.role === "admin" && (
+              <Link href="/admin">
+                <Button size="lg" className="px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:scale-105 active:scale-95">
+                  Admin Dashboard <ArrowRight size={16} className="ml-2" />
+                </Button>
+              </Link>
+            )}
           </div>
         </section>
       </Layout>

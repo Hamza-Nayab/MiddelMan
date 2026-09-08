@@ -21,6 +21,8 @@ import {
   Phone,
   Mail,
   QrCode,
+  LayoutDashboard,
+  Shield,
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { motion } from "framer-motion";
@@ -1014,20 +1016,62 @@ export default function ProfilePage() {
                         </DialogContent>
                       </Dialog>
                     )
+                  ) : me?.user?.id === user?.id ? (
+                    <Link href="/dashboard">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-full border-0",
+                          appearance.buttonClass,
+                        )}
+                        style={appearance.accentButtonStyle}
+                      >
+                        <LayoutDashboard className="w-4 h-4 mr-2" /> Edit Profile
+                      </Button>
+                    </Link>
+                  ) : me?.user?.role === "admin" ? (
+                    <Link href={`/admin/sellers/${user?.id}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-full border-0",
+                          appearance.buttonClass,
+                        )}
+                        style={appearance.accentButtonStyle}
+                      >
+                        <Shield className="w-4 h-4 mr-2" /> Moderate Seller
+                      </Button>
+                    </Link>
+                  ) : me?.user?.role === "seller" ? (
+                    <Link href="/dashboard">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-full border-0",
+                          appearance.buttonClass,
+                        )}
+                        style={appearance.accentButtonStyle}
+                      >
+                        <LayoutDashboard className="w-4 h-4 mr-2" /> Seller Dashboard
+                      </Button>
+                    </Link>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                      className={cn(
-                        "rounded-full border-0 opacity-50 cursor-not-allowed",
-                        appearance.buttonClass,
-                      )}
-                      style={appearance.accentButtonStyle}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" /> Sign in as a
-                      user to give review
-                    </Button>
+                    <Link href="/auth">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "rounded-full border-0",
+                          appearance.buttonClass,
+                        )}
+                        style={appearance.accentButtonStyle}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" /> Sign in to Review
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>
