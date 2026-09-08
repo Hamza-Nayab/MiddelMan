@@ -443,27 +443,15 @@ export default function LandingV2() {
                     )}
 
                     {user?.role === "buyer" && (
-                      <>
-                        <Link href="/my-reviews">
-                          <Button
-                            size="lg"
-                            className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95 inline-flex items-center gap-2"
-                          >
-                            <MessageSquare size={18} />
-                            My Reviews
-                          </Button>
-                        </Link>
-                        <Link href="/onboarding/role">
-                          <Button
-                            size="lg"
-                            variant="outline"
-                            className="w-full sm:w-auto px-6 py-3 border-slate-700 text-slate-200 hover:bg-slate-800 font-semibold rounded-xl transition-all duration-200 active:scale-95 inline-flex items-center gap-2"
-                          >
-                            <UserRound size={16} />
-                            Become a Seller
-                          </Button>
-                        </Link>
-                      </>
+                      <Link href="/my-reviews">
+                        <Button
+                          size="lg"
+                          className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20 hover:-translate-y-0.5 active:scale-95 inline-flex items-center gap-2"
+                        >
+                          <MessageSquare size={18} />
+                          My Reviews
+                        </Button>
+                      </Link>
                     )}
 
                     {user?.role === "admin" && (

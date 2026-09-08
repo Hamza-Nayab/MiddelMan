@@ -408,27 +408,15 @@ export default function Home() {
                 )}
 
                 {user?.role === "buyer" && (
-                  <>
-                    <Link href="/my-reviews">
-                      <Button
-                        size="lg"
-                        className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center gap-2"
-                      >
-                        <MessageSquare size={18} />
-                        My Reviews
-                      </Button>
-                    </Link>
-                    <Link href="/onboarding/role">
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="w-full sm:w-auto px-6 py-3 font-semibold rounded-xl transition-all duration-200 hover:shadow-md active:scale-95 inline-flex items-center gap-2"
-                      >
-                        <UserRound size={16} />
-                        Become a Seller
-                      </Button>
-                    </Link>
-                  </>
+                  <Link href="/my-reviews">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center gap-2"
+                    >
+                      <MessageSquare size={18} />
+                      My Reviews
+                    </Button>
+                  </Link>
                 )}
 
                 {user?.role === "admin" && (
