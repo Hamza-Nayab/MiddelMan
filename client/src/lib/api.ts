@@ -617,6 +617,7 @@ export const api = {
       { signal: options?.signal },
     ),
   adminGetReviews: (params?: {
+    q?: string;
     sellerId?: number;
     hidden?: boolean;
     rating?: number;
@@ -624,6 +625,9 @@ export const api = {
     cursor?: number;
   }) => {
     const query = new URLSearchParams();
+    if (params?.q) {
+      query.set("q", params.q);
+    }
     if (params?.sellerId !== undefined) {
       query.set("sellerId", String(params.sellerId));
     }

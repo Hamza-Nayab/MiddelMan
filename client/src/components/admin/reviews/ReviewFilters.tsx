@@ -23,24 +23,30 @@ const ratingOptions = [
 ];
 
 type ReviewFiltersProps = {
+  searchQ: string;
   reviewRatingFilter: string;
   reviewStatusFilter: string;
-  sellerFilter: string;
+  onSearchChange: (value: string) => void;
   onRatingChange: (value: string) => void;
   onStatusChange: (value: string) => void;
-  onSellerChange: (value: string) => void;
 };
 
 export function ReviewFilters({
+  searchQ,
   reviewRatingFilter,
   reviewStatusFilter,
-  sellerFilter,
+  onSearchChange,
   onRatingChange,
   onStatusChange,
-  onSellerChange,
 }: ReviewFiltersProps) {
   return (
     <div className="flex flex-col md:flex-row gap-3">
+      <Input
+        placeholder="Search by review ID, seller, author, or comment..."
+        value={searchQ}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="flex-1"
+      />
       <Select value={reviewRatingFilter} onValueChange={onRatingChange}>
         <SelectTrigger className="md:w-40">
           <SelectValue placeholder="Rating" />
@@ -53,12 +59,6 @@ export function ReviewFilters({
           ))}
         </SelectContent>
       </Select>
-      <Input
-        placeholder="Seller ID"
-        value={sellerFilter}
-        onChange={(e) => onSellerChange(e.target.value)}
-        className="md:w-40"
-      />
       <Select value={reviewStatusFilter} onValueChange={onStatusChange}>
         <SelectTrigger className="md:w-40">
           <SelectValue placeholder="Status" />

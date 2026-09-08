@@ -150,6 +150,8 @@ export function registerAdminRoutes(app: Express): void {
         .json(error("VALIDATION_ERROR", "Invalid seller id"));
     }
 
+    const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
     const rating = req.query.rating ? Number(req.query.rating) : undefined;
     if (
       req.query.rating &&
@@ -177,7 +179,7 @@ export function registerAdminRoutes(app: Express): void {
         .json(error("VALIDATION_ERROR", "Invalid hidden filter"));
     }
 
-    const conditions = [] as Array<ReturnType<typeof eq | typeof gte>>;
+    const conditions: any[] = [];
     if (sellerId !== undefined) {
       conditions.push(eq(reviews.sellerId, sellerId));
     }
@@ -191,12 +193,34 @@ export function registerAdminRoutes(app: Express): void {
       conditions.push(gte(reviews.id, cursor + 1));
     }
 
+    if (q) {
+      const cleanQ = q.replace(/^[#@]\s*/, "").trim();
+      const escaped = cleanQ.replace(/[\\%_]/g, "\\$&");
+      const searchPattern = `%${escaped}%`;
+      const numericId = Number(cleanQ);
+
+      const qConditions: any[] = [
+        ilike(users.username, searchPattern),
+        ilike(users.email, searchPattern),
+        ilike(profiles.displayName, searchPattern),
+        ilike(reviews.authorName, searchPattern),
+        ilike(reviews.comment, searchPattern),
+      ];
+
+      if (!Number.isNaN(numericId) && Number.isInteger(numericId) && numericId > 0) {
+        qConditions.push(eq(reviews.id, numericId));
+        qConditions.push(eq(reviews.sellerId, numericId));
+      }
+
+      conditions.push(or(...qConditions));
+    }
+
     const whereClause =
       conditions.length === 0
         ? undefined
         : conditions.length === 1
           ? conditions[0]
-          : and(...(conditions as any[]));
+          : and(...conditions);
 
     const reviewList = await db
       .select({

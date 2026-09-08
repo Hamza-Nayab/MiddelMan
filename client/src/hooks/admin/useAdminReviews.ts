@@ -1,24 +1,35 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const ADMIN_REVIEWS_QUERY_KEY = ["admin-reviews"] as const;
 
 const adminReviewsQueryKey = (
+  searchQ: string,
   rating: number | undefined,
-  sellerId: number | undefined,
   hidden: boolean | undefined,
   cursor: number | undefined,
-) => [...ADMIN_REVIEWS_QUERY_KEY, rating, sellerId, hidden, cursor] as const;
+) => [...ADMIN_REVIEWS_QUERY_KEY, searchQ, rating, hidden, cursor] as const;
 
 export function useAdminReviews() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location] = useLocation();
 
-  const [reviewRatingFilter, setReviewRatingFilter] = useState("all");
-  const [reviewStatusFilter, setReviewStatusFilter] = useState("all");
-  const [sellerFilter, setSellerFilter] = useState("");
+  const searchParams = useMemo(() => {
+    if (typeof window === "undefined") return new URLSearchParams();
+    return new URLSearchParams(window.location.search);
+  }, [location]);
+
+  const [searchQ, setSearchQ] = useState(() => searchParams.get("q") || "");
+  const [reviewRatingFilter, setReviewRatingFilter] = useState(
+    () => searchParams.get("rating") || "all",
+  );
+  const [reviewStatusFilter, setReviewStatusFilter] = useState(
+    () => searchParams.get("status") || "all",
+  );
   const [reviewCursor, setReviewCursor] = useState<number | undefined>(
     undefined,
   );
@@ -27,6 +38,19 @@ export function useAdminReviews() {
     isHiding: boolean;
   } | null>(null);
   const [hideReason, setHideReason] = useState("");
+
+  const updateUrlParams = (q: string, rating: string, status: string) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (rating !== "all") params.set("rating", rating);
+    if (status !== "all") params.set("status", status);
+    const queryString = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      queryString ? `?${queryString}` : "/admin/reviews",
+    );
+  };
 
   const reviewHiddenFilter = useMemo(() => {
     return reviewStatusFilter === "all"
@@ -40,24 +64,17 @@ export function useAdminReviews() {
     return reviewRatingFilter === "all" ? undefined : Number(reviewRatingFilter);
   }, [reviewRatingFilter]);
 
-  const sellerIdFilter = useMemo(() => {
-    const trimmed = sellerFilter.trim();
-    if (!trimmed) return undefined;
-    const parsed = Number(trimmed);
-    return Number.isNaN(parsed) ? undefined : parsed;
-  }, [sellerFilter]);
-
   const { data: reviewsResponse, isLoading: isReviewsLoading } = useQuery({
     queryKey: adminReviewsQueryKey(
+      searchQ,
       reviewRating,
-      sellerIdFilter,
       reviewHiddenFilter,
       reviewCursor,
     ),
     queryFn: () =>
       api.adminGetReviews({
+        q: searchQ.trim() || undefined,
         rating: reviewRating,
-        sellerId: sellerIdFilter,
         hidden: reviewHiddenFilter,
         limit: 20,
         cursor: reviewCursor,
@@ -104,25 +121,28 @@ export function useAdminReviews() {
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchQ(value);
+    setReviewCursor(undefined);
+    updateUrlParams(value, reviewRatingFilter, reviewStatusFilter);
+  };
+
   const handleRatingFilterChange = (value: string) => {
     setReviewRatingFilter(value);
     setReviewCursor(undefined);
+    updateUrlParams(searchQ, value, reviewStatusFilter);
   };
 
   const handleStatusFilterChange = (value: string) => {
     setReviewStatusFilter(value);
     setReviewCursor(undefined);
-  };
-
-  const handleSellerFilterChange = (value: string) => {
-    setSellerFilter(value);
-    setReviewCursor(undefined);
+    updateUrlParams(searchQ, reviewRatingFilter, value);
   };
 
   return {
+    searchQ,
     reviewRatingFilter,
     reviewStatusFilter,
-    sellerFilter,
     reviewCursor,
     hideReviewDialog,
     hideReason,
@@ -133,8 +153,8 @@ export function useAdminReviews() {
     setHideReason,
     handleReviewPreviousPage,
     handleReviewNextPage,
+    handleSearchChange,
     handleRatingFilterChange,
     handleStatusFilterChange,
-    handleSellerFilterChange,
   };
 }

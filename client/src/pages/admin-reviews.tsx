@@ -23,9 +23,9 @@ import { useAdminReviews } from "@/hooks/admin/useAdminReviews";
 
 export default function AdminReviewsPage() {
   const {
+    searchQ,
     reviewRatingFilter,
     reviewStatusFilter,
-    sellerFilter,
     reviewCursor,
     hideReviewDialog,
     hideReason,
@@ -36,9 +36,9 @@ export default function AdminReviewsPage() {
     setHideReason,
     handleReviewPreviousPage,
     handleReviewNextPage,
+    handleSearchChange,
     handleRatingFilterChange,
     handleStatusFilterChange,
-    handleSellerFilterChange,
   } = useAdminReviews();
 
   const reviews = useMemo(() => reviewsResponse?.items ?? [], [reviewsResponse?.items]);
@@ -63,12 +63,12 @@ export default function AdminReviewsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <ReviewFilters
+            searchQ={searchQ}
             reviewRatingFilter={reviewRatingFilter}
             reviewStatusFilter={reviewStatusFilter}
-            sellerFilter={sellerFilter}
+            onSearchChange={handleSearchChange}
             onRatingChange={handleRatingFilterChange}
             onStatusChange={handleStatusFilterChange}
-            onSellerChange={handleSellerFilterChange}
           />
 
           <ReviewTable

@@ -1042,6 +1042,38 @@ describe("route groups", () => {
     assertDbQueuesEmpty();
 
     setDbQueues({
+      select: [
+        [adminUser],
+        [
+          {
+            id: 4,
+            sellerId: sellerUser.id,
+            reviewerUserId: null,
+            authorName: "Hamza",
+            rating: 4,
+            comment: "Test 2",
+            isHidden: false,
+            createdAt: new Date(),
+            sellerUsername: "seller-one",
+            sellerDisplayName: "Hamza Nayab",
+          },
+        ],
+      ],
+    });
+    const reviewSearchRes = await request(
+      "GET",
+      "/api/admin/reviews?q=%234",
+      {
+        headers: { "x-test-user-id": String(adminUser.id) },
+      },
+    );
+    assert.equal(reviewSearchRes.status, 200);
+    assert.equal(reviewSearchRes.body.data.items.length, 1);
+    assert.equal(reviewSearchRes.body.data.items[0].id, 4);
+    assert.equal(reviewSearchRes.body.data.items[0].sellerDisplayName, "Hamza Nayab");
+    assertDbQueuesEmpty();
+
+    setDbQueues({
       select: [[adminUser], [{ avgRating: 4, totalReviews: 1 }]],
       update: [[{ id: 41, sellerId: sellerUser.id, isHidden: true }], []],
       insert: [[]],
