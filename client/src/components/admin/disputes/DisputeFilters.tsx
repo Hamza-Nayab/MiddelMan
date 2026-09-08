@@ -42,10 +42,10 @@ export function DisputeFilters({
         </SelectContent>
       </Select>
       <Input
-        placeholder="Filter by seller ID..."
+        placeholder="Filter by seller, ID, reason..."
         value={sellerSearch}
         onChange={(e) => onSellerSearchChange(e.target.value)}
-        className="md:w-56"
+        className="md:w-64"
       />
     </div>
   );

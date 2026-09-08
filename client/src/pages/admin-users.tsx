@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
     enableUserMutation,
   } = useAdminUsers();
   const items = useMemo(() => usersResponse?.items ?? [], [usersResponse?.items]);
-  const hasNextPage = usersResponse?.nextCursor !== null;
+  const hasNextPage = Boolean(usersResponse?.nextCursor);
 
   const handleEnable = useCallback(
     (id: number) => {

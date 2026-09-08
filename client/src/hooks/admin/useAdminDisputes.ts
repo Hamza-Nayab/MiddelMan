@@ -8,8 +8,9 @@ const ADMIN_DISPUTES_QUERY_KEY = ["admin-disputes"] as const;
 const adminDisputesQueryKey = (
   status: string | undefined,
   sellerId: number | undefined,
+  searchQ: string | undefined,
   cursor: number | undefined,
-) => [...ADMIN_DISPUTES_QUERY_KEY, status, sellerId, cursor] as const;
+) => [...ADMIN_DISPUTES_QUERY_KEY, status, sellerId, searchQ, cursor] as const;
 
 export function useAdminDisputes() {
   const { toast } = useToast();
@@ -17,9 +18,13 @@ export function useAdminDisputes() {
 
   const [disputeStatusFilter, setDisputeStatusFilter] = useState("open");
   const [sellerSearch, setSellerSearch] = useState("");
-  const [disputeCursor, setDisputeCursor] = useState<number | undefined>(
+  const [cursorStack, setCursorStack] = useState<(number | undefined)[]>([
     undefined,
-  );
+  ]);
+  const disputeCursor = cursorStack[cursorStack.length - 1];
+  const currentPage = cursorStack.length;
+  const hasPreviousPage = cursorStack.length > 1;
+
   const [resolveDialog, setResolveDialog] = useState<{
     disputeId: number;
     outcome: "valid" | "rejected" | null;
@@ -38,16 +43,23 @@ export function useAdminDisputes() {
     return Number.isNaN(parsed) ? undefined : parsed;
   }, [sellerSearch]);
 
+  const searchQ = useMemo(() => {
+    const trimmed = sellerSearch.trim();
+    return trimmed || undefined;
+  }, [sellerSearch]);
+
   const { data: disputesResponse, isLoading: isDisputesLoading } = useQuery({
     queryKey: adminDisputesQueryKey(
       disputeStatusFilterValue,
       sellerIdFilter,
+      searchQ,
       disputeCursor,
     ),
     queryFn: () =>
       api.adminGetDisputes({
         status: disputeStatusFilterValue,
         sellerId: sellerIdFilter,
+        q: searchQ,
         limit: 20,
         cursor: disputeCursor,
       }),
@@ -108,29 +120,33 @@ export function useAdminDisputes() {
   });
 
   const handleDisputePreviousPage = () => {
-    setDisputeCursor(undefined);
+    if (cursorStack.length > 1) {
+      setCursorStack((prev) => prev.slice(0, -1));
+    }
   };
 
   const handleDisputeNextPage = () => {
     if (disputesResponse?.nextCursor) {
-      setDisputeCursor(disputesResponse.nextCursor);
+      setCursorStack((prev) => [...prev, disputesResponse.nextCursor!]);
     }
   };
 
   const handleStatusFilterChange = (value: string) => {
     setDisputeStatusFilter(value);
-    setDisputeCursor(undefined);
+    setCursorStack([undefined]);
   };
 
   const handleSellerSearchChange = (value: string) => {
     setSellerSearch(value);
-    setDisputeCursor(undefined);
+    setCursorStack([undefined]);
   };
 
   return {
     disputeStatusFilter,
     sellerSearch,
     disputeCursor,
+    currentPage,
+    hasPreviousPage,
     disputesResponse,
     isDisputesLoading,
     resolveDialog,

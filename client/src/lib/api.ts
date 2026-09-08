@@ -366,7 +366,7 @@ export type AdminDisputeItem = {
 
 export type AdminDisputesResponse = {
   items: AdminDisputeItem[];
-  nextCursor?: number;
+  nextCursor?: number | null;
 };
 
 export type Notification = {
@@ -688,6 +688,7 @@ export const api = {
   adminGetDisputes: (params?: {
     status?: string;
     sellerId?: number;
+    q?: string;
     limit?: number;
     cursor?: number;
   }) => {
@@ -697,6 +698,9 @@ export const api = {
     }
     if (params?.sellerId !== undefined) {
       query.set("sellerId", String(params.sellerId));
+    }
+    if (params?.q) {
+      query.set("q", params.q);
     }
     if (params?.limit !== undefined) {
       query.set("limit", String(params.limit));

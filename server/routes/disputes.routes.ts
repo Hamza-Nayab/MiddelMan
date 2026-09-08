@@ -3,7 +3,7 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import multer from "multer";
 import sharp from "sharp";
 import { createHash } from "crypto";
-import { and, eq, gte, S3Client } from "./_shared";
+import { and, eq, gte, ilike, or, S3Client } from "./_shared";
 import {
   checkRateLimit,
   adminResolveDisputeSchema,
@@ -346,13 +346,15 @@ export function registerDisputesRoutes(app: Express): void {
         .json(error("VALIDATION_ERROR", "Invalid seller id"));
     }
 
+    const searchQuery = req.query.q ? String(req.query.q).trim() : undefined;
+
     const status = req.query.status ? String(req.query.status) : undefined;
     const validStatuses = ["open", "resolved_valid", "resolved_rejected"];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json(error("VALIDATION_ERROR", "Invalid status"));
     }
 
-    const conditions = [] as Array<ReturnType<typeof eq | typeof gte>>;
+    const conditions = [] as any[];
     if (sellerId !== undefined) {
       conditions.push(eq(reviewDisputes.sellerId, sellerId));
     }
@@ -362,13 +364,27 @@ export function registerDisputesRoutes(app: Express): void {
     if (cursor !== undefined) {
       conditions.push(gte(reviewDisputes.id, cursor + 1));
     }
+    if (searchQuery) {
+      const searchNum = Number(searchQuery.replace(/^#/, ""));
+      const searchTerms: any[] = [
+        ilike(users.username, `%${searchQuery}%`),
+        ilike(profiles.displayName, `%${searchQuery}%`),
+        ilike(reviewDisputes.reason, `%${searchQuery}%`),
+        ilike(reviewDisputes.message, `%${searchQuery}%`),
+      ];
+      if (!Number.isNaN(searchNum)) {
+        searchTerms.push(eq(reviewDisputes.id, searchNum));
+        searchTerms.push(eq(reviewDisputes.sellerId, searchNum));
+      }
+      conditions.push(or(...searchTerms));
+    }
 
     const whereClause =
       conditions.length === 0
         ? undefined
         : conditions.length === 1
           ? conditions[0]
-          : and(...(conditions as any[]));
+          : and(...conditions);
 
     const disputeList = await db
       .select({
@@ -413,12 +429,7 @@ export function registerDisputesRoutes(app: Express): void {
       nextCursor = paginatedDisputes[paginatedDisputes.length - 1]?.id ?? null;
     }
 
-    const response: any = { items: paginatedDisputes };
-    if (nextCursor) {
-      response.nextCursor = nextCursor;
-    }
-
-    return res.status(200).json(ok(response));
+    return res.status(200).json(ok({ items: paginatedDisputes, nextCursor }));
   });
 
   app.patch("/api/admin/disputes/:id/resolve", async (req, res) => {

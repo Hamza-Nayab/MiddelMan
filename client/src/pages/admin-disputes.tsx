@@ -17,6 +17,8 @@ export default function AdminDisputesPage() {
     disputeStatusFilter,
     sellerSearch,
     disputeCursor,
+    currentPage,
+    hasPreviousPage,
     disputesResponse,
     isDisputesLoading,
     resolveDialog,
@@ -34,7 +36,7 @@ export default function AdminDisputesPage() {
   } = useAdminDisputes();
 
   const disputes = useMemo(() => disputesResponse?.items ?? [], [disputesResponse?.items]);
-  const hasNextDisputePage = disputesResponse?.nextCursor !== null;
+  const hasNextDisputePage = Boolean(disputesResponse?.nextCursor);
 
   const handleResolveValid = useCallback(
     (disputeId: number) => {
@@ -88,6 +90,8 @@ export default function AdminDisputesPage() {
             disputes={disputes}
             isDisputesLoading={isDisputesLoading}
             disputeCursor={disputeCursor}
+            currentPage={currentPage}
+            hasPreviousPage={hasPreviousPage}
             hasNextDisputePage={hasNextDisputePage}
             onPreviousPage={handleDisputePreviousPage}
             onNextPage={handleDisputeNextPage}

@@ -249,12 +249,7 @@ export function registerAdminRoutes(app: Express): void {
       nextCursor = paginatedReviews[paginatedReviews.length - 1]?.id ?? null;
     }
 
-    const response: any = { items: paginatedReviews };
-    if (nextCursor) {
-      response.nextCursor = nextCursor;
-    }
-
-    return res.status(200).json(ok(response));
+    return res.status(200).json(ok({ items: paginatedReviews, nextCursor }));
   });
 
   app.patch("/api/admin/reviews/:id/hide", async (req, res) => {

@@ -42,7 +42,7 @@ export default function AdminReviewsPage() {
   } = useAdminReviews();
 
   const reviews = useMemo(() => reviewsResponse?.items ?? [], [reviewsResponse?.items]);
-  const hasNextReviewPage = reviewsResponse?.nextCursor !== null;
+  const hasNextReviewPage = Boolean(reviewsResponse?.nextCursor);
 
   const handleToggleHide = useCallback(
     ({ reviewId, isHiding }: { reviewId: number; isHiding: boolean }) => {
