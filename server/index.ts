@@ -87,7 +87,23 @@ declare global {
 const app = express();
 const httpServer = createServer(app);
 
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
+
+if (isProduction) {
+  app.use((req, res, next) => {
+    const proto = req.get("x-forwarded-proto");
+    if (proto && proto !== "https") {
+      return res.redirect(301, `https://${req.get("host")}${req.originalUrl}`);
+    }
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+    next();
+  });
+}
+
 app.use((_req, res, next) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -127,7 +143,6 @@ const usePgSessionStore =
   Boolean(process.env.DATABASE_URL) &&
   (isProduction || process.env.USE_PG_SESSION_IN_DEV === "true");
 
-app.set("trust proxy", 1);
 app.use(
   session({
     store: usePgSessionStore
