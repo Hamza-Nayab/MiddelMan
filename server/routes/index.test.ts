@@ -1115,6 +1115,53 @@ describe("route groups", () => {
     assert.equal(resolveDispute.body.data.dispute.status, "resolved_valid");
     assertDbQueuesEmpty();
 
+    setDbQueues({
+      select: [
+        [adminUser],
+        [
+          {
+            id: 1,
+            reviewId: 41,
+            sellerId: sellerUser.id,
+            status: "resolved_rejected",
+            reason: "fake-review",
+            message: "womp",
+            evidenceUrl: null,
+            evidenceMime: null,
+            createdAt: new Date(),
+            resolvedAt: new Date(),
+            resolvedByAdminId: adminUser.id,
+            resolutionNote: "rejected",
+            review: {
+              id: 41,
+              rating: 5,
+              comment: "Test comment",
+              authorName: "Author",
+              isHidden: false,
+              createdAt: new Date(),
+            },
+            seller: {
+              id: sellerUser.id,
+              username: "seller-one",
+              displayName: "Seller Name",
+            },
+          },
+        ],
+      ],
+    });
+    const disputesRes = await request(
+      "GET",
+      "/api/admin/disputes?q=fake",
+      {
+        headers: { "x-test-user-id": String(adminUser.id) },
+      },
+    );
+    assert.equal(disputesRes.status, 200);
+    assert.equal(disputesRes.body.data.items.length, 1);
+    assert.equal(disputesRes.body.data.items[0].id, 1);
+    assert.equal(disputesRes.body.data.nextCursor, null);
+    assertDbQueuesEmpty();
+
     const masterAdminUser = makeUser({
       id: 10,
       username: "master-admin",
