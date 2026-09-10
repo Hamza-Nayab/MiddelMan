@@ -439,8 +439,6 @@ export const api = {
     request<{ message: string }>("POST", "/api/auth/reset-password", payload),
   logout: () => request<{ loggedOut: boolean }>("POST", "/api/auth/logout"),
   getMe: () => request<MeResponse>("GET", "/api/me"),
-  updateRole: (role: "buyer" | "seller") =>
-    request<{ user: User }>("PATCH", "/api/me/role", { role }),
   getAnalytics: (days = 7) =>
     request<AnalyticsResponse>("GET", `/api/me/analytics?days=${days}`),
   checkUsername: (username: string) =>

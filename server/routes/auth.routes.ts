@@ -530,28 +530,32 @@ export function registerAuthRoutes(app: Express): void {
       return res.status(404).json(error("NOT_FOUND", "User not found"));
     }
 
+    const targetUsername = parsed.data.username || user.username;
+
     if (parsed.data.role === "seller" && user.role === "buyer") {
-      if (!parsed.data.username) {
+      if (!targetUsername) {
         return res
           .status(400)
           .json(error("VALIDATION_ERROR", "Username is required for sellers"));
       }
 
-      if (isReservedUsername(parsed.data.username)) {
+      if (isReservedUsername(targetUsername)) {
         return res
           .status(400)
           .json(error("VALIDATION_ERROR", "This username is reserved and cannot be used"));
       }
 
-      const [existing] = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.username, parsed.data.username));
+      if (parsed.data.username && parsed.data.username !== user.username) {
+        const [existing] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.username, parsed.data.username));
 
-      if (existing) {
-        return res
-          .status(409)
-          .json(error("CONFLICT", "Username already taken"));
+        if (existing) {
+          return res
+            .status(409)
+            .json(error("CONFLICT", "Username already taken"));
+        }
       }
     }
 
@@ -562,7 +566,7 @@ export function registerAuthRoutes(app: Express): void {
         .update(users)
         .set({
           role: "seller",
-          username: parsed.data.username,
+          username: targetUsername,
         })
         .where(eq(users.id, req.session.userId))
         .returning();
@@ -595,6 +599,19 @@ export function registerAuthRoutes(app: Express): void {
         .from(profiles)
         .where(eq(profiles.userId, req.session.userId));
       updatedProfile = profile;
+    }
+
+    if (!updatedProfile) {
+      const [inserted] = await db
+        .insert(profiles)
+        .values({
+          userId: req.session.userId,
+          displayName: parsed.data.displayName || updatedUser.username || "User",
+          avatarUrl: parsed.data.avatarUrl || "avatar-1",
+          bio: parsed.data.bio || null,
+        })
+        .returning();
+      updatedProfile = inserted;
     }
 
     return res.status(200).json(
