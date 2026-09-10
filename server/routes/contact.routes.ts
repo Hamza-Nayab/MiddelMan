@@ -124,7 +124,8 @@ export function registerContactRoutes(app: Express): void {
     }
 
     if (searchQuery) {
-      const searchPattern = `%${searchQuery}%`;
+      const escapedSearch = searchQuery.replace(/[\\%_]/g, "\\$&");
+      const searchPattern = `%${escapedSearch}%`;
       conditions.push(
         or(
           ilike(contacts.name, searchPattern),

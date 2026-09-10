@@ -23,7 +23,7 @@ export default function RoleOnboardingPage() {
   }, [isLoading, me, setLocation]);
 
   const updateRoleMutation = useMutation({
-    mutationFn: (role: "buyer" | "seller") => api.updateRole(role),
+    mutationFn: (role: "buyer" | "seller") => api.completeOnboarding({ role }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       toast({

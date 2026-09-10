@@ -238,12 +238,14 @@ export function registerLinksRoutes(app: Express): void {
         );
     }
 
-    const caseConditions = orderedIds
-      .map((id, index) => `WHEN ${id} THEN ${index}`)
-      .join(" ");
-
-    await db.execute(
-      sql`UPDATE links SET sort_order = CASE id ${sql.raw(caseConditions)} END, updated_at = NOW() WHERE user_id = ${userId} AND id = ANY(${orderedIds})`,
+    // Use individual parameterized updates instead of sql.raw() to avoid any injection risk
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        db
+          .update(links)
+          .set({ sortOrder: index, updatedAt: new Date() })
+          .where(and(eq(links.id, id), eq(links.userId, userId))),
+      ),
     );
 
     return res.status(200).json(ok({ updated: true }));

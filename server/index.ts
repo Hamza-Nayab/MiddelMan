@@ -108,6 +108,20 @@ app.use((_req, res, next) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  if (isProduction) {
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.cloudflare.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "connect-src 'self'",
+        "frame-ancestors 'self'",
+      ].join("; "),
+    );
+  }
   next();
 });
 
@@ -145,6 +159,7 @@ const usePgSessionStore =
 
 app.use(
   session({
+    name: isProduction ? "__Host-sid" : "connect.sid",
     store: usePgSessionStore
       ? new PgSession({ pool, createTableIfMissing: true })
       : new MemoryStoreFactory({ checkPeriod: 24 * 60 * 60 * 1000 }),
@@ -156,6 +171,7 @@ app.use(
       sameSite: "lax", // Strict same-site policy
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      path: "/",
     },
   }),
 );
@@ -207,11 +223,12 @@ app.use(async (req, res, next) => {
 
     if (sessionData.disabledGuardResult?.isDisabled) {
       req.session.destroy(() => {
-        res.clearCookie("connect.sid", {
+        const cookieName = isProduction ? "__Host-sid" : "connect.sid";
+        res.clearCookie(cookieName, {
           path: "/",
           httpOnly: true,
           sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
+          secure: isProduction,
         });
         res.status(403).json(
           error("ACCOUNT_DISABLED", "Your account has been disabled", {

@@ -365,12 +365,13 @@ export function registerDisputesRoutes(app: Express): void {
       conditions.push(gte(reviewDisputes.id, cursor + 1));
     }
     if (searchQuery) {
+      const escapedSearch = searchQuery.replace(/[\\%_]/g, "\\$&");
       const searchNum = Number(searchQuery.replace(/^#/, ""));
       const searchTerms: any[] = [
-        ilike(users.username, `%${searchQuery}%`),
-        ilike(profiles.displayName, `%${searchQuery}%`),
-        ilike(reviewDisputes.reason, `%${searchQuery}%`),
-        ilike(reviewDisputes.message, `%${searchQuery}%`),
+        ilike(users.username, `%${escapedSearch}%`),
+        ilike(profiles.displayName, `%${escapedSearch}%`),
+        ilike(reviewDisputes.reason, `%${escapedSearch}%`),
+        ilike(reviewDisputes.message, `%${escapedSearch}%`),
       ];
       if (!Number.isNaN(searchNum)) {
         searchTerms.push(eq(reviewDisputes.id, searchNum));

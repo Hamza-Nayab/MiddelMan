@@ -133,6 +133,18 @@ export function registerAuthRoutes(app: Express): void {
   );
 
   app.post("/api/auth/register", async (req, res) => {
+    const regRateLimit = checkRateLimit("register", getClientKey(req), {
+      maxRequests: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!regRateLimit.allowed) {
+      return res
+        .status(429)
+        .json(
+          error("REGISTER_RATE_LIMITED", "Too many registration attempts. Please try again later.", { retryAfter: regRateLimit.resetIn }),
+        );
+    }
+
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
       return res
@@ -525,6 +537,12 @@ export function registerAuthRoutes(app: Express): void {
           .json(error("VALIDATION_ERROR", "Username is required for sellers"));
       }
 
+      if (isReservedUsername(parsed.data.username)) {
+        return res
+          .status(400)
+          .json(error("VALIDATION_ERROR", "This username is reserved and cannot be used"));
+      }
+
       const [existing] = await db
         .select({ id: users.id })
         .from(users)
@@ -716,7 +734,8 @@ export function registerAuthRoutes(app: Express): void {
 
   app.post("/api/auth/logout", (req, res) => {
     req.session.destroy(() => {
-      res.clearCookie("connect.sid", {
+      const cookieName = process.env.NODE_ENV === "production" ? "__Host-sid" : "connect.sid";
+      res.clearCookie(cookieName, {
         path: "/",
         httpOnly: true,
         sameSite: "lax",
@@ -890,6 +909,18 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   app.post("/api/auth/reset-password", async (req, res) => {
+    const resetRateLimit = checkRateLimit("reset-password", getClientKey(req), {
+      maxRequests: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!resetRateLimit.allowed) {
+      return res
+        .status(429)
+        .json(
+          error("RATE_LIMIT", "Too many password reset attempts. Please try again later.", { retryAfter: resetRateLimit.resetIn }),
+        );
+    }
+
     const parsed = resetPasswordSchema.safeParse(req.body);
     if (!parsed.success) {
       return res
@@ -940,6 +971,21 @@ export function registerAuthRoutes(app: Express): void {
         updatedAt: new Date(),
       })
       .where(eq(users.id, seller.id));
+
+    // Invalidate all existing sessions for this user so any hijacked sessions are killed
+    try {
+      const { pool } = await import("../db");
+      await pool.query(
+        `DELETE FROM "session" WHERE sess::jsonb->>'userId' = $1`,
+        [String(seller.id)],
+      );
+    } catch (sessionErr) {
+      appLog("warn", "auth", "SESSION_INVALIDATION_FAILED", {
+        requestId: req.requestId,
+        userId: seller.id,
+        error: sessionErr instanceof Error ? sessionErr.message : "Unknown",
+      });
+    }
 
     return res
       .status(200)
@@ -1061,57 +1107,8 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.patch("/api/me/role", async (req, res) => {
-    try {
-      requireAuth(req.session.userId);
-    } catch {
-      return res.status(401).json(error("UNAUTHORIZED", "Unauthorized"));
-    }
-
-    const roleSchema = z.object({ role: z.enum(["buyer", "seller"]) });
-    const parsed = roleSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res
-        .status(400)
-        .json(
-          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
-        );
-    }
-
-    const userId = req.session.userId!;
-    const [updated] = await db
-      .update(users)
-      .set({ role: parsed.data.role, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json(error("USER_NOT_FOUND", "User not found"));
-    }
-
-    const [existingProfile] = await db
-      .select({ userId: profiles.userId })
-      .from(profiles)
-      .where(eq(profiles.userId, userId));
-
-    if (!existingProfile) {
-      await db.insert(profiles).values({
-        userId,
-        displayName: updated.username || "User",
-      });
-    }
-
-    return res.status(200).json(
-      ok({
-        user: {
-          id: updated.id,
-          username: updated.username,
-          role: updated.role,
-          createdAt: updated.createdAt,
-        },
-      }),
-    );
-  });
+  // REMOVED: PATCH /api/me/role — unrestricted role switching is a privilege escalation risk.
+  // Role changes are handled exclusively through onboarding (buyer→seller) and admin panel.
 
   app.get("/api/me", async (req, res) => {
     const userId = req.session?.userId;

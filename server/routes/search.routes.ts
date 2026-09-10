@@ -31,6 +31,14 @@ export function registerSearchRoutes(app: Express): void {
   });
 
   app.get("/api/search/suggest", async (req, res) => {
+    const suggestRateLimit = checkRateLimit("search-suggest", getClientKey(req), {
+      maxRequests: 60,
+      windowMs: 60 * 1000,
+    });
+    if (!suggestRateLimit.allowed) {
+      return res.status(200).json({ ok: true, data: { suggestions: [] } });
+    }
+
     try {
       return await searchController.suggest(req, res);
     } catch (err) {

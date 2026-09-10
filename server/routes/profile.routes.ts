@@ -361,6 +361,19 @@ export function registerProfileRoutes(app: Express): void {
     }
 
     const userId = req.session.userId!;
+
+    const verifyRateLimit = checkRateLimit("verification-request", String(userId), {
+      maxRequests: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!verifyRateLimit.allowed) {
+      return res
+        .status(429)
+        .json(
+          error("RATE_LIMIT", "Too many verification requests. Please try again later.", { retryAfter: verifyRateLimit.resetIn }),
+        );
+    }
+
     const [existingProfile] = await db
       .select(profileColumns)
       .from(profiles)
@@ -437,6 +450,18 @@ export function registerProfileRoutes(app: Express): void {
       requireAuth(req.session.userId);
     } catch {
       return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const reportRateLimit = checkRateLimit("seller-report", getClientKey(req), {
+      maxRequests: 5,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!reportRateLimit.allowed) {
+      return res
+        .status(429)
+        .json(
+          error("RATE_LIMIT", "Too many reports. Please try again later.", { retryAfter: reportRateLimit.resetIn }),
+        );
     }
 
     const username = sanitizeString(req.params.username || "");

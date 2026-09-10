@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import { and, desc, eq, gte, inArray, lt, sql } from "./_shared";
 import {
+  checkRateLimit,
   db,
   error,
+  getClientKey,
   getSessionUser,
   getReviewStats,
   hashValue,
@@ -500,6 +502,18 @@ export function registerReviewsRoutes(app: Express): void {
       requireAuth(req.session.userId);
     } catch {
       return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const reviewReportRateLimit = checkRateLimit("review-report", getClientKey(req), {
+      maxRequests: 5,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!reviewReportRateLimit.allowed) {
+      return res
+        .status(429)
+        .json(
+          error("RATE_LIMIT", "Too many reports. Please try again later.", { retryAfter: reviewReportRateLimit.resetIn }),
+        );
     }
 
     const reviewId = Number(req.params.id);

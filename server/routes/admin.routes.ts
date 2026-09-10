@@ -83,8 +83,9 @@ export function registerAdminRoutes(app: Express): void {
       if (!Number.isNaN(numericId)) {
         filters.push(eq(users.id, numericId));
       } else {
+        const escapedQ = q.replace(/[\\%_]/g, "\\$&");
         filters.push(
-          or(ilike(users.email, `%${q}%`), ilike(users.username, `%${q}%`)),
+          or(ilike(users.email, `%${escapedQ}%`), ilike(users.username, `%${escapedQ}%`)),
         );
       }
     }

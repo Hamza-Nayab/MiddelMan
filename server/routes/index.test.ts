@@ -286,7 +286,7 @@ const expectedRoutes = [
   "PATCH /api/me/profile",
   "PATCH /api/me/reviews/:id/response",
   "PATCH /api/me/reviews/given/:id",
-  "PATCH /api/me/role",
+
   "PATCH /api/me/username",
   "POST /api/admin/admins",
   "POST /api/auth/login",
