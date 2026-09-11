@@ -207,7 +207,10 @@ export function registerAuthRoutes(app: Express): void {
     const profileData: any = {
       userId: createdUser.id,
       displayName,
-      avatarUrl: parsed.data.avatarUrl || "avatar-1",
+      avatarUrl:
+        role === "seller"
+          ? (parsed.data.avatarUrl || null)
+          : (parsed.data.avatarUrl || "avatar-1"),
     };
 
     await db.insert(profiles).values(profileData);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -79,6 +79,18 @@ export function OnboardingWizard({
       bio: currentProfile?.bio || "",
     },
   });
+
+  useEffect(() => {
+    if (currentProfile?.displayName && !form.getValues("displayName")) {
+      form.setValue("displayName", currentProfile.displayName);
+    }
+    if (currentProfile?.bio && !form.getValues("bio")) {
+      form.setValue("bio", currentProfile.bio);
+    }
+    if (currentProfile?.avatarUrl && selectedAvatarUrl === "avatar-1") {
+      setSelectedAvatarUrl(currentProfile.avatarUrl);
+    }
+  }, [currentProfile, form, selectedAvatarUrl]);
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async (values: OnboardingForm) => {

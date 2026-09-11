@@ -285,9 +285,13 @@ export default function Dashboard() {
   // Check if profile is incomplete and show onboarding wizard
   useEffect(() => {
     if (me?.user?.role === "seller") {
-      // Sellers only need to complete avatar selection during onboarding
-      // (displayName comes from signup, username also comes from signup)
-      const isIncomplete = !me.profile?.avatarUrl;
+      const isCompletedLocally =
+        typeof window !== "undefined" &&
+        localStorage.getItem(`onboarding_completed_${me.user.id}`) === "true";
+      const isIncomplete =
+        !isCompletedLocally &&
+        (!me.profile?.avatarUrl ||
+          (!me.profile?.bio && me.profile?.avatarUrl === "avatar-1"));
       setShowOnboardingWizard(isIncomplete);
     }
   }, [me]);
@@ -779,9 +783,12 @@ export default function Dashboard() {
   }, []);
 
   const handleOnboardingComplete = useCallback(() => {
+    if (user?.id && typeof window !== "undefined") {
+      localStorage.setItem(`onboarding_completed_${user.id}`, "true");
+    }
     setShowOnboardingWizard(false);
     queryClient.invalidateQueries({ queryKey: ["me"] });
-  }, [queryClient]);
+  }, [user?.id, queryClient]);
 
   const createDisputeMutation = useMutation({
     mutationFn: ({
