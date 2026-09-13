@@ -1230,7 +1230,12 @@ function ProfileAnimatedBackground({
   overlayClass?: string | null;
 }) {
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden">
+    <div
+      className={cn(
+        "fixed inset-0 z-0 overflow-hidden",
+        (preset === "aurora" || preset === "antigravity") && "bg-slate-950",
+      )}
+    >
       {preset === "antigravity" && (
         <Antigravity count={300} color="#FF9FFC" particleSize={2} />
       )}

@@ -166,7 +166,13 @@ export const ProfilePreviewPhone = memo(function ProfilePreviewPhone({
           {appearance.usesDynamicBackground ? (
             <Suspense fallback={null}>
               <div
-                className="absolute inset-0 z-0 overflow-hidden"
+                className={cn(
+                  "absolute inset-0 z-0 overflow-hidden",
+                  appearance.hasAnimatedBackground &&
+                    (appearance.backgroundPreset === "aurora" ||
+                      appearance.backgroundPreset === "antigravity") &&
+                    "bg-slate-950",
+                )}
                 style={
                   appearance.hasGradientBackground && appearance.gradientBackground
                     ? { background: appearance.gradientBackground }

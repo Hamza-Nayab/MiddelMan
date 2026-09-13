@@ -289,7 +289,12 @@ export const resolveProfileAppearance = (
     usesDynamicBackground,
     usesBrightBackground,
     gradientBackground,
-    pageBgClass: usesDynamicBackground ? "bg-transparent" : baseTheme.pageBgClass,
+    pageBgClass: usesDynamicBackground
+      ? hasAnimatedBackground &&
+        (backgroundPreset === "aurora" || backgroundPreset === "antigravity")
+        ? "bg-slate-950"
+        : "bg-transparent"
+      : baseTheme.pageBgClass,
     pageTextClass: usesDynamicBackground
       ? usesBrightBackground
         ? "text-slate-900"

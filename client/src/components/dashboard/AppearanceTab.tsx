@@ -840,6 +840,8 @@ function PreviewSwatch({
         "relative h-16 overflow-hidden border-b border-slate-200/70",
         backgroundPreset === null &&
           (theme === "dark" ? "bg-slate-950" : "bg-slate-50"),
+        (backgroundPreset === "aurora" || backgroundPreset === "antigravity") &&
+          "bg-slate-950",
       )}
       style={
         backgroundPreset === "gradient"

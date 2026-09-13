@@ -25,6 +25,7 @@ export function Aurora({
         height: "100%",
         overflow: "hidden",
         pointerEvents: "none",
+        backgroundColor: "#020617",
         ...style,
       }}
     >
