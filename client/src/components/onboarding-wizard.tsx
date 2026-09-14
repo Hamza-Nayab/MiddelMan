@@ -272,212 +272,225 @@ export function OnboardingWizard({
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-md"
+        className="max-w-md w-[calc(100vw-2rem)] max-h-[92dvh] flex flex-col p-0 overflow-hidden gap-0 [&>button]:hidden sm:rounded-2xl shadow-2xl"
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle>Complete Your Seller Profile</DialogTitle>
-        </DialogHeader>
+        <Tabs
+          value={step}
+          onValueChange={(val) => setStep(val as "bio" | "avatar" | "confirm")}
+          className="flex flex-col flex-1 min-h-0 w-full"
+        >
+          {/* Pinned Header */}
+          <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b border-border/60 shrink-0 bg-background">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl font-bold font-heading">
+                Complete Your Seller Profile
+              </DialogTitle>
+            </DialogHeader>
 
-        <Tabs value={step} onValueChange={() => {}} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="bio" disabled={step === "bio"}>
-              Bio
-            </TabsTrigger>
-            <TabsTrigger value="avatar" disabled={step === "avatar"}>
-              Avatar
-            </TabsTrigger>
-            <TabsTrigger value="confirm" disabled={step === "confirm"}>
-              Done
-            </TabsTrigger>
-          </TabsList>
+            <TabsList className="grid w-full grid-cols-3 mt-3">
+              <TabsTrigger value="bio" disabled={step === "bio"}>
+                Bio
+              </TabsTrigger>
+              <TabsTrigger value="avatar" disabled={step === "avatar"}>
+                Avatar
+              </TabsTrigger>
+              <TabsTrigger value="confirm" disabled={step === "confirm"}>
+                Done
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Step 1: Bio */}
-          <TabsContent value="bio" className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              Tell us about you and your business.
-            </div>
-
-            <ErrorBanner />
-
-            <Form {...form}>
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Your name or business name"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Bio</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Share a bit about yourself and what you offer..."
-                        className="resize-none"
-                        rows={4}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </Form>
-          </TabsContent>
-
-          {/* Step 2: Avatar */}
-          <TabsContent value="avatar" className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              Choose or upload an avatar.
-            </div>
-
-            <ErrorBanner />
-
-            {/* Selected avatar preview */}
-            <div className="flex justify-center">
-              <img
-                src={getAvatarUrl(selectedAvatarUrl)}
-                alt="Selected avatar"
-                className="h-32 w-32 rounded-full border-4 border-primary/20 shadow-lg"
-              />
-            </div>
-
-            {/* Grid avatar selector */}
-            <div className="space-y-3">
-              <p className="text-sm font-medium">
-                Select or upload an avatar:
-              </p>
-              <div className="grid grid-cols-4 gap-3">
-                {/* Upload custom button */}
-                <label className="flex flex-col items-center gap-1 cursor-pointer group">
-                  <div className="h-20 w-20 rounded-lg border-2 border-dashed border-border group-hover:border-primary/60 bg-muted group-hover:bg-muted/80 transition flex items-center justify-center flex-col">
-                    <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Upload
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={uploadingAvatar}
-                    className="hidden"
-                  />
-                </label>
-
-                {/* Preset avatars grid */}
-                {PRESET_AVATARS.map((url, index) => {
-                  const avatarId = `avatar-${index + 1}`;
-                  const isSelected =
-                    selectedAvatarUrl === avatarId ||
-                    selectedAvatarUrl === url ||
-                    getAvatarId(selectedAvatarUrl) === avatarId;
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setSelectedAvatarUrl(avatarId)}
-                      className={`h-20 w-20 rounded-lg border-2 overflow-hidden transition ${
-                        isSelected
-                          ? "border-primary ring-2 ring-primary ring-offset-1 shadow-md"
-                          : "border-border hover:border-primary/50 hover:shadow-sm"
-                      }`}
-                    >
-                      <img
-                        src={url}
-                        alt={`Avatar ${index + 1}`}
-                        className="h-full w-full object-cover"
-                      />
-                    </button>
-                  );
-                })}
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5 min-h-0">
+            {/* Step 1: Bio */}
+            <TabsContent value="bio" className="mt-0 space-y-4 focus-visible:outline-none">
+              <div className="text-sm text-muted-foreground">
+                Tell us about you and your business.
               </div>
-            </div>
 
-            {uploadingAvatar && (
-              <p className="text-xs text-muted-foreground flex items-center gap-2">
-                <Spinner className="h-3 w-3" />
-                Uploading...
-              </p>
-            )}
-          </TabsContent>
+              <ErrorBanner />
 
-          {/* Step 3: Confirm */}
-          <TabsContent value="confirm" className="space-y-4">
-            <div className="text-sm text-muted-foreground mb-4">
-              Here's a preview of your seller profile:
-            </div>
+              <Form {...form}>
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Your name or business name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Bio</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Share a bit about yourself and what you offer..."
+                          className="resize-none"
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Form>
+            </TabsContent>
 
-            <ErrorBanner />
+            {/* Step 2: Avatar */}
+            <TabsContent value="avatar" className="mt-0 space-y-4 focus-visible:outline-none">
+              <div className="text-sm text-muted-foreground">
+                Choose or upload an avatar.
+              </div>
 
-            <div className="space-y-3 border rounded-lg p-4">
+              <ErrorBanner />
+
+              {/* Selected avatar preview */}
               <div className="flex justify-center">
                 <img
                   src={getAvatarUrl(selectedAvatarUrl)}
-                  alt="Your avatar"
-                  className="h-20 w-20 rounded-full border-2 border-border"
+                  alt="Selected avatar"
+                  className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-3 sm:border-4 border-primary/20 shadow-md object-cover"
                 />
               </div>
 
-              <div className="text-center">
-                <p className="font-semibold">{form.watch("displayName")}</p>
-                <p className="text-sm text-muted-foreground">Seller Profile</p>
+              {/* Grid avatar selector */}
+              <div className="space-y-2.5">
+                <p className="text-sm font-medium">
+                  Select or upload an avatar:
+                </p>
+                <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
+                  {/* Upload custom button */}
+                  <label className="flex flex-col items-center justify-center cursor-pointer group aspect-square w-full rounded-xl border-2 border-dashed border-border group-hover:border-primary/60 bg-muted/50 group-hover:bg-muted/80 transition p-1 text-center">
+                    <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-primary mt-1">
+                      Upload
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Preset avatars grid */}
+                  {PRESET_AVATARS.map((url, index) => {
+                    const avatarId = `avatar-${index + 1}`;
+                    const isSelected =
+                      selectedAvatarUrl === avatarId ||
+                      selectedAvatarUrl === url ||
+                      getAvatarId(selectedAvatarUrl) === avatarId;
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setSelectedAvatarUrl(avatarId)}
+                        className={`relative aspect-square w-full rounded-xl border-2 overflow-hidden transition p-1 bg-muted/20 ${
+                          isSelected
+                            ? "border-primary ring-2 ring-primary ring-offset-1 shadow-md scale-[0.98]"
+                            : "border-border/80 hover:border-primary/50 hover:shadow-xs"
+                        }`}
+                      >
+                        <img
+                          src={url}
+                          alt={`Avatar ${index + 1}`}
+                          className="h-full w-full object-contain"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {form.watch("bio") && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground italic">
-                    {form.watch("bio")}
-                  </p>
-                </div>
+              {uploadingAvatar && (
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <Spinner className="h-3 w-3" />
+                  Uploading...
+                </p>
               )}
-            </div>
+            </TabsContent>
 
-            <p className="text-xs text-muted-foreground">
-              You can change these anytime in your profile settings.
-            </p>
-          </TabsContent>
+            {/* Step 3: Confirm */}
+            <TabsContent value="confirm" className="mt-0 space-y-4 focus-visible:outline-none">
+              <div className="text-sm text-muted-foreground mb-2">
+                Here's a preview of your seller profile:
+              </div>
+
+              <ErrorBanner />
+
+              <div className="space-y-3 border rounded-xl p-4 bg-muted/10">
+                <div className="flex justify-center">
+                  <img
+                    src={getAvatarUrl(selectedAvatarUrl)}
+                    alt="Your avatar"
+                    className="h-16 w-16 sm:h-20 sm:w-20 rounded-full border-2 border-border shadow-sm object-cover"
+                  />
+                </div>
+
+                <div className="text-center">
+                  <p className="font-semibold text-base">{form.watch("displayName")}</p>
+                  <p className="text-xs text-muted-foreground">Seller Profile</p>
+                </div>
+
+                {form.watch("bio") && (
+                  <div className="text-center px-2">
+                    <p className="text-xs text-muted-foreground italic line-clamp-3">
+                      {form.watch("bio")}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                You can change these anytime in your profile settings.
+              </p>
+            </TabsContent>
+          </div>
+
+          {/* Pinned Footer */}
+          <div className="px-5 py-3.5 sm:px-6 sm:py-4 border-t border-border/60 bg-muted/20 shrink-0 flex items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handlePrevious}
+              disabled={step === "bio" || completeOnboardingMutation.isPending}
+            >
+              Back
+            </Button>
+
+            {step === "confirm" ? (
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={completeOnboardingMutation.isPending}
+              >
+                {completeOnboardingMutation.isPending ? "Saving..." : "Complete"}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={completeOnboardingMutation.isPending}
+              >
+                Next
+              </Button>
+            )}
+          </div>
         </Tabs>
-
-        {/* Navigation buttons */}
-        <div className="flex gap-2 justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={step === "bio" || completeOnboardingMutation.isPending}
-          >
-            Back
-          </Button>
-
-          {step === "confirm" ? (
-            <Button
-              onClick={handleSubmit}
-              disabled={completeOnboardingMutation.isPending}
-            >
-              {completeOnboardingMutation.isPending ? "Saving..." : "Complete"}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              disabled={completeOnboardingMutation.isPending}
-            >
-              Next
-            </Button>
-          )}
-        </div>
       </DialogContent>
     </Dialog>
   );
