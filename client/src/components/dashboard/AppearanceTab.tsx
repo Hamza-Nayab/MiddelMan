@@ -61,6 +61,7 @@ type AppearanceTabProps = {
   hasAppearanceChanges: boolean;
   updateAppearanceMutation: any;
   previewSlot?: ReactNode;
+  onFinish?: () => void;
 };
 
 const DESIGN_PRESETS = [
@@ -189,6 +190,7 @@ export const AppearanceTab = memo(function AppearanceTab({
   hasAppearanceChanges,
   updateAppearanceMutation,
   previewSlot,
+  onFinish,
 }: AppearanceTabProps) {
   const [activeStep, setActiveStep] = useState(0);
   const isFirstStep = activeStep === 0;
@@ -216,6 +218,33 @@ export const AppearanceTab = memo(function AppearanceTab({
 
   const goToNextStep = () => {
     setActiveStep((step) => Math.min(DESIGN_STEPS.length - 1, step + 1));
+  };
+
+  const handleFinish = () => {
+    if (
+      hasAppearanceChanges &&
+      accentValidation.valid &&
+      !updateAppearanceMutation.isPending
+    ) {
+      updateAppearanceMutation.mutate(
+        {
+          theme: pendingTheme,
+          backgroundPreset: pendingBackgroundPreset,
+          gradientPreset:
+            pendingBackgroundPreset === "gradient"
+              ? (pendingGradientPreset ?? "default")
+              : null,
+          accentColor: pendingAccentColor,
+        },
+        {
+          onSuccess: () => {
+            onFinish?.();
+          },
+        },
+      );
+    } else {
+      onFinish?.();
+    }
   };
 
   return (
@@ -797,11 +826,17 @@ export const AppearanceTab = memo(function AppearanceTab({
               </div>
               <Button
                 type="button"
-                onClick={goToNextStep}
-                disabled={isLastStep}
+                onClick={isLastStep ? handleFinish : goToNextStep}
+                disabled={isLastStep && updateAppearanceMutation.isPending}
                 className="h-11 rounded-full bg-slate-950 px-6 text-white shadow-[0_10px_30px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-[0_16px_38px_rgba(15,23,42,0.2)] disabled:translate-y-0 disabled:shadow-none"
               >
-                {activeStep === 2 ? "Show Preview" : "Continue"}
+                {isLastStep
+                  ? updateAppearanceMutation.isPending
+                    ? "Saving..."
+                    : "Finish"
+                  : activeStep === 2
+                    ? "Show Preview"
+                    : "Continue"}
               </Button>
             </CardContent>
           </Card>

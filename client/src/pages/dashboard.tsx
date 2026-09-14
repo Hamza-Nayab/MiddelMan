@@ -1316,6 +1316,10 @@ export default function Dashboard() {
                       compact
                     />
                   }
+                  onFinish={() => {
+                    setActiveTab("links");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                 />
               </TabsContent>
             </Tabs>
