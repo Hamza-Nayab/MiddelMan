@@ -293,9 +293,15 @@ export default function ProfilePage() {
     },
   });
 
-  if (profileLoading)
+  if (profileLoading && !data)
     return (
       <div className="h-screen flex items-center justify-center bg-background">
+        <SEO
+          title={seoTitle}
+          description={seoDescription}
+          keywords={seoKeywords}
+          robots="index, follow"
+        />
         <div className="animate-pulse text-primary font-medium">
           Loading Profile...
         </div>
@@ -325,13 +331,18 @@ export default function ProfilePage() {
       </div>
     );
 
-  if (profileError || !user || !profile)
+  if (!user || !profile) {
+    const isExplicit404 =
+      profileError instanceof ApiError &&
+      (profileError.code === "PROFILE_NOT_FOUND" ||
+        profileError.status === 404);
+
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <SEO
           title="Profile Not Found | MiddelMen"
           description="The requested profile could not be found."
-          robots="noindex, nofollow"
+          robots={isExplicit404 ? "noindex, nofollow" : "index, follow"}
         />
         <div className="text-center">
           <p className="text-lg font-semibold text-muted-foreground mb-2">
@@ -347,6 +358,7 @@ export default function ProfilePage() {
         </div>
       </div>
     );
+  }
 
   const averageRating = reviewStats?.totalReviews
     ? (reviewStats.avgRating || 0).toFixed(1)

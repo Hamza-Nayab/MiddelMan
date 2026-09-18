@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { and, desc, eq } from "./_shared";
+import { and, desc, eq, sql } from "./_shared";
 import { db, error, profiles, users, ok, checkRateLimit, getClientKey } from "./_shared";
 
 export function registerSeoRoutes(app: Express): void {
@@ -114,14 +114,15 @@ export function registerSeoRoutes(app: Express): void {
         })
         .from(users)
         .leftJoin(profiles, eq(profiles.userId, users.id))
-        .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
+        .where(and(sql`${users.role} != 'buyer'`, eq(users.isDisabled, false)))
         .orderBy(desc(profiles.updatedAt));
 
       const forwardedHost = req.get("x-forwarded-host");
       const host = (forwardedHost || req.get("host") || "").toLowerCase();
-      const baseUrl = host.includes("middelmen.com")
-        ? `https://${host}`
-        : process.env.APP_URL?.replace(/\/$/, "") || "https://middelmen.com";
+      const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+      const baseUrl = isLocal
+        ? `http://${host}`
+        : "https://www.middelmen.com";
 
       const urls = sellers
         .filter((s) => s.username)

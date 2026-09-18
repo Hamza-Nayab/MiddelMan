@@ -4,7 +4,9 @@ import path from "path";
 import { rewriteHtml } from "./ssr-meta";
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "public");
+  const distPath = fs.existsSync(path.resolve(__dirname, "public"))
+    ? path.resolve(__dirname, "public")
+    : path.resolve(process.cwd(), "dist", "public");
   if (!fs.existsSync(distPath)) {
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
@@ -73,7 +75,25 @@ export function serveStatic(app: Express) {
 
     const ssrMeta = (req as any).__ssrMeta;
     if (ssrMeta) {
+      res.setHeader(
+        "X-Robots-Tag",
+        "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      );
       html = rewriteHtml(html, ssrMeta);
+    } else if ((req as any).__profileNotFound) {
+      res.status(404);
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      html = html.replace(
+        /<meta name="robots" content="[^"]*"/i,
+        '<meta name="robots" content="noindex, nofollow"',
+      );
+    } else if ((req as any).__profileDisabled) {
+      res.status(403);
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      html = html.replace(
+        /<meta name="robots" content="[^"]*"/i,
+        '<meta name="robots" content="noindex, nofollow"',
+      );
     }
 
     res.setHeader("Content-Type", "text/html");

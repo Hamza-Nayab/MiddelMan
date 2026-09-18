@@ -190,4 +190,39 @@ describe("ssr-meta: rewriteHtml", () => {
     // Should not contain the old description
     assert.ok(!result.includes("old desc"));
   });
+
+  it("injects explicit robots index tag and removes any old robots tag", () => {
+    const htmlWithOldRobots = `<!DOCTYPE html>
+<html>
+<head>
+<title>Title</title>
+<meta name="robots" content="noindex, nofollow" />
+</head>
+<body><div id="root"></div></body>
+</html>`;
+    const profile = makeTestProfile();
+    const meta = buildMetaTags(profile, BASE_URL);
+    const result = rewriteHtml(htmlWithOldRobots, meta);
+
+    assert.ok(!result.includes('content="noindex, nofollow"'), "Must remove old noindex tag");
+    assert.ok(
+      result.includes('<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />'),
+      "Must inject standard robots index meta tag",
+    );
+  });
+
+  it("injects __INITIAL_PROFILE_BUNDLE__ script and SSR crawler prerender HTML when provided", () => {
+    const profile = makeTestProfile();
+    const fakeBundle = { user: { id: 1, username: "test-seller" }, profile: { displayName: "Test Seller" } };
+    const fakePrerender = '<div id="ssr-profile-prerender"><h1>Test Seller</h1></div>';
+    const meta = buildMetaTags(profile, BASE_URL, {
+      initialBundle: fakeBundle,
+      prerenderHtml: fakePrerender,
+    });
+    const result = rewriteHtml(sampleHtml, meta);
+
+    assert.ok(result.includes('id="__INITIAL_PROFILE_BUNDLE__"'), "Must include initial bundle script tag");
+    assert.ok(result.includes('"username":"test-seller"'), "Must contain bundle json content");
+    assert.ok(result.includes('<div id="root"><div id="ssr-profile-prerender"><h1>Test Seller</h1></div></div>'), "Must inject prerender inside #root");
+  });
 });

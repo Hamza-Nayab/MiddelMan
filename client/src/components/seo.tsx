@@ -10,11 +10,14 @@ interface SEOProps {
   schema?: Record<string, any> | Record<string, any>[];
 }
 
+const DEFAULT_ROBOTS =
+  "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
+
 export function SEO({
   title,
   description,
   keywords,
-  robots = "index, follow",
+  robots = DEFAULT_ROBOTS,
   type = "website",
   image,
   schema,
@@ -47,10 +50,17 @@ export function SEO({
       const keywordsStr = Array.isArray(keywords) ? keywords.join(", ") : keywords;
       updateMeta("keywords", keywordsStr);
     }
-    updateMeta("robots", robots);
+    const resolvedRobots =
+      robots === "index, follow" ? DEFAULT_ROBOTS : robots;
+    updateMeta("robots", resolvedRobots);
 
     // 3. Set OpenGraph tags
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://www.middelmen.com";
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.hostname.endsWith("middelmen.com")
+          ? "https://www.middelmen.com"
+          : window.location.origin
+        : "https://www.middelmen.com";
     const canonicalUrl = typeof window !== "undefined" ? `${origin}${window.location.pathname}` : "https://www.middelmen.com";
     const ogImage = image || `${origin}/opengraph.jpg`;
 

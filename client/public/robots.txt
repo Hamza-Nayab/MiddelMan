@@ -1,5 +1,23 @@
+User-agent: Googlebot
+Allow: /
+Allow: /api/profile/
+Allow: /api/reviews/
+Allow: /api/profiles
+Allow: /api/users
+
+User-agent: Google-InspectionTool
+Allow: /
+Allow: /api/profile/
+Allow: /api/reviews/
+Allow: /api/profiles
+Allow: /api/users
+
 User-agent: *
 Allow: /
+Allow: /api/profile/
+Allow: /api/reviews/
+Allow: /api/profiles
+Allow: /api/users
 Disallow: /admin
 Disallow: /admin/
 Disallow: /dashboard
