@@ -223,12 +223,16 @@ export default function ProfilePage() {
         `${displayName} MiddelMen`,
         `${displayName} MiddleMen`,
         `${user.username} MiddleMen`,
+        `${user.username} MiddelMen`,
         `${displayName} trust score`,
         "verified seller reviews",
         "social commerce trust profile",
         "MiddelMen",
         "MiddleMen",
         "Middleman reviews",
+        "Middel Men",
+        "Middle Man",
+        "Middlemen",
       ]
     : [
         "MiddelMen",

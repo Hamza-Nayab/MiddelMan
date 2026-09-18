@@ -154,7 +154,7 @@ export function buildMetaTags(
   const ogDescription = profile.bio
     ? `Verified reviews & trust profile for ${displayName} (@${profile.username}) on MiddelMen. ${profile.bio.slice(0, 50)}${profile.bio.length > 50 ? "…" : ""}`
     : `Read verified customer reviews, ratings, and trust scores for ${displayName} (@${profile.username}) on MiddelMen.`;
-  const keywords = `${displayName}, ${profile.username}, ${displayName} reviews, ${profile.username} reviews, ${displayName} MiddelMen, ${displayName} MiddleMen, ${profile.username} MiddleMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman`;
+  const keywords = `${displayName}, ${profile.username}, ${displayName} reviews, ${profile.username} reviews, ${displayName} MiddelMen, ${displayName} MiddleMen, ${profile.username} MiddleMen, ${profile.username} MiddelMen, verified seller reviews, trust profile, MiddelMen, MiddleMen, Middleman, Middel Men, Middle Man, Middlemen`;
   const canonicalUrl = `${baseUrl}/${encodeURIComponent(profile.username)}`;
   const ogImage =
     profile.avatarUrl &&
