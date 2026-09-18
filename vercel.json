@@ -12,18 +12,15 @@
       "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/sitemap.xml"
     },
     {
-      "source": "/:username((?!api/|sitemap\\.xml|assets/|illustrations/|auth|verified|verification|verify|forgot-password|reset-password|onboarding|dashboard|my-reviews|admin|search|demo|disabled|access-not-available|about|terms|contact|contacts|v2|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(googlebot|Googlebot|bingbot|Bingbot|yandex|duckduckbot|baiduspider|twitterbot|Twitterbot|facebookexternalhit|Facebookexternalhit|WhatsApp|whatsapp|TelegramBot|telegrambot|Discordbot|discordbot|LinkedInBot|linkedinbot|Slackbot|slackbot|Applebot|applebot|bot|Bot|crawler|Crawler|spider|Spider|preview|Preview|scraper|Scraper|curl|Wget|fetch).*"
-        }
-      ],
+      "source": "/robots.txt",
+      "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/robots.txt"
+    },
+    {
+      "source": "/:username((?!api/|sitemap\\.xml|robots\\.txt|favicon\\.ico|favicon\\.png|opengraph\\.jpg|llms\\.txt|assets/|illustrations/|auth|verified|verification|verify|forgot-password|reset-password|onboarding|dashboard|my-reviews|admin|search|demo|disabled|access-not-available|about|terms|contact|contacts|v2|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
       "destination": "https://middelmen-api-e1764610dea5.herokuapp.com/:username"
     },
     {
-      "source": "/((?!api/|sitemap\\.xml|assets/|illustrations/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
+      "source": "/((?!api/|sitemap\\.xml|robots\\.txt|favicon\\.ico|favicon\\.png|opengraph\\.jpg|llms\\.txt|assets/|illustrations/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|txt|xml|json|woff2?|ttf|map)$).*)",
       "destination": "/index.html"
     }
   ]
