@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
-import { ProfilePreviewPhone } from "@/components/profile/ProfilePreviewPhone";
+import { LiveProfilePreviewPhone } from "@/components/profile/LiveProfilePreviewPhone";
 import { LinksTab } from "@/components/dashboard/LinksTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { ReviewsTab } from "@/components/dashboard/ReviewsTab";
@@ -235,7 +235,6 @@ export default function Dashboard() {
     null,
   );
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
-  const [isWhatsAppSameAsPhone, setIsWhatsAppSameAsPhone] = useState(false);
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
   const [pendingTheme, setPendingTheme] = useState<"light" | "dark">("light");
   const [pendingBackgroundPreset, setPendingBackgroundPreset] = useState<
@@ -410,12 +409,28 @@ export default function Dashboard() {
     }));
   }, [reviews]);
 
+  const form = useForm<z.infer<typeof LinkFormSchema>>({
+    resolver: zodResolver(LinkFormSchema),
+    defaultValues: { icon: "website", title: "", url: "" },
+  });
+
+  const handleSetIsAddLinkOpen = useCallback(
+    (open: boolean) => {
+      setIsAddLinkOpen(open);
+      if (!open) {
+        form.reset({ icon: "website", title: "", url: "" });
+      }
+    },
+    [form],
+  );
+
   // Mutations
   const addLinkMutation = useMutation({
     mutationFn: (values: z.infer<typeof LinkFormSchema>) => api.addLink(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: LINKS_QUERY_KEY });
       setIsAddLinkOpen(false);
+      form.reset({ icon: "website", title: "", url: "" });
       toast({ title: "Link Added", description: "Your new link is live." });
     },
   });
@@ -629,11 +644,6 @@ export default function Dashboard() {
     },
   });
 
-  const form = useForm<z.infer<typeof LinkFormSchema>>({
-    resolver: zodResolver(LinkFormSchema),
-    defaultValues: { icon: "website", title: "", url: "" },
-  });
-
   const profileForm = useForm<z.infer<typeof ProfileFormSchema>>({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
@@ -663,9 +673,6 @@ export default function Dashboard() {
       whatsappNumber: profile?.whatsappNumber || "",
       countryCode: profile?.countryCode || "US",
     });
-    setIsWhatsAppSameAsPhone(
-      !!profile?.phoneNumber && profile.phoneNumber === profile?.whatsappNumber,
-    );
     if (isCustomAvatar(profile?.avatarUrl)) {
       setCustomAvatarPreview(profile!.avatarUrl!);
     } else {
@@ -939,32 +946,9 @@ export default function Dashboard() {
     },
   });
 
-  const watchedDisplayName = profileForm.watch("displayName");
-  const watchedBio = profileForm.watch("bio");
-  const watchedAvatar = profileForm.watch("avatarUrl");
-  const watchedPhoneNumber = profileForm.watch("phoneNumber");
-  const watchedWhatsAppNumber = profileForm.watch("whatsappNumber");
-  const watchedCountryCode = profileForm.watch("countryCode");
-  const watchedContactEmail = profileForm.watch("contactEmail");
-
-  useEffect(() => {
-    if (!isWhatsAppSameAsPhone) return;
-    profileForm.setValue("whatsappNumber", watchedPhoneNumber || "");
-  }, [isWhatsAppSameAsPhone, watchedPhoneNumber, profileForm]);
-
   if (isUserLoading || !user || !profile) {
     return null;
   }
-
-  const whatsappPreviewE164 = normalizeToE164(
-    watchedWhatsAppNumber || "",
-    watchedCountryCode,
-  );
-  const whatsappPreviewUrl = whatsappPreviewE164
-    ? buildWhatsAppUrl(whatsappPreviewE164)
-    : null;
-
-  const WhatsAppIcon = platformIconMap.whatsapp;
   const profileGradient = profile.gradientPreset as
     | typeof pendingGradientPreset
     | null;
@@ -999,23 +983,37 @@ export default function Dashboard() {
   const onboardingTasks = [
     {
       label: "Add an avatar",
-      done: Boolean(profile.avatarUrl || watchedAvatar),
+      done: Boolean(
+        profile.avatarUrl &&
+          (profile.avatarUrl !== "avatar-1" ||
+            (typeof window !== "undefined" &&
+              localStorage.getItem(`onboarding_completed_${user?.id}`) === "true") ||
+            Boolean((profile.bio || "").trim())),
+      ),
+      action: () => setActiveTab("profile"),
     },
     {
       label: "Write a short bio",
-      done: Boolean((profile.bio || watchedBio || "").trim()),
+      done: Boolean((profile.bio || "").trim()),
+      action: () => setActiveTab("profile"),
     },
     {
       label: "Add at least one active link",
       done: activeLinkCount > 0,
+      action: () => {
+        setActiveTab("links");
+        handleSetIsAddLinkOpen(true);
+      },
     },
     {
       label: "Request verification",
       done: profile.isVerified,
+      action: () => setActiveTab("profile"),
     },
     {
       label: "Collect your first review",
       done: reviewStats.totalReviews > 0,
+      action: () => setActiveTab("reviews"),
     },
   ];
   const completedOnboardingTasks = onboardingTasks.filter(
@@ -1101,13 +1099,15 @@ export default function Dashboard() {
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {onboardingTasks.map((task) => (
-                        <div
+                        <button
                           key={task.label}
+                          type="button"
+                          onClick={task.action}
                           className={cn(
-                            "rounded-xl border px-3 py-2 text-sm flex items-center gap-2",
+                            "rounded-xl border px-3 py-2 text-sm flex items-center gap-2 text-left transition",
                             task.done
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-border bg-background",
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 cursor-default"
+                              : "border-border bg-background hover:bg-muted/40 hover:border-primary/40 cursor-pointer",
                           )}
                         >
                           {task.done ? (
@@ -1116,7 +1116,7 @@ export default function Dashboard() {
                             <Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />
                           )}
                           <span>{task.label}</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </CardContent>
@@ -1176,7 +1176,7 @@ export default function Dashboard() {
               <TabsContent value="links" className="space-y-4 mt-6">
                 <LinksTab
                   isAddLinkOpen={isAddLinkOpen}
-                  setIsAddLinkOpen={setIsAddLinkOpen}
+                  setIsAddLinkOpen={handleSetIsAddLinkOpen}
                   orderedLinks={orderedLinks}
                   isLinksLoading={isLinksLoading}
                   isLinksError={isLinksError}
@@ -1230,12 +1230,6 @@ export default function Dashboard() {
                   compressAvatar={compressAvatar}
                   api={api}
                   toast={toast}
-                  isWhatsAppSameAsPhone={isWhatsAppSameAsPhone}
-                  setIsWhatsAppSameAsPhone={setIsWhatsAppSameAsPhone}
-                  watchedCountryCode={watchedCountryCode}
-                  watchedPhoneNumber={watchedPhoneNumber}
-                  whatsappPreviewUrl={whatsappPreviewUrl}
-                  WhatsAppIcon={WhatsAppIcon}
                 />
               </TabsContent>
 
@@ -1294,21 +1288,15 @@ export default function Dashboard() {
                   hasAppearanceChanges={hasAppearanceChanges}
                   updateAppearanceMutation={updateAppearanceMutation}
                   previewSlot={
-                    <ProfilePreviewPhone
-                      displayName={watchedDisplayName || profile.displayName}
+                    <LiveProfilePreviewPhone
+                      control={profileForm.control}
+                      fallbackProfile={profile}
+                      customAvatarPreview={customAvatarPreview}
                       username={user.username || ""}
-                      bio={watchedBio || profile.bio}
-                      avatarValue={watchedAvatar || profile.avatarUrl}
                       userId={user.id}
                       links={orderedLinks.filter((link) => link.isActive)}
                       avgRating={reviewStats.avgRating}
                       totalReviews={reviewStats.totalReviews}
-                      phoneNumber={watchedPhoneNumber || profile.phoneNumber}
-                      whatsappNumber={
-                        watchedWhatsAppNumber || profile.whatsappNumber
-                      }
-                      countryCode={watchedCountryCode || profile.countryCode}
-                      contactEmail={watchedContactEmail || profile.contactEmail}
                       theme={pendingTheme}
                       backgroundPreset={pendingBackgroundPreset}
                       gradientPreset={pendingGradientPreset}
@@ -1328,19 +1316,15 @@ export default function Dashboard() {
           {/* Preview Phone */}
           {activeTab !== "appearance" && (
             <div className="w-full xl:w-auto mt-8 xl:mt-0 flex justify-center">
-              <ProfilePreviewPhone
-                displayName={watchedDisplayName || profile.displayName}
+              <LiveProfilePreviewPhone
+                control={profileForm.control}
+                fallbackProfile={profile}
+                customAvatarPreview={customAvatarPreview}
                 username={user.username || ""}
-                bio={watchedBio || profile.bio}
-                avatarValue={watchedAvatar || profile.avatarUrl}
                 userId={user.id}
                 links={orderedLinks.filter((link) => link.isActive)}
                 avgRating={reviewStats.avgRating}
                 totalReviews={reviewStats.totalReviews}
-                phoneNumber={watchedPhoneNumber || profile.phoneNumber}
-                whatsappNumber={watchedWhatsAppNumber || profile.whatsappNumber}
-                countryCode={watchedCountryCode || profile.countryCode}
-                contactEmail={watchedContactEmail || profile.contactEmail}
                 theme={pendingTheme}
                 backgroundPreset={pendingBackgroundPreset}
                 gradientPreset={pendingGradientPreset}

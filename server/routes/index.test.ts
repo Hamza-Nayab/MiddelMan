@@ -785,6 +785,18 @@ describe("route groups", () => {
     assertDbQueuesEmpty();
 
     setDbQueues({
+      select: [[sellerUser], [{ id: 301 }, { id: 302 }]],
+      update: [[{ id: 302 }], [{ id: 301 }]],
+    });
+    const reorderLinks = await request("PATCH", "/api/me/links/reorder", {
+      headers: { "x-test-user-id": String(sellerUser.id) },
+      body: { orderedIds: [302, 301] },
+    });
+    assert.equal(reorderLinks.status, 200);
+    assert.equal(reorderLinks.body.data.updated, true);
+    assertDbQueuesEmpty();
+
+    setDbQueues({
       select: [[sellerUser]],
       delete: [[{ id: 301 }]],
     });

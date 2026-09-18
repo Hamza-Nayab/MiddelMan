@@ -74,11 +74,20 @@ export function OnboardingWizard({
 
   const form = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
+    mode: "onChange",
     defaultValues: {
       displayName: currentProfile?.displayName || "",
       bio: currentProfile?.bio || "",
     },
   });
+
+  // Always start at step 1 ('bio') and clear errors whenever modal opens
+  useEffect(() => {
+    if (open) {
+      setStep("bio");
+      setSubmitError(null);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (currentProfile?.displayName && !form.getValues("displayName")) {
@@ -269,6 +278,46 @@ export function OnboardingWizard({
       </div>
     ) : null;
 
+  const handleTabChange = async (targetStep: string) => {
+    if (targetStep === step) return;
+
+    if (targetStep === "avatar") {
+      const isBioStepValid = await form.trigger(["displayName", "bio"], {
+        shouldFocus: true,
+      });
+      if (!isBioStepValid) {
+        const errors = form.formState.errors;
+        const errorParts: string[] = [];
+        if (errors.displayName) {
+          errorParts.push(`Display Name: ${errors.displayName.message}`);
+        }
+        if (errors.bio) {
+          errorParts.push(`Bio: ${errors.bio.message}`);
+        }
+        setSubmitError(
+          errorParts.join(" · ") || "Please complete display name and bio first.",
+        );
+        return;
+      }
+      setSubmitError(null);
+      setStep("avatar");
+    } else if (targetStep === "confirm") {
+      const isBioStepValid = await form.trigger(["displayName", "bio"], {
+        shouldFocus: true,
+      });
+      if (!isBioStepValid) {
+        setSubmitError("Please complete your bio before viewing preview.");
+        return;
+      }
+      setSubmitError(null);
+      setStep("confirm");
+    } else {
+      // Going back to "bio" is always allowed
+      setSubmitError(null);
+      setStep("bio");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
@@ -277,7 +326,7 @@ export function OnboardingWizard({
       >
         <Tabs
           value={step}
-          onValueChange={(val) => setStep(val as "bio" | "avatar" | "confirm")}
+          onValueChange={handleTabChange}
           className="flex flex-col flex-1 min-h-0 w-full"
         >
           {/* Pinned Header */}
@@ -289,13 +338,13 @@ export function OnboardingWizard({
             </DialogHeader>
 
             <TabsList className="grid w-full grid-cols-3 mt-3">
-              <TabsTrigger value="bio" disabled={step === "bio"}>
+              <TabsTrigger value="bio">
                 Bio
               </TabsTrigger>
-              <TabsTrigger value="avatar" disabled={step === "avatar"}>
+              <TabsTrigger value="avatar">
                 Avatar
               </TabsTrigger>
-              <TabsTrigger value="confirm" disabled={step === "confirm"}>
+              <TabsTrigger value="confirm">
                 Done
               </TabsTrigger>
             </TabsList>
@@ -322,6 +371,10 @@ export function OnboardingWizard({
                         <Input
                           placeholder="Your name or business name"
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            if (submitError) setSubmitError(null);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -340,6 +393,10 @@ export function OnboardingWizard({
                           className="resize-none"
                           rows={3}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            if (submitError) setSubmitError(null);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

@@ -24,14 +24,20 @@ export function Antigravity({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let w = 0;
+    let h = 0;
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      w = rect.width;
+      h = rect.height;
+      if (w === 0 || h === 0) return;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       ctx.scale(dpr, dpr);
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
     };
 
     const particles: Array<{
@@ -47,8 +53,7 @@ export function Antigravity({
 
     const init = () => {
       particles.length = 0;
-      const w = canvas.getBoundingClientRect().width;
-      const h = canvas.getBoundingClientRect().height;
+      if (w === 0 || h === 0) return;
       for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * w,
@@ -62,35 +67,35 @@ export function Antigravity({
     };
 
     const animate = () => {
-      const w = canvas.getBoundingClientRect().width;
-      const h = canvas.getBoundingClientRect().height;
-      ctx.clearRect(0, 0, w, h);
+      if (w > 0 && h > 0) {
+        ctx.clearRect(0, 0, w, h);
 
-      const cx = w / 2;
-      const cy = h / 2;
-      const time = Date.now() * 0.001;
+        const cx = w / 2;
+        const cy = h / 2;
+        const time = Date.now() * 0.001;
 
-      particles.forEach((p) => {
-        const dx = cx - p.x;
-        const dy = cy - p.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-        const force = Math.sin(time * 2 + dist * 0.01) * 0.5 + 0.5;
-        p.vx += (dx / dist) * force * 0.1;
-        p.vy += (dy / dist) * force * 0.1;
-        p.vx *= 0.95;
-        p.vy *= 0.95;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.x = (p.x + w) % w;
-        p.y = (p.y + h) % h;
+        particles.forEach((p) => {
+          const dx = cx - p.x;
+          const dy = cy - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const force = Math.sin(time * 2 + dist * 0.01) * 0.5 + 0.5;
+          p.vx += (dx / dist) * force * 0.1;
+          p.vy += (dy / dist) * force * 0.1;
+          p.vx *= 0.95;
+          p.vy *= 0.95;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.x = (p.x + w) % w;
+          p.y = (p.y + h) % h;
 
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.6 + Math.sin(time + p.x * 0.01) * 0.2;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, particleSize, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      ctx.globalAlpha = 1;
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.6 + Math.sin(time + p.x * 0.01) * 0.2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, particleSize, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      }
 
       animationId = requestAnimationFrame(animate);
     };
@@ -103,10 +108,18 @@ export function Antigravity({
       resize();
       init();
     };
+
+    const resizeObserver = new ResizeObserver(() => {
+      resize();
+      init();
+    });
+    resizeObserver.observe(canvas);
+
     window.addEventListener("resize", onResize);
 
     return () => {
       cancelAnimationFrame(animationId);
+      resizeObserver.disconnect();
       window.removeEventListener("resize", onResize);
     };
   }, [count, color, particleSize]);

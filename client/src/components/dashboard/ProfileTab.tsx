@@ -1,4 +1,7 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
+import { useWatch } from "react-hook-form";
+import { buildWhatsAppUrl, normalizeToE164 } from "@/lib/phone";
+import { platformIconMap } from "@/lib/graphics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,12 +62,12 @@ type ProfileTabProps = {
   compressAvatar: (file: File) => Promise<File>;
   api: any;
   toast: (value: any) => void;
-  isWhatsAppSameAsPhone: boolean;
-  setIsWhatsAppSameAsPhone: (value: boolean) => void;
-  watchedCountryCode: string | null;
-  watchedPhoneNumber: string | null;
-  whatsappPreviewUrl: string | null;
-  WhatsAppIcon: any;
+  isWhatsAppSameAsPhone?: boolean;
+  setIsWhatsAppSameAsPhone?: (value: boolean) => void;
+  watchedCountryCode?: string | null;
+  watchedPhoneNumber?: string | null;
+  whatsappPreviewUrl?: string | null;
+  WhatsAppIcon?: any;
 };
 
 export const ProfileTab = memo(function ProfileTab({
@@ -97,6 +100,57 @@ export const ProfileTab = memo(function ProfileTab({
   whatsappPreviewUrl,
   WhatsAppIcon,
 }: ProfileTabProps) {
+  const [internalSameAsPhone, setInternalSameAsPhone] = useState(
+    () =>
+      isWhatsAppSameAsPhone ??
+      Boolean(
+        profileForm.getValues("phoneNumber") &&
+          profileForm.getValues("phoneNumber") ===
+            profileForm.getValues("whatsappNumber"),
+      ),
+  );
+  const sameAsPhone =
+    isWhatsAppSameAsPhone !== undefined
+      ? isWhatsAppSameAsPhone
+      : internalSameAsPhone;
+  const setSameAsPhone =
+    setIsWhatsAppSameAsPhone || setInternalSameAsPhone;
+
+  const internalPhoneNumber = useWatch({
+    control: profileForm.control,
+    name: "phoneNumber",
+  });
+  const internalWhatsAppNumber = useWatch({
+    control: profileForm.control,
+    name: "whatsappNumber",
+  });
+  const internalCountryCode = useWatch({
+    control: profileForm.control,
+    name: "countryCode",
+  });
+
+  const effectivePhoneNumber = watchedPhoneNumber ?? internalPhoneNumber;
+  const effectiveWhatsAppNumber = internalWhatsAppNumber;
+  const effectiveCountryCode = watchedCountryCode ?? internalCountryCode;
+
+  useEffect(() => {
+    if (!sameAsPhone) return;
+    profileForm.setValue("whatsappNumber", effectivePhoneNumber || "");
+  }, [sameAsPhone, effectivePhoneNumber, profileForm]);
+
+  const whatsappPreviewE164 = normalizeToE164(
+    effectiveWhatsAppNumber || "",
+    effectiveCountryCode,
+  );
+  const effectiveWhatsappPreviewUrl =
+    whatsappPreviewUrl !== undefined
+      ? whatsappPreviewUrl
+      : whatsappPreviewE164
+        ? buildWhatsAppUrl(whatsappPreviewE164)
+        : null;
+
+  const EffectiveWhatsAppIcon = WhatsAppIcon || platformIconMap.whatsapp;
+
   return (
     <Card>
       <CardHeader>
@@ -473,11 +527,11 @@ export const ProfileTab = memo(function ProfileTab({
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">Same as phone</span>
                       <Switch
-                        checked={isWhatsAppSameAsPhone}
+                        checked={sameAsPhone}
                         onCheckedChange={(checked) => {
-                          setIsWhatsAppSameAsPhone(checked);
+                          setSameAsPhone(checked);
                           if (checked) {
-                            profileForm.setValue("whatsappNumber", watchedPhoneNumber || "");
+                            profileForm.setValue("whatsappNumber", effectivePhoneNumber || "");
                           }
                         }}
                       />
@@ -490,8 +544,8 @@ export const ProfileTab = memo(function ProfileTab({
                           international
                           withCountryCallingCode
                           countryCallingCodeEditable={false}
-                          defaultCountry={(watchedCountryCode as any) || "US"}
-                          country={(watchedCountryCode as any) || "US"}
+                          defaultCountry={(effectiveCountryCode as any) || "US"}
+                          country={(effectiveCountryCode as any) || "US"}
                           value={field.value || ""}
                           onChange={(value) => field.onChange(value ?? "")}
                           onCountryChange={(country) =>
@@ -501,12 +555,12 @@ export const ProfileTab = memo(function ProfileTab({
                             className:
                               "w-full h-10 rounded-md border border-input bg-background px-3 text-sm",
                             placeholder: "+1234567890",
-                            disabled: isWhatsAppSameAsPhone,
+                            disabled: sameAsPhone,
                           }}
                           countrySelectProps={{
                             className:
                               "h-10 rounded-md border border-input bg-background px-2 text-sm",
-                            disabled: isWhatsAppSameAsPhone,
+                            disabled: sameAsPhone,
                           }}
                           className="flex items-center gap-6"
                         />
@@ -519,18 +573,18 @@ export const ProfileTab = memo(function ProfileTab({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                disabled={!whatsappPreviewUrl}
+                                disabled={!effectiveWhatsappPreviewUrl}
                                 onClick={() => {
-                                  if (!whatsappPreviewUrl) return;
-                                  window.open(whatsappPreviewUrl, "_blank");
+                                  if (!effectiveWhatsappPreviewUrl) return;
+                                  window.open(effectiveWhatsappPreviewUrl, "_blank");
                                 }}
                                 aria-label="Open WhatsApp preview"
                               >
-                                <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+                                <EffectiveWhatsAppIcon className="h-4 w-4" aria-hidden="true" />
                               </Button>
                             </span>
                           </TooltipTrigger>
-                          {!whatsappPreviewUrl && (
+                          {!effectiveWhatsappPreviewUrl && (
                             <TooltipContent>Enter a valid WhatsApp number</TooltipContent>
                           )}
                         </Tooltip>

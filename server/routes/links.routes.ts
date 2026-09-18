@@ -148,6 +148,55 @@ export function registerLinksRoutes(app: Express): void {
     return res.status(201).json(ok({ link: created }));
   });
 
+  app.patch("/api/me/links/reorder", async (req, res) => {
+    try {
+      requireAuth(req.session.userId);
+      await requireRole(req.session.userId, "seller");
+    } catch {
+      return res.status(403).json(error("FORBIDDEN", "Forbidden"));
+    }
+
+    const parsed = linkReorderSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json(
+          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
+        );
+    }
+
+    const userId = req.session.userId!;
+    const { orderedIds } = parsed.data;
+
+    const existingLinks = await db
+      .select({ id: links.id })
+      .from(links)
+      .where(and(eq(links.userId, userId), inArray(links.id, orderedIds)));
+
+    if (existingLinks.length !== orderedIds.length) {
+      return res
+        .status(404)
+        .json(
+          error(
+            "LINK_NOT_FOUND",
+            "Some links not found or don't belong to user",
+          ),
+        );
+    }
+
+    // Use individual parameterized updates instead of sql.raw() to avoid any injection risk
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        db
+          .update(links)
+          .set({ sortOrder: index, updatedAt: new Date() })
+          .where(and(eq(links.id, id), eq(links.userId, userId))),
+      ),
+    );
+
+    return res.status(200).json(ok({ updated: true }));
+  });
+
   app.patch("/api/me/links/:id", async (req, res) => {
     try {
       requireAuth(req.session.userId);
@@ -200,55 +249,6 @@ export function registerLinksRoutes(app: Express): void {
       .returning();
 
     return res.status(200).json(ok({ link: updated }));
-  });
-
-  app.patch("/api/me/links/reorder", async (req, res) => {
-    try {
-      requireAuth(req.session.userId);
-      await requireRole(req.session.userId, "seller");
-    } catch {
-      return res.status(403).json(error("FORBIDDEN", "Forbidden"));
-    }
-
-    const parsed = linkReorderSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res
-        .status(400)
-        .json(
-          error("VALIDATION_ERROR", "Invalid input", parsed.error.flatten()),
-        );
-    }
-
-    const userId = req.session.userId!;
-    const { orderedIds } = parsed.data;
-
-    const existingLinks = await db
-      .select({ id: links.id })
-      .from(links)
-      .where(and(eq(links.userId, userId), inArray(links.id, orderedIds)));
-
-    if (existingLinks.length !== orderedIds.length) {
-      return res
-        .status(404)
-        .json(
-          error(
-            "LINK_NOT_FOUND",
-            "Some links not found or don't belong to user",
-          ),
-        );
-    }
-
-    // Use individual parameterized updates instead of sql.raw() to avoid any injection risk
-    await Promise.all(
-      orderedIds.map((id, index) =>
-        db
-          .update(links)
-          .set({ sortOrder: index, updatedAt: new Date() })
-          .where(and(eq(links.id, id), eq(links.userId, userId))),
-      ),
-    );
-
-    return res.status(200).json(ok({ updated: true }));
   });
 
   app.delete("/api/me/links/:id", async (req, res) => {

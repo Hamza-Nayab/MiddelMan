@@ -36,8 +36,8 @@ export default function LandingV2() {
   const [, navigate] = useLocation();
 
   // Parallax effects for the Hero section
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLDivElement>(null);
+  const rafParallaxRef = useRef<number | null>(null);
   const prefersReducedMotion =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -45,12 +45,32 @@ export default function LandingV2() {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion || !heroRef.current) return;
 
-    const rect = heroRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) * 0.02;
-    const y = (e.clientY - rect.top - rect.height / 2) * 0.02;
+    const currentTarget = e.currentTarget;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
-    setParallax({ x, y });
+    if (rafParallaxRef.current !== null) {
+      cancelAnimationFrame(rafParallaxRef.current);
+    }
+
+    rafParallaxRef.current = requestAnimationFrame(() => {
+      if (!heroRef.current) return;
+      const rect = currentTarget.getBoundingClientRect();
+      const x = (clientX - rect.left - rect.width / 2) * 0.02;
+      const y = (clientY - rect.top - rect.height / 2) * 0.02;
+
+      heroRef.current.style.setProperty("--parallax-x", `${x}px`);
+      heroRef.current.style.setProperty("--parallax-y", `${y}px`);
+    });
   };
+
+  useEffect(() => {
+    return () => {
+      if (rafParallaxRef.current !== null) {
+        cancelAnimationFrame(rafParallaxRef.current);
+      }
+    };
+  }, []);
 
   // Refs for tracking points for the SVG Bezier curve
   const containerRef = useRef<HTMLDivElement>(null);
@@ -331,6 +351,7 @@ export default function LandingV2() {
             className="relative overflow-hidden pt-12 lg:pt-16 pb-20 lg:pb-28"
             onMouseMove={handleMouseMove}
             ref={heroRef}
+            style={{ "--parallax-x": "0px", "--parallax-y": "0px" } as React.CSSProperties}
           >
             <div className="container mx-auto px-4 max-w-7xl relative z-10">
               <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[500px] lg:min-h-[600px]">
@@ -498,7 +519,7 @@ export default function LandingV2() {
                   <div
                     className="absolute inset-0 badge-parallax"
                     style={{
-                      transform: `translate(${!prefersReducedMotion ? parallax.x * 0.3 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.3 : 0}px)`,
+                      transform: "translate(calc(var(--parallax-x, 0px) * 0.3), calc(var(--parallax-y, 0px) * 0.3))",
                       transition: !prefersReducedMotion ? "transform 0.15s ease-out" : "none",
                       pointerEvents: "none",
                     }}
@@ -517,7 +538,7 @@ export default function LandingV2() {
                   <div
                     className="relative z-10 w-full h-full flex items-center justify-center gap-6"
                     style={{
-                      transform: `translate(${!prefersReducedMotion ? parallax.x * 0.5 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.5 : 0}px)`,
+                      transform: "translate(calc(var(--parallax-x, 0px) * 0.5), calc(var(--parallax-y, 0px) * 0.5))",
                       transition: !prefersReducedMotion ? "transform 0.1s ease-out" : "none",
                     }}
                   >
@@ -537,7 +558,7 @@ export default function LandingV2() {
                   <div
                     className="absolute top-12 right-6 float-animation z-20 badge-parallax"
                     style={{
-                      transform: `translate(${!prefersReducedMotion ? parallax.x * 0.2 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.2 : 0}px)`,
+                      transform: "translate(calc(var(--parallax-x, 0px) * 0.2), calc(var(--parallax-y, 0px) * 0.2))",
                     }}
                   >
                     <PillBadge icon="✓" text="Verified Reviews" />
@@ -546,7 +567,7 @@ export default function LandingV2() {
                   <div
                     className="absolute bottom-20 left-6 float-animation-2 z-20 badge-parallax"
                     style={{
-                      transform: `translate(${!prefersReducedMotion ? parallax.x * 0.15 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.15 : 0}px)`,
+                      transform: "translate(calc(var(--parallax-x, 0px) * 0.15), calc(var(--parallax-y, 0px) * 0.15))",
                     }}
                   >
                     <PillBadge icon="🛡️" text="Dispute Support" />
@@ -555,7 +576,7 @@ export default function LandingV2() {
                   <div
                     className="absolute bottom-12 right-12 float-animation-3 z-20 badge-parallax"
                     style={{
-                      transform: `translate(${!prefersReducedMotion ? parallax.x * 0.2 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.2 : 0}px)`,
+                      transform: "translate(calc(var(--parallax-x, 0px) * 0.2), calc(var(--parallax-y, 0px) * 0.2))",
                     }}
                   >
                     <PillBadge icon="✨" text="Shareable Link" />

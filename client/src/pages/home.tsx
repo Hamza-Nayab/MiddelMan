@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
@@ -109,8 +109,8 @@ export default function Home() {
   const user = me?.user ?? null;
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLDivElement>(null);
+  const rafParallaxRef = useRef<number | null>(null);
   const prefersReducedMotion =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -130,12 +130,32 @@ export default function Home() {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion || !heroRef.current) return;
 
-    const rect = heroRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) * 0.02;
-    const y = (e.clientY - rect.top - rect.height / 2) * 0.02;
+    const currentTarget = e.currentTarget;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
-    setParallax({ x, y });
+    if (rafParallaxRef.current !== null) {
+      cancelAnimationFrame(rafParallaxRef.current);
+    }
+
+    rafParallaxRef.current = requestAnimationFrame(() => {
+      if (!heroRef.current) return;
+      const rect = currentTarget.getBoundingClientRect();
+      const x = (clientX - rect.left - rect.width / 2) * 0.02;
+      const y = (clientY - rect.top - rect.height / 2) * 0.02;
+
+      heroRef.current.style.setProperty("--parallax-x", `${x}px`);
+      heroRef.current.style.setProperty("--parallax-y", `${y}px`);
+    });
   };
+
+  useEffect(() => {
+    return () => {
+      if (rafParallaxRef.current !== null) {
+        cancelAnimationFrame(rafParallaxRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Layout>
@@ -208,6 +228,7 @@ export default function Home() {
         className="relative overflow-hidden pt-2 lg:pt-3 pb-8 lg:pb-12"
         onMouseMove={handleMouseMove}
         ref={heroRef}
+        style={{ "--parallax-x": "0px", "--parallax-y": "0px" } as React.CSSProperties}
       >
         <style>{`
           @keyframes float-subtle {
@@ -463,7 +484,7 @@ export default function Home() {
               <div
                 className="absolute inset-0 badge-parallax"
                 style={{
-                  transform: `translate(${!prefersReducedMotion ? parallax.x * 0.3 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.3 : 0}px)`,
+                  transform: "translate(calc(var(--parallax-x, 0px) * 0.3), calc(var(--parallax-y, 0px) * 0.3))",
                   transition: !prefersReducedMotion
                     ? "transform 0.15s ease-out"
                     : "none",
@@ -498,7 +519,7 @@ export default function Home() {
               <div
                 className="relative z-10 w-full h-full flex items-center justify-center gap-4"
                 style={{
-                  transform: `translate(${!prefersReducedMotion ? parallax.x * 0.5 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.5 : 0}px)`,
+                  transform: "translate(calc(var(--parallax-x, 0px) * 0.5), calc(var(--parallax-y, 0px) * 0.5))",
                   transition: !prefersReducedMotion
                     ? "transform 0.1s ease-out"
                     : "none",
@@ -530,7 +551,7 @@ export default function Home() {
               <div
                 className="absolute top-14 right-8 lg:right-12 float-animation z-20 badge-parallax pointer-events-auto"
                 style={{
-                  transform: `translate(${!prefersReducedMotion ? parallax.x * 0.2 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.2 : 0}px)`,
+                  transform: "translate(calc(var(--parallax-x, 0px) * 0.2), calc(var(--parallax-y, 0px) * 0.2))",
                 }}
               >
                 <PillBadge icon="✓" text="Verified Reviews" />
@@ -540,7 +561,7 @@ export default function Home() {
               <div
                 className="absolute -left-16 lg:-left-28 top-[36%] -translate-y-1/2 float-animation-2 z-20 badge-parallax pointer-events-auto"
                 style={{
-                  transform: `translate(${!prefersReducedMotion ? parallax.x * 0.15 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.15 : 0}px)`,
+                  transform: "translate(calc(var(--parallax-x, 0px) * 0.15), calc(var(--parallax-y, 0px) * 0.15))",
                 }}
               >
                 <PillBadge icon="🛡️" text="Dispute Support" />
@@ -550,7 +571,7 @@ export default function Home() {
               <div
                 className="absolute bottom-14 right-8 lg:right-12 float-animation-3 z-20 badge-parallax pointer-events-auto"
                 style={{
-                  transform: `translate(${!prefersReducedMotion ? parallax.x * 0.2 : 0}px, ${!prefersReducedMotion ? parallax.y * 0.2 : 0}px)`,
+                  transform: "translate(calc(var(--parallax-x, 0px) * 0.2), calc(var(--parallax-y, 0px) * 0.2))",
                 }}
               >
                 <PillBadge icon="✨" text="Shareable Link" />
