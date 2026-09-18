@@ -1015,8 +1015,7 @@ export default function ProfilePage() {
                               />
                               <Button
                                 type="submit"
-                                className="w-full"
-                                style={appearance.accentButtonStyle}
+                                className="w-full !bg-[#0080FF] hover:!bg-[#0070E0] !text-white font-semibold !border-[#0080FF] shadow-sm transition-colors"
                                 disabled={addReviewMutation.isPending}
                               >
                                 {addReviewMutation.isPending
