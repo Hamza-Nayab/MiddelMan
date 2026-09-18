@@ -1162,7 +1162,7 @@ export function registerAuthRoutes(app: Express): void {
       .from(profiles)
       .where(eq(profiles.userId, userId));
 
-    if (!profile) {
+    if (!profile && user.role === "seller") {
       const [createdProfile] = await db
         .insert(profiles)
         .values({

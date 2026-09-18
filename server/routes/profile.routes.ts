@@ -43,7 +43,7 @@ export function registerProfileRoutes(app: Express): void {
       .from(users)
       .where(sql`lower(${users.username}) = lower(${username})`);
 
-    if (!user) {
+    if (!user || user.role !== "seller") {
       return res
         .status(404)
         .json(error("PROFILE_NOT_FOUND", "Profile not found"));
@@ -61,14 +61,30 @@ export function registerProfileRoutes(app: Express): void {
       .where(eq(profiles.userId, user.id));
 
     if (!profile) {
-      const [createdProfile] = await db
-        .insert(profiles)
-        .values({
-          userId: user.id,
-          displayName: user.username || "Seller",
-        })
-        .returning();
-      profile = createdProfile;
+      profile = {
+        userId: user.id,
+        displayName: user.username || "Seller",
+        bio: null,
+        avatarUrl: null,
+        contactEmail: null,
+        whatsappNumber: null,
+        phoneNumber: null,
+        countryCode: "US",
+        isVerified: false,
+        verificationMethod: "none" as const,
+        verificationStatus: "not_requested" as const,
+        verificationRequestNote: null,
+        verificationRequestedAt: null,
+        verificationReviewedAt: null,
+        theme: "light" as const,
+        backgroundPreset: null,
+        gradientPreset: null,
+        accentColor: null,
+        avgRating: 0,
+        totalReviews: 0,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
     }
 
     const stats = await getReviewStats(user.id);
@@ -123,7 +139,7 @@ export function registerProfileRoutes(app: Express): void {
       .from(users)
       .where(sql`lower(${users.username}) = lower(${username})`);
 
-    if (!seller) {
+    if (!seller || seller.role !== "seller") {
       return res
         .status(404)
         .json(error("PROFILE_NOT_FOUND", "Profile not found"));

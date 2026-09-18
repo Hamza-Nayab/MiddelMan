@@ -683,6 +683,23 @@ describe("route groups", () => {
     assert.equal(profile.body.data.user.username, "seller-one");
     assertDbQueuesEmpty();
 
+    // Verify non-seller (admin) returns 404 PROFILE_NOT_FOUND
+    setDbQueues({
+      select: [[{ ...sellerUser, role: "admin" }]],
+    });
+    const adminProfile = await request("GET", "/api/profile/seller-one");
+    assert.equal(adminProfile.status, 404);
+    assert.equal(adminProfile.body.error.code, "PROFILE_NOT_FOUND");
+    assertDbQueuesEmpty();
+
+    setDbQueues({
+      select: [[{ ...sellerUser, role: "admin" }]],
+    });
+    const adminBundle = await request("GET", "/api/profile/seller-one/bundle");
+    assert.equal(adminBundle.status, 404);
+    assert.equal(adminBundle.body.error.code, "PROFILE_NOT_FOUND");
+    assertDbQueuesEmpty();
+
     setDbQueues({});
     const unauthorized = await request("PATCH", "/api/me/profile", {
       body: { displayName: "New Name" },
@@ -1215,7 +1232,6 @@ describe("route groups", () => {
       ],
       insert: [
         [{ id: 99, username: "admin-new", email: "newadmin@example.com", role: "admin", isMasterAdmin: false, createdAt: new Date() }],
-        [[]],
         [[]],
       ],
     });

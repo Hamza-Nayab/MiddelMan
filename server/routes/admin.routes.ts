@@ -662,11 +662,6 @@ export function registerAdminRoutes(app: Express): void {
       })
       .returning();
 
-    await db.insert(profiles).values({
-      userId: newAdmin.id,
-      displayName: parsed.data.displayName || username,
-    });
-
     await logAdminAction(req.session.userId!, "PROMOTE_ADMIN", newAdmin.id, {
       email,
       username,

@@ -114,7 +114,7 @@ export function registerSeoRoutes(app: Express): void {
         })
         .from(users)
         .leftJoin(profiles, eq(profiles.userId, users.id))
-        .where(and(sql`${users.role} != 'buyer'`, eq(users.isDisabled, false)))
+        .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
         .orderBy(desc(profiles.updatedAt));
 
       const forwardedHost = req.get("x-forwarded-host");

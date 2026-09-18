@@ -291,7 +291,7 @@ export function registerSsrMetaMiddleware(app: Express): void {
         .where(sql`lower(${users.username}) = lower(${username})`)
         .limit(1);
 
-      if (!user) {
+      if (!user || user.role !== "seller") {
         (req as any).__profileNotFound = true;
         return next();
       }

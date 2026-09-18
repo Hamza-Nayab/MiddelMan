@@ -2,7 +2,6 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "../server/db";
-import { profiles } from "../shared/schema/profiles.schema";
 import { users } from "../shared/schema/users.schema";
 
 const args = process.argv.slice(2);
@@ -72,20 +71,6 @@ async function createMasterAdmin() {
     console.log(
       `Created master admin user "${username}" (id=${userId})`,
     );
-  }
-
-  const [existingProfile] = await db
-    .select({ userId: profiles.userId })
-    .from(profiles)
-    .where(eq(profiles.userId, userId))
-    .limit(1);
-
-  if (!existingProfile) {
-    await db.insert(profiles).values({
-      userId,
-      displayName: username,
-    });
-    console.log(`Created profile for user id=${userId}`);
   }
 
   console.log(`Master admin "${username}" (id=${userId}) is ready.`);

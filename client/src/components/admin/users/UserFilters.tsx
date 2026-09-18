@@ -11,6 +11,7 @@ const roleOptions = [
   { value: "all", label: "All Roles" },
   { value: "buyer", label: "Buyer" },
   { value: "seller", label: "Seller" },
+  { value: "admin", label: "Admin" },
 ];
 
 const statusOptions = [
