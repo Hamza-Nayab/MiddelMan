@@ -10,6 +10,8 @@ type SessionUser = {
   id: number;
   role: UserRole;
   isNewUser?: boolean;
+  isDisabled?: boolean;
+  disabledReason?: string | null;
 };
 
 const userColumns = {

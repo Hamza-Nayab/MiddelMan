@@ -107,6 +107,30 @@ export default function AuthPage() {
   const { data: me } = useMeQuery();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get("error");
+    const reasonParam = params.get("reason");
+
+    if (errorParam === "ACCOUNT_DISABLED") {
+      toast({
+        title: "Account Disabled",
+        description: reasonParam
+          ? `Your account has been disabled: ${reasonParam}`
+          : "Your account has been disabled. Please contact support@middelmen.com for assistance.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (params.get("oauth") === "failed") {
+      toast({
+        title: "Login failed",
+        description: "Google sign-in was cancelled or failed. Please try again.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [toast]);
+
+  useEffect(() => {
     if (!me?.user) return;
     if (me.user.role === "seller") {
       setLocation("/dashboard");
@@ -166,7 +190,7 @@ export default function AuthPage() {
           title: "Account Disabled",
           description: error.details?.reason
             ? `Your account has been disabled: ${error.details.reason}`
-            : "Your account has been disabled. Please contact support@middlemen.com for assistance.",
+            : "Your account has been disabled. Please contact support@middelmen.com for assistance.",
           variant: "destructive",
         });
         return;

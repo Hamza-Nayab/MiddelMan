@@ -109,8 +109,38 @@ export function registerAuthRoutes(app: Express): void {
         id?: number;
         role?: string;
         isNewUser?: boolean;
+        isDisabled?: boolean;
+        disabledReason?: string | null;
       };
       const appUrl = process.env.APP_URL || "http://localhost:5005";
+
+      if (user?.isDisabled) {
+        appLog("warn", "auth", "OAUTH_LOGIN_BLOCKED_DISABLED_ACCOUNT", {
+          requestId: req.requestId,
+          userId: user.id,
+        });
+
+        const params = new URLSearchParams({
+          error: "ACCOUNT_DISABLED",
+        });
+        if (user.disabledReason) {
+          params.set("reason", user.disabledReason);
+        }
+
+        const redirectUrl = `${appUrl}/auth?${params.toString()}`;
+
+        if (req.logout) {
+          req.logout(() => {});
+        }
+        if (req.session) {
+          req.session.userId = undefined;
+          return req.session.destroy(() => {
+            res.redirect(redirectUrl);
+          });
+        }
+
+        return res.redirect(redirectUrl);
+      }
 
       if (user?.id) {
         req.session.userId = user.id;
