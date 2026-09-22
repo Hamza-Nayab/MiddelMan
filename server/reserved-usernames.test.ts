@@ -50,6 +50,7 @@ describe("Reserved Usernames Protection", () => {
         "profile",
         "register",
         "reviews",
+        "robot.txt",
         "robots.txt",
         "search",
         "seller",

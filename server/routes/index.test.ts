@@ -272,6 +272,7 @@ const expectedRoutes = [
   "GET /api/search/suggest",
   "GET /api/username/check",
   "GET /api/users",
+  "GET /robot.txt",
   "GET /sitemap.xml",
   "PATCH /api/admin/contacts/:id",
   "PATCH /api/admin/disputes/:id/resolve",
@@ -1384,6 +1385,10 @@ describe("route groups", () => {
     assert.match(sitemap.body, /<urlset/);
     assert.match(sitemap.body, /seller-one/);
     assertDbQueuesEmpty();
+
+    const robotRes = await request("GET", "/robot.txt", { redirect: "manual" });
+    assert.equal(robotRes.status, 301);
+    assert.equal(robotRes.response.headers.get("location"), "/robots.txt");
   });
 
   it("contacts", async () => {

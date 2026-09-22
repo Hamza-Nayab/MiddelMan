@@ -26,6 +26,11 @@ export function serveStatic(app: Express) {
     res.status(404).send("Not Found");
   });
 
+  // Redirect /robot.txt to /robots.txt
+  app.get("/robot.txt", (_req, res) => {
+    return res.redirect(301, "/robots.txt");
+  });
+
   // Serve favicon.ico with proper headers
   app.get("/favicon.ico", (_req, res) => {
     const faviconPath = path.resolve(distPath, "favicon.ico");

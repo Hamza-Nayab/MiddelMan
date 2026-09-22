@@ -105,6 +105,10 @@ export function registerSeoRoutes(app: Express): void {
     }
   });
 
+  app.get("/robot.txt", (_req, res) => {
+    return res.redirect(301, "/robots.txt");
+  });
+
   app.get("/sitemap.xml", async (req, res) => {
     try {
       const sellers = await db

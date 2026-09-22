@@ -2,6 +2,13 @@
   "buildCommand": "npx vite build",
   "outputDirectory": "dist/public",
   "framework": "vite",
+  "redirects": [
+    {
+      "source": "/robot.txt",
+      "destination": "/robots.txt",
+      "statusCode": 301
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",

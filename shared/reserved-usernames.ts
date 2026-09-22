@@ -81,6 +81,7 @@ export const RESERVED_USERNAMES = new Set<string>([
   "favicon.ico",
   "favicon.png",
   "robots.txt",
+  "robot.txt",
   "sitemap.xml",
   "sitemap",
   "llms.txt",

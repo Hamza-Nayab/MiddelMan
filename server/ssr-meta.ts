@@ -35,6 +35,7 @@ const KNOWN_ROUTES = new Set([
   "favicon.png",
   "favicon.ico",
   "robots.txt",
+  "robot.txt",
   "sitemap.xml",
   "opengraph.jpg",
   "llms.txt",
