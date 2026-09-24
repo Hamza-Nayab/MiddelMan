@@ -109,13 +109,36 @@ app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   if (isProduction) {
+    const r2PublicOrigin = (() => {
+      try {
+        return process.env.R2_PUBLIC_BASE_URL
+          ? new URL(process.env.R2_PUBLIC_BASE_URL).origin
+          : "";
+      } catch {
+        return "";
+      }
+    })();
+
+    const allowedImgSrc = [
+      "'self'",
+      "data:",
+      "blob:",
+      "https://*.r2.cloudflarestorage.com",
+      "https://*.cloudflarestorage.com",
+      "https://*.cloudflare.com",
+      "https://*.r2.dev",
+      r2PublicOrigin,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     res.setHeader(
       "Content-Security-Policy",
       [
         "default-src 'self'",
         "script-src 'self'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.cloudflare.com",
+        `img-src ${allowedImgSrc}`,
         "font-src 'self' https://fonts.gstatic.com",
         "connect-src 'self'",
         "frame-ancestors 'self'",
