@@ -5,7 +5,7 @@ process.env.DATABASE_URL ||= "postgres://test:test@localhost:5432/test";
 process.env.REVIEW_HASH_SALT ||= "test-salt";
 process.env.APP_URL ||= "https://middelmen.com";
 
-import { buildMetaTags, rewriteHtml } from "./ssr-meta";
+import { buildMetaTags, rewriteHtml, buildPrerenderHtml } from "./ssr-meta";
 
 const BASE_URL = "https://middelmen.com";
 
@@ -224,5 +224,34 @@ describe("ssr-meta: rewriteHtml", () => {
     assert.ok(result.includes('id="__INITIAL_PROFILE_BUNDLE__"'), "Must include initial bundle script tag");
     assert.ok(result.includes('"username":"test-seller"'), "Must contain bundle json content");
     assert.ok(result.includes('<div id="root"><div id="ssr-profile-prerender"><h1>Test Seller</h1></div></div>'), "Must inject prerender inside #root");
+  });
+
+  it("buildPrerenderHtml renders top 5 reviews safely into HTML", () => {
+    const fakeReviews = [
+      { authorName: "Alice & Bob", rating: 5, comment: "Fast & trusted transaction!" },
+      { authorName: "Charlie", rating: 4, comment: "Great communication." },
+      { authorName: "Dave", rating: 5, comment: "Highly recommended seller." },
+      { authorName: "Eve", rating: 5, comment: "100% legit." },
+      { authorName: "Frank", rating: 5, comment: "Smooth delivery." },
+      { authorName: "Grace", rating: 1, comment: "This 6th review should be capped." },
+    ];
+
+    const html = buildPrerenderHtml(
+      "Test Seller",
+      "testseller",
+      "Official seller store",
+      null,
+      true,
+      4.8,
+      6,
+      [{ id: 1, title: "Website", url: "https://example.com" }],
+      fakeReviews,
+    );
+
+    assert.ok(html.includes("Verified Reviews"), "Must include Verified Reviews section header");
+    assert.ok(html.includes("Alice &amp; Bob"), "Must escape reviewer names");
+    assert.ok(html.includes("Fast &amp; trusted transaction!"), "Must escape review comments");
+    assert.ok(html.includes("Smooth delivery."), "Must include 5th review");
+    assert.ok(!html.includes("This 6th review should be capped."), "Must cap reviews at top 5");
   });
 });

@@ -33,6 +33,7 @@ const TermsPage = lazy(() => import("@/pages/terms"));
 const ContactPage = lazy(() => import("@/pages/contact"));
 const AdminContactsPage = lazy(() => import("@/pages/admin-contacts"));
 const LandingV2 = lazy(() => import("@/pages/landing-v2"));
+const DirectoryPage = lazy(() => import("@/pages/directory"));
 
 function PageLoader() {
   return (
@@ -63,6 +64,8 @@ function Router() {
         <Route path="/admin/contacts" component={AdminContactsPage} />
         <Route path="/admin/analytics" component={AdminAnalyticsPage} />
         <Route path="/search" component={SearchPage} />
+        <Route path="/sellers" component={DirectoryPage} />
+        <Route path="/explore" component={DirectoryPage} />
         <Route path="/demo" component={DemoPage} />
         <Route path="/disabled" component={DisabledPage} />
         <Route path="/access-not-available" component={AccessNotAvailablePage} />

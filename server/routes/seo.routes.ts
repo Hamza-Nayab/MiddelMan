@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { and, desc, eq, sql } from "./_shared";
+import { and, desc, eq, gt, isNotNull, or, sql } from "./_shared";
 import { db, error, profiles, users, ok, checkRateLimit, getClientKey } from "./_shared";
 
 export function registerSeoRoutes(app: Express): void {
@@ -115,10 +115,23 @@ export function registerSeoRoutes(app: Express): void {
         .select({
           username: users.username,
           updatedAt: profiles.updatedAt,
+          createdAt: users.createdAt,
         })
         .from(users)
         .leftJoin(profiles, eq(profiles.userId, users.id))
-        .where(and(eq(users.role, "seller"), eq(users.isDisabled, false)))
+        .where(
+          and(
+            eq(users.role, "seller"),
+            eq(users.isDisabled, false),
+            // Quality gate: require verified email, profile verification, active reviews, or non-empty bio
+            or(
+              eq(users.emailVerified, true),
+              eq(profiles.isVerified, true),
+              gt(profiles.totalReviews, 0),
+              and(isNotNull(profiles.bio), sql`length(trim(${profiles.bio})) > 0`),
+            ),
+          ),
+        )
         .orderBy(desc(profiles.updatedAt));
 
       const forwardedHost = req.get("x-forwarded-host");
@@ -132,12 +145,12 @@ export function registerSeoRoutes(app: Express): void {
         .filter((s) => s.username)
         .map((seller) => {
           const url = `${baseUrl}/${encodeURIComponent(seller.username!)}`;
-          const lastmod = seller.updatedAt
-            ? new Date(seller.updatedAt).toISOString().split("T")[0]
-            : new Date().toISOString().split("T")[0];
+          const timestamp = seller.updatedAt || seller.createdAt;
+          const lastmod = timestamp
+            ? new Date(timestamp).toISOString().split("T")[0]
+            : null;
           return `  <url>
-    <loc>${url}</loc>
-    <lastmod>${lastmod}</lastmod>
+    <loc>${url}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ""}
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
@@ -152,6 +165,11 @@ export function registerSeoRoutes(app: Express): void {
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>${baseUrl}/sellers</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>${baseUrl}/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -162,12 +180,16 @@ export function registerSeoRoutes(app: Express): void {
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>${baseUrl}/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>${baseUrl}/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-${urls}
-</urlset>`;
+${urls ? `${urls}\n` : ""}</urlset>`;
 
       res.setHeader("Content-Type", "application/xml");
       res.setHeader("Cache-Control", "public, max-age=86400");

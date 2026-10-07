@@ -69,8 +69,8 @@ const RegisterSchema = z
           .min(5, "Username must be at least 5 characters")
           .max(20, "Username must be at most 20 characters")
           .regex(
-            /^[a-z0-9._-]+$/,
-            "Only lowercase letters, numbers, dots, underscores, and hyphens",
+            /^[a-z0-9_-]+$/,
+            "Only lowercase letters, numbers, underscores, and hyphens",
           )
           .refine(
             (val) => !isReservedUsername(val),

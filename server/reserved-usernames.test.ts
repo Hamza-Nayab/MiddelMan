@@ -165,10 +165,18 @@ describe("Reserved Usernames Protection", () => {
     });
 
     it("accepts valid, non-reserved usernames", () => {
-      const valid = ["admin1", "seller_shop", "my.store", "john-doe"];
+      const valid = ["admin1", "seller_shop", "mystore", "john-doe"];
       for (const v of valid) {
         const result = usernameSchema.safeParse(v);
         assert.equal(result.success, true, `Expected '${v}' to be valid`);
+      }
+    });
+
+    it("rejects usernames containing dots or file-like extensions", () => {
+      const invalid = ["my.store", "mughalsubs.pk", "test.user", "alex.js", "data.json"];
+      for (const inv of invalid) {
+        const result = usernameSchema.safeParse(inv);
+        assert.equal(result.success, false, `Expected '${inv}' with dot to be rejected`);
       }
     });
   });

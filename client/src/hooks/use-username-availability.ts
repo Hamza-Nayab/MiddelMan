@@ -20,7 +20,7 @@ export function useUsernameAvailability(username: string) {
   const isValidFormat =
     username.length >= 5 &&
     username.length <= 20 &&
-    /^[a-z0-9._-]+$/.test(username) &&
+    /^[a-z0-9_-]+$/.test(username) &&
     username === username.toLowerCase();
 
   // Debounce username input

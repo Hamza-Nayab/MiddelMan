@@ -130,16 +130,16 @@ export function Layout({
             {/* Desktop Navigation Links (Removed redundant Search link; replaced with Explore) */}
             <div className="hidden md:flex items-center gap-1">
               <Link
-                href="/search"
+                href="/sellers"
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 active:scale-95",
-                  location.startsWith("/search")
+                  location === "/sellers" || location === "/explore"
                     ? "bg-primary/10 text-primary font-semibold dark:bg-primary/20"
                     : "text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-zinc-900",
                 )}
               >
                 <Compass className="w-3.5 h-3.5 text-sky-500 transition-transform duration-200 group-hover:rotate-45" />
-                Explore
+                Directory
               </Link>
               <Link
                 href="/about"
@@ -449,17 +449,17 @@ export function Layout({
                   {/* Nav Links */}
                   <div className="flex flex-col gap-1">
                     <Link
-                      href="/search"
+                      href="/sellers"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         "flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                        location.startsWith("/search")
+                        location === "/sellers" || location === "/explore"
                           ? "bg-primary text-primary-foreground font-semibold"
                           : "text-slate-800 dark:text-slate-200 hover:bg-muted/70 hover:text-foreground",
                       )}
                     >
                       <Compass className="w-4 h-4 text-sky-500" />
-                      Explore Sellers
+                      Seller Directory
                     </Link>
                     <Link
                       href="/about"

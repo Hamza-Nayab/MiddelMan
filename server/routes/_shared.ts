@@ -3,9 +3,11 @@ import {
   and,
   desc,
   eq,
+  gt,
   gte,
   ilike,
   inArray,
+  isNotNull,
   lt,
   ne,
   or,
@@ -54,9 +56,11 @@ export {
   and,
   desc,
   eq,
+  gt,
   gte,
   ilike,
   inArray,
+  isNotNull,
   lt,
   ne,
   or,
@@ -288,7 +292,7 @@ export const adminResolveDisputeSchema = z.object({
   hideReview: z.boolean().optional(),
 });
 
-const USERNAME_REGEX = /^[a-z0-9._-]{5,20}$/;
+const USERNAME_REGEX = /^[a-z0-9_-]{5,20}$/;
 const DISPLAYNAME_REGEX = /^[\p{L}\p{N}\s\-_.,!?'"()]+$/u;
 
 export const usernameSchema = z
@@ -297,7 +301,7 @@ export const usernameSchema = z
   .max(20, "Username must be at most 20 characters")
   .regex(
     USERNAME_REGEX,
-    "Username must contain only lowercase letters, numbers, dots, underscores, or hyphens",
+    "Username must contain only lowercase letters, numbers, underscores, or hyphens",
   )
   .refine(
     (val) => !isReservedUsername(val),

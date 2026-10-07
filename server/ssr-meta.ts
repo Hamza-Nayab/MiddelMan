@@ -21,6 +21,8 @@ const KNOWN_ROUTES = new Set([
   "my-reviews",
   "admin",
   "search",
+  "sellers",
+  "explore",
   "demo",
   "disabled",
   "access-not-available",
@@ -81,7 +83,7 @@ function sellerProfileReflectingEmailVerification<
   };
 }
 
-function buildPrerenderHtml(
+export function buildPrerenderHtml(
   displayName: string,
   username: string,
   bio: string | null,
@@ -90,6 +92,7 @@ function buildPrerenderHtml(
   avgRating: number,
   totalReviews: number,
   linksList: { id: number; title: string; url: string }[],
+  reviewsList: { authorName: string; rating: number; comment: string; createdAt?: Date | string }[] = [],
 ): string {
   const safeName = escapeHtml(displayName);
   const safeUser = escapeHtml(username);
@@ -106,6 +109,26 @@ function buildPrerenderHtml(
     )
     .join("\n        ");
 
+  const topReviews = (reviewsList || []).slice(0, 5);
+  const reviewsHtml =
+    topReviews.length > 0
+      ? topReviews
+          .map((r) => {
+            const stars = "★".repeat(Math.max(1, Math.min(5, Math.round(r.rating))));
+            const safeAuthor = escapeHtml(r.authorName || "Verified Buyer");
+            const safeComment = escapeHtml(r.comment || "");
+            return `
+          <div style="border:1px solid #e2e8f0;border-radius:0.75rem;padding:0.875rem 1rem;margin-bottom:0.75rem;background:#fafafa;text-align:left;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+              <span style="font-weight:600;font-size:0.875rem;color:#1e293b;">${safeAuthor}</span>
+              <span style="color:#eab308;font-size:0.875rem;">${stars}</span>
+            </div>
+            <p style="font-size:0.875rem;line-height:1.4;color:#475569;margin:0;">${safeComment}</p>
+          </div>`;
+          })
+          .join("\n        ")
+      : "";
+
   return `
     <div id="ssr-profile-prerender" style="max-width:480px;margin:0 auto;padding:2rem 1rem;font-family:system-ui,-apple-system,sans-serif;color:#111;">
       <div style="text-align:center;">
@@ -115,6 +138,7 @@ function buildPrerenderHtml(
         <div style="font-size:0.875rem;color:#059669;font-weight:600;">${isVerified ? "✓ Verified Seller &bull; " : ""}${ratingText}</div>
       </div>
       ${linksList.length > 0 ? `<div style="margin-top:1.5rem;"><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">${linksHtml}</ul></div>` : ""}
+      ${topReviews.length > 0 ? `<div style="margin-top:1.5rem;text-align:left;"><h2 style="font-size:1.125rem;font-weight:600;margin:0 0 0.75rem 0;color:#0f172a;">Verified Reviews</h2>${reviewsHtml}</div>` : ""}
     </div>`;
 }
 
@@ -394,6 +418,12 @@ export function registerSsrMetaMiddleware(app: Express): void {
         stats.avgRating,
         stats.totalReviews,
         userLinks.map((l) => ({ id: l.id, title: l.title, url: l.url })),
+        reviewList.map((r) => ({
+          authorName: r.authorName,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.createdAt,
+        })),
       );
 
       (req as any).__ssrMeta = buildMetaTags(

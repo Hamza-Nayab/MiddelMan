@@ -74,6 +74,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/sellers"
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
+                >
+                  Seller Directory
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/search"
                   className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-medium transition-colors"
                 >

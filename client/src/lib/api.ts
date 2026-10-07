@@ -811,4 +811,26 @@ export const api = {
     request<ContactMessage>("GET", `/api/admin/contacts/${id}`),
   updateAdminContact: (id: number, data: AdminContactUpdatePayload) =>
     request<{ contact: ContactMessage }>("PATCH", `/api/admin/contacts/${id}`, data),
+
+  // Public Directory / Profiles
+  getPublicProfiles: (params?: { limit?: number; offset?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.limit !== undefined) query.set("limit", String(params.limit));
+    if (params?.offset !== undefined) query.set("offset", String(params.offset));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ profiles: PublicProfileItem[] }>("GET", `/api/profiles${suffix}`);
+  },
 };
+
+export interface PublicProfileItem {
+  id: number;
+  username: string;
+  createdAt: string;
+  displayName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  isVerified: boolean | null;
+  avgRating: number | null;
+  totalReviews: number | null;
+  updatedAt: string | null;
+}

@@ -59,7 +59,7 @@ const platformKeys = platformOptions.map((option) => option.key) as [
   ...PlatformKey[],
 ];
 
-const USERNAME_REGEX = /^[a-z0-9._-]{5,20}$/;
+const USERNAME_REGEX = /^[a-z0-9_-]{5,20}$/;
 const UsernameChangeSchema = z.object({
   username: z
     .string()
@@ -67,7 +67,7 @@ const UsernameChangeSchema = z.object({
     .max(20, "Username must be at most 20 characters")
     .regex(
       USERNAME_REGEX,
-      "Use lowercase letters, numbers, dots, underscores, or hyphens",
+      "Use lowercase letters, numbers, underscores, or hyphens",
     )
     .refine(
       (val) => !isReservedUsername(val),

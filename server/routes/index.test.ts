@@ -1384,6 +1384,27 @@ describe("route groups", () => {
     assert.equal(sitemap.status, 200);
     assert.match(sitemap.body, /<urlset/);
     assert.match(sitemap.body, /seller-one/);
+    assert.match(sitemap.body, /<lastmod>2026-03-12<\/lastmod>/);
+    assert.match(sitemap.body, /\/sellers/);
+    assert.match(sitemap.body, /\/contact/);
+    assertDbQueuesEmpty();
+
+    // Verify lastmod falls back to createdAt when updatedAt is null
+    setDbQueues({
+      select: [
+        [
+          {
+            username: "created-fallback-seller",
+            updatedAt: null,
+            createdAt: new Date("2025-11-20T00:00:00.000Z"),
+          },
+        ],
+      ],
+    });
+    const sitemapFallback = await request("GET", "/sitemap.xml");
+    assert.equal(sitemapFallback.status, 200);
+    assert.match(sitemapFallback.body, /created-fallback-seller/);
+    assert.match(sitemapFallback.body, /<lastmod>2025-11-20<\/lastmod>/);
     assertDbQueuesEmpty();
 
     const robotRes = await request("GET", "/robot.txt", { redirect: "manual" });
